@@ -12,9 +12,7 @@ int main(int argc, char *argv[])
 {
     // Pids for all children
     pid_t child_writer0;
-    pid_t child_writer1;
     pid_t child_reader0;
-    pid_t child_reader1;
     pid_t child_server;
 
     int res;
@@ -48,20 +46,6 @@ int main(int argc, char *argv[])
     }
     num_children += 1;
     
-    // writer 1
-    child_writer1 = fork();
-    if (child_writer1 < 0) {
-        perror("Fork");
-        return -1;
-    }
-
-    if (child_writer1 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./writer", "1", NULL };
-        execvp("konsole", arg_list);
-	return 0;
-    }
-    num_children += 1;
-
     // reader 0
     child_reader0 = fork();
     if (child_reader0 < 0) {
@@ -75,21 +59,7 @@ int main(int argc, char *argv[])
 	return 0;
     }
     num_children += 1;
-
-    // reader 1
-    child_reader1 = fork();
-    if (child_reader1 < 0) {
-        perror("Fork");
-        return -1;
-    }
-
-    if (child_reader1 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./reader", "1", NULL };
-        execvp("konsole", arg_list);
-	return 0;
-    }
-    num_children += 1;
-    
+   
     //wait for all children to terminate
     for(int i = 0; i < num_children; i ++){
         wait(&res);

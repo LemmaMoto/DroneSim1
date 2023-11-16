@@ -1,3 +1,4 @@
+// READER È LA MAPPA
 #include <stdio.h> 
 #include <string.h> 
 #include <fcntl.h> 
