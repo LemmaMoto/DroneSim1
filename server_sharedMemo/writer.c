@@ -63,11 +63,9 @@ int main(int argc, char *argv[])
         }
         // post semaphore
         sem_post(sem_id);
-        sleep(2);
+        sleep(0.5);
     } 
     // clean up
-    shm_unlink(SHMOBJ_PATH);
     sem_close(sem_id);
-    sem_unlink(SEM_PATH);
     return 0; 
 } 

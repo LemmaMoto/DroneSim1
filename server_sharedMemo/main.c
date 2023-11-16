@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     pid_t child_server;
 
     int res;
-    int num_children;
+    int num_children=0;
 
     // Server
     child_server = fork();

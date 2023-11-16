@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
     int reader_num;
     int in_progress = 0;
-    int number_received;
+    int number_received=-1;
 
     char filename_string[80];
     char filedirectory_string[80];
@@ -77,8 +77,6 @@ int main(int argc, char *argv[])
     } 
 
     // clean up
-    shm_unlink(SHMOBJ_PATH);
     sem_close(sem_id);
-    sem_unlink(SEM_PATH);
     return 0; 
 } 

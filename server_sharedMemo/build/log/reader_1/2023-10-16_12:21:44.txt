@@ -1,0 +1,6 @@
+Logged 37 in cell 1 
+Logged 33 in cell 1 
+Logged 10 in cell 1 
+Logged 20 in cell 1 
+Logged 5 in cell 1 
+Logged 23 in cell 1 

@@ -49,9 +49,7 @@ int main(int argc, char *argv[])
     } 
 
     // clean up
-    shm_unlink(SHMOBJ_PATH);
     sem_close(sem_id);
-    sem_unlink(SEM_PATH);
     munmap(shm_ptr, shared_seg_size);
 
     return 0; 
