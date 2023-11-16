@@ -10,6 +10,8 @@
 #include <sys/wait.h>
 #include "include/constants.h"
 
+
+
 int main(int argc, char *argv[])
 {
     // pids for all children
