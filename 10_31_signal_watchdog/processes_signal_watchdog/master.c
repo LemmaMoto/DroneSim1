@@ -11,7 +11,7 @@
 #include "include/constants.h"
 
 
-int main(int argc, char *argv[])
+int main (int argc, char *argv[])
 {
     // pids for all children
     pid_t child_watchdog;
