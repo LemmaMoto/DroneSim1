@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/watchdog.dir/watchdog.c.o CMakeFiles/watchdog.dir/utility/wrapfunc.c.o -o ../watchdog  -lcurses -lform -lm 
