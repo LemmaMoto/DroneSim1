@@ -1,4 +1,3 @@
-// READER È LA MAPPA
 #include <stdio.h> 
 #include <string.h> 
 #include <fcntl.h> 
@@ -9,10 +8,25 @@
 #include <unistd.h> 
 #include <stdlib.h>
 #include <time.h>
+#include <signal.h> // Added this line
 #include "include/constants.h"
+
+void handle_watchdog_signal(int signum) {
+    printf("Received watchdog signal. Responding...\n");
+    fflush(stdout);
+    kill(getppid(), SIGUSR1);
+}
 
 int main(int argc, char *argv[]) 
 {
+    // Set up the signal handler for the watchdog signal (SIGUSR1)
+    struct sigaction sa;
+    sa.sa_handler = handle_watchdog_signal;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGUSR1, &sa, NULL);
+
+    printf("Process is running and ready to receive watchdog signal.\n");
     int reader_num;
     int in_progress = 0;
     int number_received=-1;

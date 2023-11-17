@@ -1,270 +1,92 @@
-#include <ncurses.h>
-#include <string.h>
-#include <time.h>
-#include "include/constants.h"
+#include <stdio.h>
 #include <signal.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
 
-#include <fcntl.h> 
-#include <sys/stat.h> 
-#include <sys/time.h>
-#include <sys/types.h> 
-#include <unistd.h> 
+volatile sig_atomic_t process1_active = 0;
+volatile sig_atomic_t process2_active = 0;
+volatile sig_atomic_t process3_active = 0; // Added for the third process
 
-pid_t sp_pids[NUM_PROCESSES];
-struct timeval prev_ts[NUM_PROCESSES];
-int process_data_recieved[NUM_PROCESSES] = {0, 0, 0};
-char logfile_name[80];
-int logfile_line = 0; // line to read from in the log file
-char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
-
-
-// logs time update to file
-// void log_receipt(pid_t process_id, char *process_name, struct timeval tv)
-// {
-//     FILE *lf_fp = fopen(logfile_name, "a");
-//     fprintf(lf_fp, "%s [%d]: %ld %ld\n", process_name, process_id, tv.tv_sec, tv.tv_usec);
-//     fclose(lf_fp);
-// }
-
-// // updates the process data received and previous time
-// void process_update_handler(int sig, siginfo_t *info, void *context)
-// {
-//     for(int i = 0; i < NUM_PROCESSES; i++){
-//         if(info->si_pid == sp_pids[i]){
-//             process_data_recieved[i] = 1;
-//             gettimeofday(&prev_ts[i], NULL);
-//             log_receipt(sp_pids[i], process_names[i], prev_ts[i]);
-//         }
-//     }
-// }
-
-void check_log_file()
-{
-    FILE* file = fopen(logfile_name, "r"); 
-    char line[256]; 
-    int i = 0; 
-    char process_name[80];
-    int process_id;
-    long seconds;
-    long microseconds;
-    int p_idx;
-
-    // skip all data until new lines
-    while (i < logfile_line) 
-    { 
-        i++; 
-        fgets(line, sizeof(line), file);
-    } 
-    
-    while (fgets(line, sizeof(line), file)) 
-    { 
-        sscanf(line, "%d %ld %ld", &process_id, &seconds, &microseconds);
-
-        // Get index of process from its id
-        p_idx = 0;
-        while(process_id != sp_pids[p_idx] && p_idx < NUM_PROCESSES)
-        {
-            p_idx ++;
-        }
-
-        // Update prev ts
-        prev_ts[p_idx].tv_sec = seconds;
-        prev_ts[p_idx].tv_usec = microseconds;
-        process_data_recieved[p_idx] = 1;
-        i++;
-    } 
-    logfile_line = i;
-    fclose(file); 
+void handle_process1_signal(int signum) {
+    process1_active = 1;
 }
 
-// creates a window with the correct height, draws a box around it and refreshes
-WINDOW *create_newwin(int height, int width, int starty, int startx)
-{
-    WINDOW *local_win;
-    local_win = newwin(height, width, starty, startx);
-    box(local_win, 0 , 0);
-    /* 0, 0 gives default characters
-    * for the vertical and horizontal
-    * lines
-    */
-    wrefresh(local_win);
-    /* Show that box
-    */
-    return local_win;
+void handle_process2_signal(int signum) {
+    process2_active = 1;
 }
 
-// Gets elapsed time in seconds between two timevals
-double get_elapsed_time_s(struct timeval current, struct timeval previous)
-{
-    return (double)(current.tv_sec - previous.tv_sec) + (double)(current.tv_usec - previous.tv_usec) / 1000000;
+void handle_process3_signal(int signum) { // Handler for the third process
+    process3_active = 1;
 }
 
-// update window text with new elapsed times, retgurns 1 if time elapsed longer than process timeout
-int update_window_text(WINDOW **windows)
-{
-    int window_height;
-    int window_width;
-    struct timeval read_time;
-    gettimeofday(&read_time, NULL);
-    double elapsed;
-
-    for(int i = 0; i < NUM_PROCESSES; i++)
-    {
-        if (process_data_recieved[i])
-        {
-            getmaxyx(windows[i], window_height, window_width);
-            elapsed = get_elapsed_time_s(read_time, prev_ts[i]);
-            if(elapsed > PROCESS_TIMEOUT_S)
-            {
-                // wattron(windows[i], COLOR_PAIR(1))
-                return -1;
-            }
-            else
-            {
-                wattron(windows[i], COLOR_PAIR(3));
-            }
-            mvwprintw(windows[i], window_height/2, window_width - 20, "Time elapsed: %05.3f", elapsed);
-            wrefresh(windows[i]);
-        }
-        
-    }
-    return 0;
-}
-
-// Terminates all watched processes
-void terminate_all_watched_processes()
-{
-    for(int i = 0; i < NUM_PROCESSES; i ++)
-    {
-        if(kill(sp_pids[i], SIGKILL) < 0)
-        {
-            perror("kill");
-        }
+void send_watchdog_signal(pid_t pid) {
+    if (kill(pid, SIGUSR1) == -1) {
+        perror("Error sending watchdog signal");
+        exit(EXIT_FAILURE);
     }
 }
 
-int main(int argc, char *argv[])
-{
-    //publish the watchdog pid
-    pid_t watchdog_pid = getpid();
+void start_watchdog() {
+    struct sigaction sa1, sa2, sa3; 
+    // Set up the signal handler for process 1 signal (SIGUSR1)
+    sa1.sa_handler = handle_process1_signal;
+    sigemptyset(&sa1.sa_mask);
+    sa1.sa_flags = 0;
+    sigaction(SIGUSR1, &sa1, NULL);
 
-    FILE *watchdog_fp = fopen(PID_FILE_PW, "w");
-    fprintf(watchdog_fp, "%d", watchdog_pid);
-    fclose(watchdog_fp); 
+    // Set up the signal handler for process 2 signal (SIGUSR2)
+    sa2.sa_handler = handle_process2_signal;
+    sigemptyset(&sa2.sa_mask);
+    sa2.sa_flags = 0;
+    sigaction(SIGUSR1, &sa2, NULL);
 
-    // Reading in pids for other processes
-    FILE *pid_fp = NULL;
-    struct stat sbuf;
+    // Set up the signal handler for process 3 signal (SIGUSR3)
+    sa3.sa_handler = handle_process3_signal;
+    sigemptyset(&sa3.sa_mask);
+    sa3.sa_flags = 0;
+    sigaction(SIGUSR1, &sa3, NULL); // Assuming SIGUSR2 for the third process
+}
 
-    char *fnames[NUM_PROCESSES] = PID_FILE_SP;
+void check_processes_activity(pid_t pid1, pid_t pid2, pid_t pid3) { // Added pid3 for the third process
+    // Check if Process 1 is active by sending a watchdog signal
+    process1_active = 0;
+    send_watchdog_signal(pid1);
+    usleep(500000); // Wait for response
 
-    for(int i = 0; i < NUM_PROCESSES; i++)
-    {
-        /* call stat, fill stat buffer, validate success */
-        if (stat (fnames[i], &sbuf) == -1) {
-            perror ("error-stat");
-            return -1;
-        }
+    // Check if Process 2 is active by sending a watchdog signal
+    process2_active = 0;
+    send_watchdog_signal(pid2);
+    usleep(500000); // Wait for response
 
+    // Check if Process 3 is active by sending a watchdog signal
+    process3_active = 0;
+    send_watchdog_signal(pid3);
+    usleep(500000); // Wait for response
 
-        while (sbuf.st_size <= 0) {
-            if (stat (fnames[i], &sbuf) == -1) {
-                perror ("error-stat");
-                return -1;
-            }
-            usleep(50000);
-        }
+    // Check if all processes responded
+    if (!process1_active || !process2_active || !process3_active) { // Added check for the third process
+        printf("At least one process is not responding. Taking action...\n");
+        // Perform action when a process is not responding
+        exit(EXIT_FAILURE);
+    }
+}
 
-        pid_fp = fopen(fnames[i], "r");
-
-        fscanf(pid_fp, "%d", &sp_pids[i]);
-
-        fclose(pid_fp);
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s <pid1> <pid2> <pid3>\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
 
-    // Extract log file name
-    if(argc == 2){
-        snprintf(logfile_name, 80, "%s", argv[1]);
-    } else {
-        printf("wrong args\n"); 
-        return -1;
-    }
+    start_watchdog();
 
-    // initializes/clears contents of logfile
-    FILE *lf_fp = fopen(logfile_name, "w");
-    fclose(lf_fp);
+    pid_t process1_pid = atoi(argv[1]); // PID of child_reader0
+    pid_t process2_pid = atoi(argv[2]); // PID of child_writer0
+    pid_t process3_pid = atoi(argv[3]); // PID of child_server
 
-    // Initialize Windows
-    int window_width, window_height;
-    int ch;
-    initscr();
-    cbreak();
-    start_color();
-
-    // Set up color pairs
-    // init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(3, COLOR_GREEN, COLOR_BLACK);
-
-    // Window sizes for each subwindow
-    window_height = (LINES - 1) / NUM_PROCESSES;
-    window_width = COLS - 2;
-
-    refresh();
-
-    // Make windows for each process
-    WINDOW *windows[NUM_PROCESSES];
-
-    for (int i = 0; i < NUM_PROCESSES; i++)
-    {
-        windows[i] = create_newwin(window_height, window_width, i * window_height + 1, 1);
-        mvwprintw(windows[i], window_height / 2, 2, "%s", process_names[i]);
-        wattron(windows[i], COLOR_PAIR(2));
-        mvwprintw(windows[i], window_height / 2, window_width - 18, "No Data Received");
-        wrefresh(windows[i]);
-    }
-
-    // Get a start time to track total run time
-    struct timeval process_start_time;
-    gettimeofday(&process_start_time, NULL);
-    int count;
-
-    while(1)
-    {
-        // Check log file for new entries
-        check_log_file();
-
-        // update_window_text returns -1 if a process has timed out
-        if(update_window_text(windows) < 0)
-        {
-            terminate_all_watched_processes();
-
-            // Log termination and total elapsed time
-            struct timeval termination_time;
-            gettimeofday(&termination_time, NULL);
-            double elapsed = get_elapsed_time_s(termination_time, process_start_time);
-            FILE *lf_fp = fopen(logfile_name, "a");
-            fprintf(lf_fp, "Terminated after running for %05.2f seconds\n", elapsed);
-            fclose(lf_fp);
-            return -1;
-        }
-        
-        if (count == PROCESS_SIGNAL_INTERVAL)
-        {
-            // Send new signal
-            for(int i = 0; i < NUM_PROCESSES; i ++)
-            {
-                if(kill(sp_pids[i], SIGUSR1) < 0)
-                {
-                    // perror("kill");  //This does weird things to the ncurses window if I leave it in
-                }
-            }
-            count = 0;
-        }
-        count ++;
-        
-        usleep(WATCHDOG_SLEEP_US);
-        
+    while (1) {
+        check_processes_activity(process1_pid, process2_pid, process3_pid);
+        sleep(5); // Adjust the interval as needed
     }
 
     return 0;

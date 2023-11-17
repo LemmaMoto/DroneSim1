@@ -1,0 +1,2 @@
+Logged 43 in cell 1 
+Logged 47 in cell 1 
