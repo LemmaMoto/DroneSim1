@@ -17,8 +17,10 @@ int main(int argc, char *argv[])
     // pids for all children
     pid_t child_watchdog;
     pid_t child_server;
-    pid_t child_writer;
-    pid_t child_reader;
+    pid_t child_writer0;
+    pid_t child_reader0;
+    pid_t child_writer1;
+    pid_t child_reader1;
 
     // Make a log file with the start time/date
     time_t now = time(NULL);
@@ -69,27 +71,54 @@ int main(int argc, char *argv[])
     }
     num_children += 1;
 
-    child_writer = fork();
-    if (child_writer < 0) {
+    child_writer0 = fork();
+    if (child_writer0 < 0) {
         perror("Fork");
         return -1;
     }
 
-    if (child_writer == 0) {
-        char * arg_list[] = { "konsole", "-e", "./writer", logfile_name, NULL };
+    if (child_writer0 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./writer", "0", logfile_name, NULL };
         execvp("konsole", arg_list);
     return 0;
     }
     num_children += 1;
 
-    child_reader = fork();
-    if (child_reader < 0) {
+    child_reader0 = fork();
+    if (child_reader0 < 0) {
         perror("Fork");
         return -1;
     }
 
-    if (child_reader == 0) {
-        char * arg_list[] = { "konsole", "-e", "./reader", logfile_name, NULL };
+    if (child_reader0 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./reader", "0",logfile_name, NULL };
+        execvp("konsole", arg_list);
+    return 0;
+    }
+    num_children += 1;
+
+    //
+     child_writer1 = fork();
+    if (child_writer1 < 0) {
+        perror("Fork");
+        return -1;
+    }
+
+    if (child_writer1 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./writer", "1", logfile_name, NULL };
+        execvp("konsole", arg_list);
+    return 0;
+    }
+    num_children += 1;
+
+    child_reader1 = fork();
+    if (child_reader1 < 0) {
+        perror("Fork");
+        return -1;
+    }
+
+    if (child_reader1 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./reader", "1",logfile_name, NULL };
         execvp("konsole", arg_list);
     return 0;
     }
