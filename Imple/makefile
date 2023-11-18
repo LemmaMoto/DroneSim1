@@ -13,6 +13,6 @@ drone:
 input:
 	gcc input.c -o build/input
 world:	
-	gcc world.c -o build/world
+	gcc world.c -o build/world -lncurses
 watchdog:
 	gcc watchdog.c -o build/watchdog -lncurses

@@ -12,13 +12,21 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-#define SHM_KEY 1234 // Define a key for the shared memory segment
+#define SHM_DRN 12 // Define a key for the shared memory segment
+#define SHM_WRLD 34
 
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
 char logfile_name[80];
+
+struct Drone {
+    int x;
+    int y;
+    char symbol;
+    short color_pair;
+};
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -39,6 +47,7 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[]) 
 {
+    struct Drone drone = {0, 0, 'W', 1};
     int process_num;
     if(argc == 3){
         sscanf(argv[1],"%d", &process_num);  
@@ -98,31 +107,34 @@ int main(int argc, char *argv[])
     int sleep_duration = sleep_durations[process_num];
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
-    
-    int shm_id = shmget(SHM_KEY, sizeof(int), IPC_CREAT | 0666);
+
+    // Use the shared memory
+    // Create a shared memory segment
+    int shm_id = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
     if (shm_id < 0) {
         perror("shmget");
         return -1;
     }
 
     // Attach the shared memory segment to our process's address space
-    int *shared_var = (int *) shmat(shm_id, NULL, 0);
-    if (shared_var == (int *) -1) {
+    struct Drone *shared_drone = (struct Drone *) shmat(shm_id, NULL, 0);
+    if (shared_drone == (struct Drone *) -1) {
         perror("shmat");
         return -1;
     }
 
     // Use the shared memory
-    *shared_var = process_id;
-
     while (1) 
     {   
-        printf("Sleepy process\n");
-        usleep(sleep_duration);
+        shared_drone->x = drone.x;
+        shared_drone->y = drone.y;
+        shared_drone->symbol = drone.symbol;
+        shared_drone->color_pair = drone.color_pair;
+        sleep(0.5);
     }
 
     // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_var) == -1) {
+    if (shmdt(shared_drone) == -1) {
         perror("shmdt");
         return -1;
     }

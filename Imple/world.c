@@ -9,12 +9,25 @@
 #include <stdlib.h>
 #include <time.h>
 #include "include/constants.h"
+#include <ncurses.h>
+#include <stdbool.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_WRLD 34 // Define a key for the shared memory segment
 
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
 char logfile_name[80];
+
+struct Drone {
+    int x;
+    int y;
+    char symbol;
+    short color_pair;
+};
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -26,7 +39,7 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    printf("received signal \n");
+    //printf("received signal \n");
     if(info->si_pid == watchdog_pid){
         gettimeofday(&prev_t, NULL);
         log_receipt(prev_t);
@@ -94,11 +107,48 @@ int main(int argc, char *argv[])
     int sleep_duration = sleep_durations[process_num];
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
-    
-    while (1) 
-    {   
-        printf("Sleepy process\n");
-        usleep(sleep_duration);
-    } 
+
+    initscr();
+    start_color();
+    curs_set(0);
+    timeout(100);
+    srand(time(NULL));
+
+    init_pair(1, COLOR_BLACK, COLOR_WHITE);
+
+    struct Drone drone = {0, 0, 'W', 1};
+
+    // Create a shared memory segment
+    int shm_id = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
+    if (shm_id < 0) {
+        perror("shmget");
+        return -1;
+    }
+
+    // Attach the shared memory segment to our process's address space
+    struct Drone *shared_drone  = (struct Drone *) shmat(shm_id, NULL, 0);
+    if (shared_drone  == (struct Drone *) -1) {
+        perror("shmat");
+        return -1;
+    }
+
+    shared_drone->symbol = drone.symbol;
+    shared_drone->color_pair = drone.color_pair;
+    while(1){
+    // Use the shared memory
+    shared_drone ->x = drone.x;
+    shared_drone ->y = drone.y;
+    mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position 
+    refresh(); // Refresh the screen to show the changes
+    clear(); // Clear the screen of all previously-printed characters
+
+    sleep(3); // Wait for 5 seconds so you can see the output
+    }
+    // Detach the shared memory segment from our process's address space
+    if (shmdt(shared_drone) == -1) {
+        perror("shmdt");
+        return -1;
+    }
+    endwin();
     return 0; 
 } 
