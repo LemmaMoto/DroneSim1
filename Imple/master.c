@@ -11,16 +11,15 @@
 #include "include/constants.h"
 
 
-
 int main(int argc, char *argv[])
 {
     // pids for all children
     pid_t child_watchdog;
-    pid_t child_writer0;
-    pid_t child_reader0;
-    pid_t child_writer1;
-    pid_t child_reader1;
-    pid_t child_server;
+    pid_t child_process0;
+    pid_t child_process1;
+    pid_t child_process2;
+    pid_t child_process3;
+
 
     // Make a log file with the start time/date
     time_t now = time(NULL);
@@ -30,7 +29,7 @@ int main(int argc, char *argv[])
     char logfile_name[80];
 
     //There should be a check that the log folder exists but I haven't done that
-    sprintf(logfile_name, "./log/watchdog%i-%i-%i_%i:%i:%i.txt", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    sprintf(logfile_name, "./log/watchdog/watchdog%i-%i-%i_%i:%i:%i.txt", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
 
     fopen(PID_FILE_PW, "w");
     char *fnames[NUM_PROCESSES] = PID_FILE_SP;
@@ -40,98 +39,79 @@ int main(int argc, char *argv[])
         fopen(fnames[i], "w");
     }
 
+
     int res;
-    int num_children = 0;
+    int num_children=0;
 
-   // Create watchdog
-child_watchdog = fork();
-if (child_watchdog < 0) {
-    perror("Fork");
-    return -1;
-}
-
-if (child_watchdog == 0) {
-    char pid1_str[10], pid2_str[10], pid3_str[10];
-    sprintf(pid1_str, "%d", child_reader0);
-    sprintf(pid2_str, "%d", child_writer0);
-    sprintf(pid3_str, "%d", child_server);
-
-    char * arg_list[] = { "konsole", "-e", "./watchdog", logfile_name, pid1_str, pid2_str, pid3_str, NULL};
-    execvp("konsole", arg_list);
-    return 0;
-}
-    num_children += 1;
-
-    // Server
-    child_server = fork();
-    if (child_server < 0) {
+    // Create watchdog
+    child_watchdog = fork();
+    if (child_watchdog < 0) {
         perror("Fork");
         return -1;
     }
 
-    if (child_server == 0) {
-        char * arg_list[] = { "konsole", "-e", "./server", NULL };
-        execvp("konsole", arg_list);
-	return 0;
-    }
-    num_children += 1;
-    
-     child_writer0 = fork();
-    if (child_writer0 < 0) {
-        perror("Fork");
-        return -1;
-    }
-
-    if (child_writer0 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./writer", "0", NULL };
-        execvp("konsole", arg_list);
-	return 0;
-    }
-    num_children += 1;
-    
-    // writer 1
-    child_writer1 = fork();
-    if (child_writer1 < 0) {
-        perror("Fork");
-        return -1;
-    }
-
-    if (child_writer1 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./writer", "1", NULL };
+    if (child_watchdog == 0) {
+        char * arg_list[] = { "konsole", "-e", "./watchdog", logfile_name, NULL};
         execvp("konsole", arg_list);
 	return 0;
     }
     num_children += 1;
 
-    // reader 0
-    child_reader0 = fork();
-    if (child_reader0 < 0) {
+
+    // Make child processes
+    child_process0 = fork();
+    if (child_process0 < 0) {
         perror("Fork");
         return -1;
     }
 
-    if (child_reader0 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./reader", "0", NULL };
+    if (child_process0 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./server", "0", logfile_name, NULL };
         execvp("konsole", arg_list);
 	return 0;
     }
     num_children += 1;
 
-    // reader 1
-    child_reader1 = fork();
-    if (child_reader1 < 0) {
+    child_process1 = fork();
+    if (child_process1 < 0) {
         perror("Fork");
         return -1;
     }
 
-    if (child_reader1 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./reader", "1", NULL };
+    if (child_process1 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./drone", "1", logfile_name, NULL };
         execvp("konsole", arg_list);
 	return 0;
     }
     num_children += 1;
-    
-    //wait for all children to terminate
+
+    child_process2 = fork();
+    if (child_process2 < 0) {
+        perror("Fork");
+        return -1;
+    }
+
+    if (child_process2 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./input","2", logfile_name, NULL };
+        execvp("konsole", arg_list);
+	return 0;
+    }
+    num_children += 1;
+
+    child_process3 = fork();
+    if (child_process3 < 0) {
+        perror("Fork");
+        return -1;
+    }
+
+    if (child_process3 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./world", "3", logfile_name, NULL };
+        execvp("konsole", arg_list);
+        return 0;
+    }
+    num_children += 1;
+
+    // Wait for all children to die
     for(int i = 0; i < num_children; i ++){
         wait(&res);
     }
