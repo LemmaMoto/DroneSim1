@@ -13,33 +13,6 @@ int pipe_to_drone[2];
 int pipe_to_ui[2];
 pid_t drone_pid;
 
-void drone_process() {
-    // Chiudi l'estremità di scrittura del pipe verso il drone
-    close(pipe_to_drone[PIPE_WRITE]);
-    
-    // Loop principale del processo del drone
-    while (1) {
-        // Leggi il comando dal pipe
-        char command;
-        read(pipe_to_drone[PIPE_READ], &command, sizeof(char));
-
-        // Esegui il comando
-        if (command == 'U') {
-            // Il drone si muove verso l'alto
-            // Aggiungi qui la tua logica di movimento del drone
-        } else if (command == 'D') {
-            // Il drone si muove verso il basso
-            // Aggiungi qui la tua logica di movimento del drone
-        } else if (command == 'L') {
-            // Il drone si muove a sinistra
-            // Aggiungi qui la tua logica di movimento del drone
-        } else if (command == 'R') {
-            // Il drone si muove a destra
-            // Aggiungi qui la tua logica di movimento del drone
-        }
-    }
-}
-
 void ui_process() {
     // Chiudi l'estremità di lettura del pipe verso l'interfaccia utente
     close(pipe_to_ui[PIPE_READ]);
@@ -118,14 +91,7 @@ int main() {
     pipe(pipe_to_drone);
     pipe(pipe_to_ui);
 
-    // Crea un processo figlio per il drone
-    if ((drone_pid = fork()) == 0) {
-        drone_process();
-        exit(0);
-    } else {
-        // Processo genitore, esegui l'interfaccia utente
-        ui_process();
-    }
+    ui_process();
 
     // Termina il processo del drone
     kill(drone_pid, SIGKILL);

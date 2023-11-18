@@ -10,6 +10,9 @@
 #include <sys/wait.h>
 #include "include/constants.h"
 
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
 
 int main(int argc, char *argv[])
 {
@@ -20,6 +23,20 @@ int main(int argc, char *argv[])
     pid_t child_process2;
     pid_t child_process3;
 
+    char read_fd[10];
+    char write_fd[10];
+
+    
+
+    // Create a pipe
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        return -1;
+    }
+
+    sprintf(read_fd, "%d", pipefd[PIPE_READ]);
+    sprintf(write_fd, "%d", pipefd[PIPE_WRITE]);
 
     // Make a log file with the start time/date
     time_t now = time(NULL);
@@ -79,9 +96,10 @@ int main(int argc, char *argv[])
     }
 
     if (child_process1 == 0) {
+        close(pipefd[PIPE_WRITE]);
         char * arg_list[] = { "konsole", "-e", "./drone", "1", logfile_name, NULL };
         execvp("konsole", arg_list);
-	return 0;
+        return 0;
     }
     num_children += 1;
 
@@ -92,9 +110,10 @@ int main(int argc, char *argv[])
     }
 
     if (child_process2 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./input","2", logfile_name, NULL };
+        close(pipefd[PIPE_READ]);
+        char * arg_list[] = { "konsole", "-e", "./input", "2", logfile_name, NULL };
         execvp("konsole", arg_list);
-	return 0;
+        return 0;
     }
     num_children += 1;
 
@@ -111,10 +130,16 @@ int main(int argc, char *argv[])
     }
     num_children += 1;
 
+    
+
     // Wait for all children to die
     for(int i = 0; i < num_children; i ++){
         wait(&res);
     }
+
+    close(pipefd[0]);
+    close(pipefd[1]);
+    printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
 
     return 0;
 }

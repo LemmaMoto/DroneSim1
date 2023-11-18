@@ -8,13 +8,19 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ncurses.h>
 #include "include/constants.h"
+
+#define PIPE_READ 0
+#define PIPE_WRITE 1
 
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
 char logfile_name[80];
+
+int pipefd[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -26,7 +32,6 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    printf("received signal \n");
     if(info->si_pid == watchdog_pid){
         gettimeofday(&prev_t, NULL);
         log_receipt(prev_t);
@@ -35,6 +40,7 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[]) 
 {
+    printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
     int process_num;
     if(argc == 3){
         sscanf(argv[1],"%d", &process_num);  
@@ -95,10 +101,17 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
     
-    while (1) 
-    {   
-        printf("Sleepy process\n");
-        usleep(sleep_duration);
-    } 
+    char command;
+
+while (1) 
+{   
+    clear();
+    // Non chiudere il pipe dopo ogni lettura
+    if(read(pipefd[PIPE_READ], &command, sizeof(char)) > 0) {
+        mvprintw(0, 0, "Comando inviato: %c\n", command);
+        refresh();
+    }
+}  
+    close(pipefd[PIPE_READ]);
     return 0; 
 } 

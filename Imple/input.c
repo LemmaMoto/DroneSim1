@@ -9,12 +9,102 @@
 #include <stdlib.h>
 #include <time.h>
 #include "include/constants.h"
+#include <ncurses.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+
+#define PIPE_READ 0
+#define PIPE_WRITE 1
 
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
 char logfile_name[80];
+
+// Dichiarazioni delle variabili globali
+int pipe_to_ui[2];
+int pipefd[2];
+
+pid_t drone_pid;
+
+
+void ui_process() {
+    // Chiudi l'estremità di lettura del pipe verso l'interfaccia utente
+    close(pipe_to_ui[PIPE_READ]);
+    
+    // Inizializza ncurses
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+
+    // Loop principale dell'interfaccia utente
+    while (1) {
+        int ch = getch();
+        char command = '\0';
+
+        // Mappa i tasti per comandare il drone
+        switch (ch) {
+            case 'w':
+                command = 'w'; // forza verso USx
+                break;
+            case 'e':
+                command = 'e'; // forza verso U
+                break;
+            case 'r':
+                command = 'r'; // forza verso UDx
+                break;
+            case 's':
+                command = 's'; // forza verso Sx
+                break;
+            case 'd':
+                command = 'd'; // annulla forza 
+                break;
+            case 'f':
+                command = 'f';  // forza verso Dx
+                break;
+            case 'x':
+                command = 'x';  // forza verso DSx
+                break;
+            case 'c':
+                command = 'c'; // forza verso D
+                break;
+            case 'v':
+                command = 'v'; // forza verso DDx
+                break;
+            case 'q':
+                command = 'Q'; // Termina il programma
+                break;
+            default:
+                command = '\0'; // Comando non valido
+                break;
+        }
+
+        // Invia il comando al drone attraverso il pipe
+        
+        write(pipefd[PIPE_WRITE], &command, sizeof(char));
+        if (command == 'Q') {
+            mvprintw(0, 0, "Terminazione in corso...\n");
+            refresh();
+            sleep(3);
+            break;
+        }
+        if (command == '\0') {
+            mvprintw(0, 0, "Comando non valido\n");
+        } else {
+            mvprintw(0, 0, "Comando inviato: %c\n", command);
+            printf("%c", command);
+        }
+    }
+
+    // Chiudi ncurses
+    endwin();
+}
+
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -26,7 +116,6 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    printf("received signal \n");
     if(info->si_pid == watchdog_pid){
         gettimeofday(&prev_t, NULL);
         log_receipt(prev_t);
@@ -35,6 +124,8 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[]) 
 {
+    
+    printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
     int process_num;
     if(argc == 3){
         sscanf(argv[1],"%d", &process_num);  
@@ -95,10 +186,17 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
     
-    while (1) 
-    {   
-        printf("Sleepy process\n");
-        usleep(sleep_duration);
-    } 
+
+
+    // Crea i pipe per la comunicazione tra i processi
+    pipe(pipefd);
+    pipe(pipe_to_ui);
+
+    ui_process();
+
+    // Termina il processo del drone
+    kill(drone_pid, SIGKILL); 
+
     return 0; 
+
 } 

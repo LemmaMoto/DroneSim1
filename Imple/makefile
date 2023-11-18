@@ -9,9 +9,9 @@ master:
 server:
 	gcc server.c -o build/server
 drone:
-	gcc drone.c -o build/drone
+	gcc drone.c -o build/drone -lncurses
 input:
-	gcc input.c -o build/input
+	gcc input.c -o build/input -lncurses
 world:	
 	gcc world.c -o build/world -lncurses
 watchdog:
