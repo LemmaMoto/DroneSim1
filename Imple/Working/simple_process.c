@@ -1,4 +1,3 @@
-//COMBINARE AL SERVER
 #include <stdio.h> 
 #include <string.h> 
 #include <fcntl.h> 
@@ -48,7 +47,7 @@ int main(int argc, char *argv[])
     // Publish your pid
     process_id = getpid();
 
-    char *fnames[NUM_PROCESSES] = PID_FILE_SP;
+    char *fnames[NUM_PROC_GENERATED] = PID_FILE_SP;
 
     FILE *pid_fp = fopen(fnames[process_num], "w");
     fprintf(pid_fp, "%d", process_id);
@@ -91,9 +90,9 @@ int main(int argc, char *argv[])
     }
 
     // Read how long to sleep process for
-    int sleep_durations[3] = PROCESS_SLEEPS_US;
+    int sleep_durations[NUM_PROC_GENERATED] = PROCESS_SLEEPS_US;
     int sleep_duration = sleep_durations[process_num];
-    char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
+    char *process_names[NUM_PROC_GENERATED] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
     
     while (1) 

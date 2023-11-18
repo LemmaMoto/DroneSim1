@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include <time.h>
 #include "include/constants.h"
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_KEY 1234 // Define a key for the shared memory segment
+
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -95,10 +100,33 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
     
+    int shm_id = shmget(SHM_KEY, sizeof(int), 0666);
+    if (shm_id < 0) {
+        perror("shmget");
+        return -1;
+    }
+
+    // Attach the shared memory segment to our process's address space
+    int *shared_var = (int *) shmat(shm_id, NULL, 0);
+    if (shared_var == (int *) -1) {
+        perror("shmat");
+        return -1;
+    }
+
+    // Use the shared memory
+    printf("Received from server: %d\n", *shared_var);
+
     while (1) 
     {   
         printf("Sleepy process\n");
         usleep(sleep_duration);
-    } 
+    }
+
+    // Detach the shared memory segment from our process's address space
+    if (shmdt(shared_var) == -1) {
+        perror("shmdt");
+        return -1;
+    }
+
     return 0; 
 } 

@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     pid_t child_process0;
     pid_t child_process1;
     pid_t child_process2;
+    pid_t child_process3;
 
 
     // Make a log file with the start time/date
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     char logfile_name[80];
 
     //There should be a check that the log folder exists but I haven't done that
-    sprintf(logfile_name, "./log/watchdog%i-%i-%i_%i:%i:%i.txt", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    sprintf(logfile_name, "./log/watchdog/watchdog%i-%i-%i_%i:%i:%i.txt", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
 
     fopen(PID_FILE_PW, "w");
     char *fnames[NUM_PROCESSES] = PID_FILE_SP;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
 
 
     int res;
-    int num_children;
+    int num_children=0;
 
     // Create watchdog
     child_watchdog = fork();
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
     }
 
     if (child_process0 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./simple_process", "0", logfile_name, NULL };
+        char * arg_list[] = { "konsole", "-e", "./server", "0", logfile_name, NULL };
         execvp("konsole", arg_list);
 	return 0;
     }
@@ -78,7 +79,7 @@ int main(int argc, char *argv[])
     }
 
     if (child_process1 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./simple_process", "1", logfile_name, NULL };
+        char * arg_list[] = { "konsole", "-e", "./drone", "1", logfile_name, NULL };
         execvp("konsole", arg_list);
 	return 0;
     }
@@ -91,9 +92,22 @@ int main(int argc, char *argv[])
     }
 
     if (child_process2 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./simple_process", "2", logfile_name, NULL };
+        char * arg_list[] = { "konsole", "-e", "./input","2", logfile_name, NULL };
         execvp("konsole", arg_list);
 	return 0;
+    }
+    num_children += 1;
+
+    child_process3 = fork();
+    if (child_process3 < 0) {
+        perror("Fork");
+        return -1;
+    }
+
+    if (child_process3 == 0) {
+        char * arg_list[] = { "konsole", "-e", "./world", "3", logfile_name, NULL };
+        execvp("konsole", arg_list);
+        return 0;
     }
     num_children += 1;
 
