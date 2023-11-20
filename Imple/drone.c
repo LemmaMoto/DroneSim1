@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <ncurses.h>
+#include <errno.h>
 #include "include/constants.h"
 
 #define PIPE_READ 0
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
         printf("wrong args\n"); 
         return -1;
     }
-
+    
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
     
     // Publish your pid
@@ -107,29 +108,42 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
     
+    
     int flags = fcntl(pipefd[PIPE_READ], F_GETFL, 0);
     fcntl(pipefd[PIPE_READ], F_SETFL, flags | O_NONBLOCK);
-    while (1) {   
+
+
+
+    while (1) {  
         FD_ZERO(&read_fds);
         FD_SET(pipefd[PIPE_READ], &read_fds);
 
         // Timeout after 1 second
         tv.tv_sec = 1;
         tv.tv_usec = 0;
-
+        clear();
         retval = select(pipefd[PIPE_READ] + 1, &read_fds, NULL, NULL, &tv);
         if (retval == -1) {
-            perror("select");
+            if (errno == EINTR) {
+                // The call was interrupted by a signal, just continue with the loop
+                continue;
+            } else {
+                perror("select");
+            }
         } else if (retval) {
             char command;
             ssize_t bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
             if (bytesRead > 0) {
-                printf("Comando inviato: %c\n", command);
+                mvprintw(0, 0, "Comando inviato: %c\n", command);
             }
         } else {
-            printf("No data within one second.\n");
+            mvprintw(0, 0, "No command sent");
         }
+        refresh();
     }
-    close(pipefd[PIPE_READ]);
+
+    // Close the write end of the pipe when you're done with it
+    close(pipefd[PIPE_WRITE]);
+
     return 0; 
 } 

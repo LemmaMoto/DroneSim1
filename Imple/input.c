@@ -121,17 +121,25 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[]) 
 {
+    // Set up sigaction for receiving signals from processes
+    struct sigaction p_action;
+    p_action.sa_flags = SA_SIGINFO;
+    p_action.sa_sigaction = watchdog_handler;
+    if(sigaction(SIGUSR1, &p_action, NULL) < 0)
+    {
+        perror("sigaction");
+    }
     
     int process_num;
     if(argc == 4){
         sscanf(argv[1],"%d", &process_num); 
         sscanf(argv[2],"%d", &pipefd[PIPE_READ]);
         sscanf(argv[3],"%d", &pipefd[PIPE_WRITE]); 
+
     } else {
         printf("wrong args\n"); 
         return -1;
     }
-
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
     
     // Publish your pid
@@ -170,14 +178,6 @@ int main(int argc, char *argv[])
     printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
 
-    // Set up sigaction for receiving signals from processes
-    struct sigaction p_action;
-    p_action.sa_flags = SA_SIGINFO;
-    p_action.sa_sigaction = watchdog_handler;
-    if(sigaction(SIGUSR1, &p_action, NULL) < 0)
-    {
-        perror("sigaction");
-    }
 
     // Read how long to sleep process for
     int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;
@@ -187,10 +187,10 @@ int main(int argc, char *argv[])
     
 
 
-    // Crea i pipe per la comunicazione tra i processi
-    pipe(pipefd);
-
     ui_process();
+
+    
+    
 
     // Termina il processo del drone
     kill(drone_pid, SIGKILL); 
