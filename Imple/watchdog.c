@@ -12,7 +12,7 @@
 pid_t sp_pids[NUM_PROCESSES];
 struct timeval prev_ts[NUM_PROCESSES];
 int process_data_recieved[NUM_PROCESSES] = {0, 0, 0, 0};
-char logfile_name[80];
+char logfile_name[256] = LOG_FILE_NAME;
 int logfile_line = 0; // line to read from in the log file
 char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
 
@@ -179,14 +179,6 @@ int main(int argc, char *argv[])
         fscanf(pid_fp, "%d", &sp_pids[i]);
 
         fclose(pid_fp);
-    }
-
-    // Extract log file name
-    if(argc == 2){
-        snprintf(logfile_name, 80, "%s", argv[1]);
-    } else {
-        printf("wrong args\n"); 
-        return -1;
     }
 
     // initializes/clears contents of logfile

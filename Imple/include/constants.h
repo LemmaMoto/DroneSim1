@@ -19,6 +19,6 @@
 #define PID_FILE_PW "/tmp/pid_filew" /* filename for watchdog process pid */
 #define PROCESS_NAMES {"server", "drone", "input", "world"}  /* process names used for ncurses windows and in log file */
 
-
+#define LOG_FILE_NAME "./log/watchdog/watchdog.txt"
 
 #endif // !CONSTANTS_H

@@ -19,7 +19,7 @@ pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
-char logfile_name[80];
+char logfile_name[256]= LOG_FILE_NAME;
 
 struct Drone {
     int x;
@@ -49,9 +49,8 @@ int main(int argc, char *argv[])
 {
     struct Drone drone = {0, 0, 'W', 1};
     int process_num;
-    if(argc == 3){
+    if(argc == 2){
         sscanf(argv[1],"%d", &process_num);  
-        snprintf(logfile_name, 80, "%s", argv[2]);
     } else {
         printf("wrong args\n"); 
         return -1;

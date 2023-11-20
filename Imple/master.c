@@ -26,7 +26,15 @@ int main(int argc, char *argv[])
     char read_fd[10];
     char write_fd[10];
 
-    
+    char logfile_name[256];
+    sprintf(logfile_name, LOG_FILE_NAME);
+    remove(logfile_name);
+
+    FILE *logfile = fopen(logfile_name, "w");
+    if (logfile == NULL) {
+        perror("fopen");
+        return -1;
+    }
 
     // Create a pipe
     int pipefd[2];
@@ -38,15 +46,9 @@ int main(int argc, char *argv[])
     sprintf(read_fd, "%d", pipefd[PIPE_READ]);
     sprintf(write_fd, "%d", pipefd[PIPE_WRITE]);
 
-    // Make a log file with the start time/date
-    time_t now = time(NULL);
-    struct tm *timenow;
-    timenow = gmtime(&now);
-
-    char logfile_name[80];
 
     //There should be a check that the log folder exists but I haven't done that
-    sprintf(logfile_name, "./log/watchdog/watchdog%i-%i-%i_%i:%i:%i.txt", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    //sprintf(logfile_name, "./log/watchdog/watchdog%i-%i-%i_%i:%i:%i.txt", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
 
     fopen(PID_FILE_PW, "w");
     char *fnames[NUM_PROCESSES] = PID_FILE_SP;
@@ -68,7 +70,7 @@ int main(int argc, char *argv[])
     }
 
     if (child_watchdog == 0) {
-        char * arg_list[] = { "konsole", "-e", "./watchdog", logfile_name, NULL};
+        char * arg_list[] = { "konsole", "-e", "./watchdog", NULL};
         execvp("konsole", arg_list);
 	return 0;
     }
@@ -83,8 +85,8 @@ int main(int argc, char *argv[])
     }
 
     if (child_process0 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./server", "0", logfile_name, NULL };
-        execvp("konsole", arg_list);
+        char * arg_list[] = { "konsole", "-e", "./server", "0", NULL };
+        execvp("konsole", arg_list); 
 	return 0;
     }
     num_children += 1;
@@ -97,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (child_process1 == 0) {
         close(pipefd[PIPE_WRITE]);
-        char * arg_list[] = { "konsole", "-e", "./drone", "1", logfile_name, NULL };
+        char * arg_list[] = { "konsole", "-e", "./drone", "1", NULL };
         execvp("konsole", arg_list);
         return 0;
     }
@@ -111,7 +113,7 @@ int main(int argc, char *argv[])
 
     if (child_process2 == 0) {
         close(pipefd[PIPE_READ]);
-        char * arg_list[] = { "konsole", "-e", "./input", "2", logfile_name, NULL };
+        char * arg_list[] = { "konsole", "-e", "./input", "2", NULL };
         execvp("konsole", arg_list);
         return 0;
     }
@@ -124,7 +126,7 @@ int main(int argc, char *argv[])
     }
 
     if (child_process3 == 0) {
-        char * arg_list[] = { "konsole", "-e", "./world", "3", logfile_name, NULL };
+        char * arg_list[] = { "konsole", "-e", "./world", "3", NULL };
         execvp("konsole", arg_list);
         return 0;
     }
