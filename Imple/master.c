@@ -23,8 +23,6 @@ int main(int argc, char *argv[])
     pid_t child_process2;
     pid_t child_process3;
 
-    char read_fd[10];
-    char write_fd[10];
 
     char logfile_name[256];
     sprintf(logfile_name, LOG_FILE_NAME);
@@ -43,8 +41,11 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    sprintf(read_fd, "%d", pipefd[PIPE_READ]);
-    sprintf(write_fd, "%d", pipefd[PIPE_WRITE]);
+    char pipe_read_str[10];
+    char pipe_write_str[10];
+    sprintf(pipe_read_str, "%d", pipefd[PIPE_READ]);
+    sprintf(pipe_write_str, "%d", pipefd[PIPE_WRITE]);
+
 
 
     //There should be a check that the log folder exists but I haven't done that
@@ -97,9 +98,10 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+
     if (child_process1 == 0) {
         close(pipefd[PIPE_WRITE]);
-        char * arg_list[] = { "konsole", "-e", "./drone", "1", NULL };
+        char * arg_list[] = { "konsole", "-e", "./drone", "1", pipe_read_str, pipe_write_str, NULL };
         execvp("konsole", arg_list);
         return 0;
     }
@@ -113,7 +115,7 @@ int main(int argc, char *argv[])
 
     if (child_process2 == 0) {
         close(pipefd[PIPE_READ]);
-        char * arg_list[] = { "konsole", "-e", "./input", "2", NULL };
+        char * arg_list[] = { "konsole", "-e", "./input", "2", pipe_read_str, pipe_write_str, NULL };
         execvp("konsole", arg_list);
         return 0;
     }

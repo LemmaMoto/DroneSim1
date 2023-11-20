@@ -26,15 +26,12 @@ struct timeval prev_t;
 char logfile_name[256]= LOG_FILE_NAME;
 
 // Dichiarazioni delle variabili globali
-int pipe_to_ui[2];
 int pipefd[2];
 
 pid_t drone_pid;
 
 
 void ui_process() {
-    // Chiudi l'estremità di lettura del pipe verso l'interfaccia utente
-    close(pipe_to_ui[PIPE_READ]);
     
     // Inizializza ncurses
     initscr();
@@ -97,6 +94,7 @@ void ui_process() {
                 mvprintw(0, 0, "Comando inviato: %c\n", command);
             }
         }
+        close(pipefd[PIPE_WRITE]);
         refresh();
     }
 
@@ -124,14 +122,17 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 int main(int argc, char *argv[]) 
 {
     
-    printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
     int process_num;
-    if(argc == 2){
-        sscanf(argv[1],"%d", &process_num);  
+    if(argc == 4){
+        sscanf(argv[1],"%d", &process_num); 
+        sscanf(argv[2],"%d", &pipefd[PIPE_READ]);
+        sscanf(argv[3],"%d", &pipefd[PIPE_WRITE]); 
     } else {
         printf("wrong args\n"); 
         return -1;
     }
+
+    printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
     
     // Publish your pid
     process_id = getpid();
@@ -188,7 +189,6 @@ int main(int argc, char *argv[])
 
     // Crea i pipe per la comunicazione tra i processi
     pipe(pipefd);
-    pipe(pipe_to_ui);
 
     ui_process();
 
