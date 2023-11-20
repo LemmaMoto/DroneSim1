@@ -78,6 +78,9 @@ void ui_process() {
                 break;
             case 'q':
                 command = 'Q'; // Termina il programma
+                mvprintw(0, 0, "Terminazione in corso...\n");
+                refresh();
+                sleep(3);
                 break;
             default:
                 command = '\0'; // Comando non valido
@@ -85,20 +88,16 @@ void ui_process() {
         }
 
         // Invia il comando al drone attraverso il pipe
-        
-        write(pipefd[PIPE_WRITE], &command, sizeof(char));
-        if (command == 'Q') {
-            mvprintw(0, 0, "Terminazione in corso...\n");
-            refresh();
-            sleep(3);
-            break;
+        if (command == 'w' || command == 'e' || command == 'r' || command == 's' || command == 'd' || command == 'f' || command == 'x' || command == 'c' || command == 'v' || command == 'Q'){
+            write(pipefd[PIPE_WRITE], &command, sizeof(char));
+            if (command == 'Q') {
+                break;
+            }
+            else if (command == 'w' || command == 'e' || command == 'r' || command == 's' || command == 'd' || command == 'f' || command == 'x' || command == 'c' || command == 'v') {
+                mvprintw(0, 0, "Comando inviato: %c\n", command);
+            }
         }
-        if (command == '\0') {
-            mvprintw(0, 0, "Comando non valido\n");
-        } else {
-            mvprintw(0, 0, "Comando inviato: %c\n", command);
-            printf("%c", command);
-        }
+        refresh();
     }
 
     // Chiudi ncurses
