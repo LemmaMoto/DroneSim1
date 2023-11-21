@@ -180,7 +180,8 @@ int main(int argc, char *argv[])
         else if (retval)
         {*/
             char command;
-            ssize_t bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
+            int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
+            
             if (bytesRead > 0)
             {
                 switch (command)
