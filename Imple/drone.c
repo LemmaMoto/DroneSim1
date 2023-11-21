@@ -15,6 +15,16 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
+#define M 1.0
+#define K 0.1
+
+// Initialize position and velocity
+double x = 0, y = 0;
+double vx = 0, vy = 0;
+
+// Initialize forces
+double fx = 0, fy = 0;
+
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
@@ -139,12 +149,49 @@ int main(int argc, char *argv[])
                 perror("select");
             }
         }
+
         else if (retval)
         {
             char command;
             ssize_t bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
             if (bytesRead > 0)
             {
+                // Update forces based on command
+                switch (command)
+                {
+                case 'w':
+                    fy += 1.0; // forza verso USx
+                    fx -= 1.0;
+                    break;
+                case 'e':
+                    fy += 1.0; // forza verso U
+                    break;
+                case 'r':
+                    fy += 1.0; // forza verso UDx
+                    fx += 1.0;
+                    break;
+                case 's':
+                    fx -= 1.0; // forza verso Sx
+                    break;
+                case 'd':
+                    fy = 0; // annulla forza
+                    fx = 0;
+                    break;
+                case 'f':
+                    fx += 1.0; // forza verso Dx
+                    break;
+                case 'x':
+                    fy -= 1.0; // forza verso DSx
+                    fx -= 1.0;
+                    break;
+                case 'c':
+                    fy -= 1.0; // forza verso D
+                    break;
+                case 'v':
+                    fy -= 1.0; // forza verso DDx
+                    fx += 1.0;
+                    break;
+                }
                 mvprintw(0, 0, "Comando inviato: %c\n", command);
             }
         }
@@ -152,6 +199,18 @@ int main(int argc, char *argv[])
         {
             mvprintw(0, 0, "No command sent");
         }
+
+        // Update velocity and position
+        double ax = fx / M;
+        double ay = fy / M;
+        vx += ax;
+        vy += ay;
+        x += vx;
+        y += vy;
+
+        // Apply friction
+        vx *= (1 - K);
+        vy *= (1 - K);
         refresh();
     }
 
