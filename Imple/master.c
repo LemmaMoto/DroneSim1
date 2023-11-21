@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
     int res;
     int num_children = 0;
-
+    
     // Create watchdog
     child_watchdog = fork();
     if (child_watchdog < 0)

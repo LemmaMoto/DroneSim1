@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -92,7 +91,7 @@ int main(int argc, char *argv[])
     }
 
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
-    close(pipefd[PIPE_WRITE]);
+    //close(pipefd[PIPE_WRITE]);
     
     // Publish your pid
     process_id = getpid();
@@ -138,8 +137,6 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-    int flags = fcntl(pipefd[PIPE_READ], F_GETFL, 0);
-    fcntl(pipefd[PIPE_READ], F_SETFL, flags | O_NONBLOCK);
 
     // Create a shared memory segment
     int shm_id = shmget(SHM_DRN, sizeof(struct Drone), IPC_CREAT | 0666);
@@ -160,7 +157,7 @@ int main(int argc, char *argv[])
     while (1)
     {
          
-        FD_ZERO(&read_fds);
+        /*FD_ZERO(&read_fds);
         FD_SET(pipefd[PIPE_READ], &read_fds);
 
         // Timeout after 1 second
@@ -181,7 +178,7 @@ int main(int argc, char *argv[])
             }
         }
         else if (retval)
-        {
+        {*/
             char command;
             ssize_t bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
             if (bytesRead > 0)
@@ -223,11 +220,16 @@ int main(int argc, char *argv[])
                 }
                 mvprintw(0, 0, "Comando inviato: %c\n", command);
             }
-        }
-        else
-        {
-            mvprintw(0, 0, "No command sent");
-        }
+            else if (bytesRead == 0)
+            {
+                printf("Nothing to read\n");
+            }
+            else
+            {
+                perror("read");
+            }
+        
+        
 
         // Update velocity and position
         double ax = fx / M;
@@ -261,7 +263,7 @@ int main(int argc, char *argv[])
     }
 
     // Close the write end of the pipe when you're done with it
-    close(pipefd[PIPE_WRITE]);
+    //close(pipefd[PIPE_WRITE]);
 
     return 0;
 }
