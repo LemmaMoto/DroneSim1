@@ -205,12 +205,14 @@ int main(int argc, char *argv[])
         double ay = fy / M;
         vx += ax;
         vy += ay;
-        x += vx;
-        y += vy;
+        
 
         // Apply friction
         vx *= (1 - K);
         vy *= (1 - K);
+
+        x += vx;
+        y += vy;
         refresh();
     }
 
