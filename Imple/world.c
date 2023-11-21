@@ -1,10 +1,10 @@
-#include <stdio.h> 
-#include <string.h> 
-#include <fcntl.h> 
-#include <sys/stat.h> 
+#include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/types.h> 
-#include <unistd.h> 
+#include <sys/types.h>
+#include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <time.h>
@@ -20,9 +20,10 @@ pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
-char logfile_name[256]= LOG_FILE_NAME;
+char logfile_name[256] = LOG_FILE_NAME;
 
-struct Drone {
+struct Drone
+{
     int x;
     int y;
     char symbol;
@@ -39,23 +40,27 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    //printf("received signal \n");
-    if(info->si_pid == watchdog_pid){
+    // printf("received signal \n");
+    if (info->si_pid == watchdog_pid)
+    {
         gettimeofday(&prev_t, NULL);
         log_receipt(prev_t);
-    }  
+    }
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
     int process_num;
-    if(argc == 2){
-        sscanf(argv[1],"%d", &process_num);  
-    } else {
-        printf("wrong args\n"); 
+    if (argc == 2)
+    {
+        sscanf(argv[1], "%d", &process_num);
+    }
+    else
+    {
+        printf("wrong args\n");
         return -1;
     }
-    
+
     // Publish your pid
     process_id = getpid();
 
@@ -67,20 +72,22 @@ int main(int argc, char *argv[])
 
     printf("Published pid %d \n", process_id);
 
-
     // Read watchdog pid
     FILE *watchdog_fp = NULL;
     struct stat sbuf;
 
     /* call stat, fill stat buffer, validate success */
-    if (stat (PID_FILE_PW, &sbuf) == -1) {
-        perror ("error-stat");
+    if (stat(PID_FILE_PW, &sbuf) == -1)
+    {
+        perror("error-stat");
         return -1;
     }
     // waits until the file has data
-    while (sbuf.st_size <= 0) {
-        if (stat (PID_FILE_PW, &sbuf) == -1) {
-            perror ("error-stat");
+    while (sbuf.st_size <= 0)
+    {
+        if (stat(PID_FILE_PW, &sbuf) == -1)
+        {
+            perror("error-stat");
             return -1;
         }
         usleep(50000);
@@ -96,7 +103,7 @@ int main(int argc, char *argv[])
     struct sigaction p_action;
     p_action.sa_flags = SA_SIGINFO;
     p_action.sa_sigaction = watchdog_handler;
-    if(sigaction(SIGUSR1, &p_action, NULL) < 0)
+    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
         perror("sigaction");
     }
@@ -119,35 +126,39 @@ int main(int argc, char *argv[])
 
     // Create a shared memory segment
     int shm_id = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
-    if (shm_id < 0) {
+    if (shm_id < 0)
+    {
         perror("shmget");
         return -1;
     }
 
     // Attach the shared memory segment to our process's address space
-    struct Drone *shared_drone  = (struct Drone *) shmat(shm_id, NULL, 0);
-    if (shared_drone  == (struct Drone *) -1) {
+    struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
+    if (shared_drone == (struct Drone *)-1)
+    {
         perror("shmat");
         return -1;
     }
 
     shared_drone->symbol = drone.symbol;
     shared_drone->color_pair = drone.color_pair;
-    while(1){
-    // Use the shared memory
-    shared_drone ->x = drone.x;
-    shared_drone ->y = drone.y;
-    mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position 
-    refresh(); // Refresh the screen to show the changes
-    clear(); // Clear the screen of all previously-printed characters
+    while (1)
+    {
+        // Use the shared memory
+        shared_drone->x = drone.x;
+        shared_drone->y = drone.y;
+        mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position
+        refresh();                                      // Refresh the screen to show the changes
+        clear();                                        // Clear the screen of all previously-printed characters
 
-    sleep(3); // Wait for 5 seconds so you can see the output
+        sleep(3); // Wait for 5 seconds so you can see the output
     }
     // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_drone) == -1) {
+    if (shmdt(shared_drone) == -1)
+    {
         perror("shmdt");
         return -1;
     }
     endwin();
-    return 0; 
-} 
+    return 0;
+}

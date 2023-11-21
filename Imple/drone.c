@@ -1,10 +1,10 @@
-#include <stdio.h> 
-#include <string.h> 
-#include <fcntl.h> 
-#include <sys/stat.h> 
+#include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/types.h> 
-#include <unistd.h> 
+#include <sys/types.h>
+#include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <time.h>
@@ -19,7 +19,7 @@ pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
-char logfile_name[256]= LOG_FILE_NAME;
+char logfile_name[256] = LOG_FILE_NAME;
 char command;
 
 int pipefd[2];
@@ -37,35 +37,39 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    if(info->si_pid == watchdog_pid){
+    if (info->si_pid == watchdog_pid)
+    {
         gettimeofday(&prev_t, NULL);
         log_receipt(prev_t);
-    }  
+    }
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
     // Set up sigaction for receiving signals from processes
     struct sigaction p_action;
     p_action.sa_flags = SA_SIGINFO;
     p_action.sa_sigaction = watchdog_handler;
-    if(sigaction(SIGUSR1, &p_action, NULL) < 0)
+    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
         perror("sigaction");
     }
 
     int process_num;
-    if(argc == 4){
-        sscanf(argv[1],"%d", &process_num);
-        sscanf(argv[2],"%d", &pipefd[PIPE_READ]);
-        sscanf(argv[3],"%d", &pipefd[PIPE_WRITE]);  
-    } else {
-        printf("wrong args\n"); 
+    if (argc == 4)
+    {
+        sscanf(argv[1], "%d", &process_num);
+        sscanf(argv[2], "%d", &pipefd[PIPE_READ]);
+        sscanf(argv[3], "%d", &pipefd[PIPE_WRITE]);
+    }
+    else
+    {
+        printf("wrong args\n");
         return -1;
     }
-    
+
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
-    
+
     // Publish your pid
     process_id = getpid();
 
@@ -77,20 +81,22 @@ int main(int argc, char *argv[])
 
     printf("Published pid %d \n", process_id);
 
-
     // Read watchdog pid
     FILE *watchdog_fp = NULL;
     struct stat sbuf;
 
     /* call stat, fill stat buffer, validate success */
-    if (stat (PID_FILE_PW, &sbuf) == -1) {
-        perror ("error-stat");
+    if (stat(PID_FILE_PW, &sbuf) == -1)
+    {
+        perror("error-stat");
         return -1;
     }
     // waits until the file has data
-    while (sbuf.st_size <= 0) {
-        if (stat (PID_FILE_PW, &sbuf) == -1) {
-            perror ("error-stat");
+    while (sbuf.st_size <= 0)
+    {
+        if (stat(PID_FILE_PW, &sbuf) == -1)
+        {
+            perror("error-stat");
             return -1;
         }
         usleep(50000);
@@ -107,14 +113,12 @@ int main(int argc, char *argv[])
     int sleep_duration = sleep_durations[process_num];
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
-    
-    
+
     int flags = fcntl(pipefd[PIPE_READ], F_GETFL, 0);
     fcntl(pipefd[PIPE_READ], F_SETFL, flags | O_NONBLOCK);
 
-
-
-    while (1) {  
+    while (1)
+    {
         FD_ZERO(&read_fds);
         FD_SET(pipefd[PIPE_READ], &read_fds);
 
@@ -123,20 +127,29 @@ int main(int argc, char *argv[])
         tv.tv_usec = 0;
         clear();
         retval = select(pipefd[PIPE_READ] + 1, &read_fds, NULL, NULL, &tv);
-        if (retval == -1) {
-            if (errno == EINTR) {
+        if (retval == -1)
+        {
+            if (errno == EINTR)
+            {
                 // The call was interrupted by a signal, just continue with the loop
                 continue;
-            } else {
+            }
+            else
+            {
                 perror("select");
             }
-        } else if (retval) {
+        }
+        else if (retval)
+        {
             char command;
             ssize_t bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
-            if (bytesRead > 0) {
+            if (bytesRead > 0)
+            {
                 mvprintw(0, 0, "Comando inviato: %c\n", command);
             }
-        } else {
+        }
+        else
+        {
             mvprintw(0, 0, "No command sent");
         }
         refresh();
@@ -145,5 +158,5 @@ int main(int argc, char *argv[])
     // Close the write end of the pipe when you're done with it
     close(pipefd[PIPE_WRITE]);
 
-    return 0; 
-} 
+    return 0;
+}

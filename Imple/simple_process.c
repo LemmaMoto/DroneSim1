@@ -1,10 +1,10 @@
-#include <stdio.h> 
-#include <string.h> 
-#include <fcntl.h> 
-#include <sys/stat.h> 
+#include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/types.h> 
-#include <unistd.h> 
+#include <sys/types.h>
+#include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <time.h>
@@ -27,23 +27,27 @@ void log_receipt(struct timeval tv)
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
     printf("received signal \n");
-    if(info->si_pid == watchdog_pid){
+    if (info->si_pid == watchdog_pid)
+    {
         gettimeofday(&prev_t, NULL);
         log_receipt(prev_t);
-    }  
+    }
 }
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
     int process_num;
-    if(argc == 3){
-        sscanf(argv[1],"%d", &process_num);  
+    if (argc == 3)
+    {
+        sscanf(argv[1], "%d", &process_num);
         snprintf(logfile_name, 80, "%s", argv[2]);
-    } else {
-        printf("wrong args\n"); 
+    }
+    else
+    {
+        printf("wrong args\n");
         return -1;
     }
-    
+
     // Publish your pid
     process_id = getpid();
 
@@ -55,20 +59,22 @@ int main(int argc, char *argv[])
 
     printf("Published pid %d \n", process_id);
 
-
     // Read watchdog pid
     FILE *watchdog_fp = NULL;
     struct stat sbuf;
 
     /* call stat, fill stat buffer, validate success */
-    if (stat (PID_FILE_PW, &sbuf) == -1) {
-        perror ("error-stat");
+    if (stat(PID_FILE_PW, &sbuf) == -1)
+    {
+        perror("error-stat");
         return -1;
     }
     // waits until the file has data
-    while (sbuf.st_size <= 0) {
-        if (stat (PID_FILE_PW, &sbuf) == -1) {
-            perror ("error-stat");
+    while (sbuf.st_size <= 0)
+    {
+        if (stat(PID_FILE_PW, &sbuf) == -1)
+        {
+            perror("error-stat");
             return -1;
         }
         usleep(50000);
@@ -84,7 +90,7 @@ int main(int argc, char *argv[])
     struct sigaction p_action;
     p_action.sa_flags = SA_SIGINFO;
     p_action.sa_sigaction = watchdog_handler;
-    if(sigaction(SIGUSR1, &p_action, NULL) < 0)
+    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
         perror("sigaction");
     }
@@ -94,11 +100,11 @@ int main(int argc, char *argv[])
     int sleep_duration = sleep_durations[process_num];
     char *process_names[NUM_PROC_GENERATED] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
-    
-    while (1) 
-    {   
+
+    while (1)
+    {
         printf("Sleepy process\n");
         usleep(sleep_duration);
-    } 
-    return 0; 
-} 
+    }
+    return 0;
+}

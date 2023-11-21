@@ -3,19 +3,18 @@
 #include <time.h>
 #include "include/constants.h"
 #include <signal.h>
-#include <fcntl.h> 
-#include <sys/stat.h> 
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/types.h> 
-#include <unistd.h> 
+#include <sys/types.h>
+#include <unistd.h>
 
 pid_t sp_pids[NUM_PROCESSES];
 struct timeval prev_ts[NUM_PROCESSES];
 int process_data_recieved[NUM_PROCESSES] = {0, 0, 0, 0};
 char logfile_name[256] = LOG_FILE_NAME;
-int logfile_line = 0; // line to read from in the log file
+int logfile_line = 0;                               // line to read from in the log file
 char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
-
 
 // logs time update to file
 // void log_receipt(pid_t process_id, char *process_name, struct timeval tv)
@@ -39,9 +38,9 @@ char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
 
 void check_log_file()
 {
-    FILE* file = fopen(logfile_name, "r"); 
-    char line[256]; 
-    int i = 0; 
+    FILE *file = fopen(logfile_name, "r");
+    char line[256];
+    int i = 0;
     char process_name[80];
     int process_id;
     long seconds;
@@ -49,21 +48,21 @@ void check_log_file()
     int p_idx;
 
     // skip all data until new lines
-    while (i < logfile_line) 
-    { 
-        i++; 
+    while (i < logfile_line)
+    {
+        i++;
         fgets(line, sizeof(line), file);
-    } 
-    
-    while (fgets(line, sizeof(line), file)) 
-    { 
+    }
+
+    while (fgets(line, sizeof(line), file))
+    {
         sscanf(line, "%d %ld %ld", &process_id, &seconds, &microseconds);
 
         // Get index of process from its id
         p_idx = 0;
-        while(process_id != sp_pids[p_idx] && p_idx < NUM_PROCESSES)
+        while (process_id != sp_pids[p_idx] && p_idx < NUM_PROCESSES)
         {
-            p_idx ++;
+            p_idx++;
         }
 
         // Update prev ts
@@ -71,9 +70,9 @@ void check_log_file()
         prev_ts[p_idx].tv_usec = microseconds;
         process_data_recieved[p_idx] = 1;
         i++;
-    } 
+    }
     logfile_line = i;
-    fclose(file); 
+    fclose(file);
 }
 
 // creates a window with the correct height, draws a box around it and refreshes
@@ -81,14 +80,14 @@ WINDOW *create_newwin(int height, int width, int starty, int startx)
 {
     WINDOW *local_win;
     local_win = newwin(height, width, starty, startx);
-    box(local_win, 0 , 0);
+    box(local_win, 0, 0);
     /* 0, 0 gives default characters
-    * for the vertical and horizontal
-    * lines
-    */
+     * for the vertical and horizontal
+     * lines
+     */
     wrefresh(local_win);
     /* Show that box
-    */
+     */
     return local_win;
 }
 
@@ -107,13 +106,13 @@ int update_window_text(WINDOW **windows)
     gettimeofday(&read_time, NULL);
     double elapsed;
 
-    for(int i = 0; i < NUM_PROCESSES; i++)
+    for (int i = 0; i < NUM_PROCESSES; i++)
     {
         if (process_data_recieved[i])
         {
             getmaxyx(windows[i], window_height, window_width);
             elapsed = get_elapsed_time_s(read_time, prev_ts[i]);
-            if(elapsed > PROCESS_TIMEOUT_S)
+            if (elapsed > PROCESS_TIMEOUT_S)
             {
                 // wattron(windows[i], COLOR_PAIR(1))
                 return -1;
@@ -122,10 +121,9 @@ int update_window_text(WINDOW **windows)
             {
                 wattron(windows[i], COLOR_PAIR(3));
             }
-            mvwprintw(windows[i], window_height/2, window_width - 20, "Time elapsed: %05.3f", elapsed);
+            mvwprintw(windows[i], window_height / 2, window_width - 20, "Time elapsed: %05.3f", elapsed);
             wrefresh(windows[i]);
         }
-        
     }
     return 0;
 }
@@ -133,9 +131,9 @@ int update_window_text(WINDOW **windows)
 // Terminates all watched processes
 void terminate_all_watched_processes()
 {
-    for(int i = 0; i < NUM_PROCESSES; i ++)
+    for (int i = 0; i < NUM_PROCESSES; i++)
     {
-        if(kill(sp_pids[i], SIGKILL) < 0)
+        if (kill(sp_pids[i], SIGKILL) < 0)
         {
             perror("kill");
         }
@@ -144,12 +142,12 @@ void terminate_all_watched_processes()
 
 int main(int argc, char *argv[])
 {
-    //publish the watchdog pid
+    // publish the watchdog pid
     pid_t watchdog_pid = getpid();
 
     FILE *watchdog_fp = fopen(PID_FILE_PW, "w");
     fprintf(watchdog_fp, "%d", watchdog_pid);
-    fclose(watchdog_fp); 
+    fclose(watchdog_fp);
 
     // Reading in pids for other processes
     FILE *pid_fp = NULL;
@@ -157,18 +155,20 @@ int main(int argc, char *argv[])
 
     char *fnames[NUM_PROCESSES] = PID_FILE_SP;
 
-    for(int i = 0; i < NUM_PROCESSES; i++)
+    for (int i = 0; i < NUM_PROCESSES; i++)
     {
         /* call stat, fill stat buffer, validate success */
-        if (stat (fnames[i], &sbuf) == -1) {
-            perror ("error-stat");
+        if (stat(fnames[i], &sbuf) == -1)
+        {
+            perror("error-stat");
             return -1;
         }
 
-
-        while (sbuf.st_size <= 0) {
-            if (stat (fnames[i], &sbuf) == -1) {
-                perror ("error-stat");
+        while (sbuf.st_size <= 0)
+        {
+            if (stat(fnames[i], &sbuf) == -1)
+            {
+                perror("error-stat");
                 return -1;
             }
             usleep(50000);
@@ -220,13 +220,13 @@ int main(int argc, char *argv[])
     gettimeofday(&process_start_time, NULL);
     int count;
 
-    while(1)
+    while (1)
     {
         // Check log file for new entries
         check_log_file();
 
         // update_window_text returns -1 if a process has timed out
-        if(update_window_text(windows) < 0)
+        if (update_window_text(windows) < 0)
         {
             terminate_all_watched_processes();
 
@@ -239,23 +239,22 @@ int main(int argc, char *argv[])
             fclose(lf_fp);
             return -1;
         }
-        
+
         if (count == PROCESS_SIGNAL_INTERVAL)
         {
             // Send new signal
-            for(int i = 0; i < NUM_PROCESSES; i ++)
+            for (int i = 0; i < NUM_PROCESSES; i++)
             {
-                if(kill(sp_pids[i], SIGUSR1) < 0)
+                if (kill(sp_pids[i], SIGUSR1) < 0)
                 {
                     // perror("kill");  //This does weird things to the ncurses window if I leave it in
                 }
             }
             count = 0;
         }
-        count ++;
-        
+        count++;
+
         usleep(WATCHDOG_SLEEP_US);
-        
     }
 
     return 0;
