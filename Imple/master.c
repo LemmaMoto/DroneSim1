@@ -101,7 +101,6 @@ int main(int argc, char *argv[])
 
     if (child_process1 == 0)
     {
-        close(pipefd[PIPE_WRITE]);
         char *arg_list[] = {"konsole", "-e", "./drone", "1", pipe_read_str, pipe_write_str, NULL};
         execvp("konsole", arg_list);
         return 0;
@@ -117,7 +116,6 @@ int main(int argc, char *argv[])
 
     if (child_process2 == 0)
     {
-        close(pipefd[PIPE_READ]);
         char *arg_list[] = {"konsole", "-e", "./input", "2", pipe_read_str, pipe_write_str, NULL};
         execvp("konsole", arg_list);
         return 0;

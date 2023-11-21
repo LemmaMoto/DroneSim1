@@ -11,6 +11,10 @@
 #include <ncurses.h>
 #include <errno.h>
 #include "include/constants.h"
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SHM_DRN 12
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -31,6 +35,15 @@ char *process_name;
 struct timeval prev_t;
 char logfile_name[256] = LOG_FILE_NAME;
 char command;
+
+struct Drone
+{
+    int x;
+    int y;
+    char symbol;
+    short color_pair;
+};
+struct Drone drone = {0, 0, 'W', 1};
 
 int pipefd[2];
 fd_set read_fds;
@@ -79,7 +92,8 @@ int main(int argc, char *argv[])
     }
 
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
-
+    close(pipefd[PIPE_WRITE]);
+    
     // Publish your pid
     process_id = getpid();
 
@@ -127,8 +141,25 @@ int main(int argc, char *argv[])
     int flags = fcntl(pipefd[PIPE_READ], F_GETFL, 0);
     fcntl(pipefd[PIPE_READ], F_SETFL, flags | O_NONBLOCK);
 
+    // Create a shared memory segment
+    int shm_id = shmget(SHM_DRN, sizeof(struct Drone), IPC_CREAT | 0666);
+    if (shm_id < 0)
+    {
+        perror("shmget");
+        return -1;
+    }
+
+    // Attach the shared memory segment to our process's address space
+    struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
+    if (shared_drone == (struct Drone *)-1)
+    {
+        perror("shmat");
+        return -1;
+    }
+
     while (1)
     {
+         
         FD_ZERO(&read_fds);
         FD_SET(pipefd[PIPE_READ], &read_fds);
 
@@ -149,14 +180,12 @@ int main(int argc, char *argv[])
                 perror("select");
             }
         }
-
         else if (retval)
         {
             char command;
             ssize_t bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
             if (bytesRead > 0)
             {
-                // Update forces based on command
                 switch (command)
                 {
                 case 'w':
@@ -205,15 +234,30 @@ int main(int argc, char *argv[])
         double ay = fy / M;
         vx += ax;
         vy += ay;
-        
 
         // Apply friction
         vx *= (1 - K);
         vy *= (1 - K);
 
-        x += vx;
-        y += vy;
+        drone.x += vx;
+        drone.y += vy;
         refresh();
+
+        // Use the shared memory
+        shared_drone->x = drone.x;
+        shared_drone->y = drone.y;
+        shared_drone->symbol = drone.symbol;
+        shared_drone->color_pair = drone.color_pair;
+
+        sleep(3); // Wait for 3 seconds so you can see the output
+        clear();  // Clear the screen of all previously-printed characters
+    }
+
+    // Detach the shared memory segment from our process's address space
+    if (shmdt(shared_drone) == -1)
+    {
+        perror("shmdt");
+        return -1;
     }
 
     // Close the write end of the pipe when you're done with it

@@ -114,9 +114,7 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-    // Use the shared memory
-    // Create a shared memory segment
-    int shm_id = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
+    int shm_id = shmget(SHM_DRN, sizeof(struct Drone), IPC_CREAT | 0666);
     if (shm_id < 0)
     {
         perror("shmget");
@@ -143,6 +141,40 @@ int main(int argc, char *argv[])
 
     // Detach the shared memory segment from our process's address space
     if (shmdt(shared_drone) == -1)
+    {
+        perror("shmdt");
+        return -1;
+    }
+
+    // Use the shared memory
+    // Create a shared memory segment
+    int shm_id2 = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
+    if (shm_id2 < 0)
+    {
+        perror("shmget");
+        return -1;
+    }
+
+    // Attach the shared memory segment to our process's address space
+    struct Drone *shared_wrld = (struct Drone *)shmat(shm_id2, NULL, 0);
+    if (shared_wrld == (struct Drone *)-1)
+    {
+        perror("shmat");
+        return -1;
+    }
+
+    // Use the shared memory
+    while (1)
+    {
+        shared_wrld->x = drone.x;
+        shared_wrld->y = drone.y;
+        shared_wrld->symbol = drone.symbol;
+        shared_wrld->color_pair = drone.color_pair;
+        sleep(0.5);
+    }
+
+    // Detach the shared memory segment from our process's address space
+    if (shmdt(shared_wrld) == -1)
     {
         perror("shmdt");
         return -1;

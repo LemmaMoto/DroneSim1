@@ -89,6 +89,15 @@ void ui_process()
         // Invia il comando al drone attraverso il pipe
         if (command == 'w' || command == 'e' || command == 'r' || command == 's' || command == 'd' || command == 'f' || command == 'x' || command == 'c' || command == 'v' || command == 'Q')
         {
+            // Check if the pipe is available for writing
+            int flags = fcntl(pipefd[PIPE_WRITE], F_GETFL);
+            if ((flags & O_ACCMODE) != O_WRONLY)
+            {
+                mvprintw(0, 0, "Pipe is not available for writing\n");
+                refresh();
+                continue;
+            }
+
             write(pipefd[PIPE_WRITE], &command, sizeof(char));
             if (command == 'Q')
             {
@@ -148,6 +157,7 @@ int main(int argc, char *argv[])
         return -1;
     }
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
+    close(pipefd[PIPE_READ]); // close read end of pipe
 
     // Publish your pid
     process_id = getpid();
