@@ -39,14 +39,10 @@ struct Drone
 {
     int x;
     int y;
-    int x_1;
-    int y_1;
-    int x_2;
-    int y_2;
     char symbol;
     short color_pair;
 };
-struct Drone drone = {0, 0, 0, 0, 0, 0, 'W', 1};
+struct Drone drone = {20, 20, 'W', 1};
 
 int pipefd[2];
 fd_set read_fds;
@@ -162,21 +158,8 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    double x_1 = 0;
-    double y_1 = 0;
-    double x_2 = 0;
-    double y_2 = 0;
-    
     while (1)
     {
-        x_1 = shared_drone->x_1;
-        x_2 = shared_drone->x_2;
-        y_1 = shared_drone->y_1;
-        y_2 = shared_drone->y_2;
-        shared_drone->symbol = drone.symbol;
-        shared_drone->color_pair = drone.color_pair;
-
-        // Read from pipe
         char command;
         printf("Reading from pipe\n");
         int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
@@ -247,8 +230,6 @@ int main(int argc, char *argv[])
             vy *= (1 - K);
         }
 
-        //(vx/(1 - K)*M )-vx =  fx ;
-
         // Apply friction
 
         drone.x += vx;
@@ -261,7 +242,7 @@ int main(int argc, char *argv[])
         shared_drone->symbol = drone.symbol;
         shared_drone->color_pair = drone.color_pair;
 
-        clear(); // Clear the screen of all previously-printed characters
+        clear();  // Clear the screen of all previously-printed characters
     }
 
     // Detach the shared memory segment from our process's address space

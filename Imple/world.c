@@ -26,10 +26,6 @@ struct Drone
 {
     int x;
     int y;
-    int x_1;
-    int y_1;
-    int x_2;
-    int y_2;
     char symbol;
     short color_pair;
 };
