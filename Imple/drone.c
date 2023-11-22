@@ -18,6 +18,10 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
+// #define M 1.0
+// #define K 0.1
+#define T 0.01
+
 // Initialize position and velocity
 double x = 0, y = 0;
 double vx = 0, vy = 0;
@@ -39,6 +43,7 @@ struct Drone
     char symbol;
     short color_pair;
 };
+struct Drone drone;
 
 int pipefd[2];
 fd_set read_fds;
@@ -153,6 +158,7 @@ int main(int argc, char *argv[])
         perror("shmat");
         return -1;
     }
+
     FILE *file = fopen("file_para.txt", "r");
     if (file == NULL)
     {
@@ -200,10 +206,18 @@ int main(int argc, char *argv[])
     printf("drone.x = %d\n", drone.x);
     printf("drone.y = %d\n", drone.y);
     sleep(10);
+    shared_drone->x = drone.x;
+    shared_drone->y = drone.y;
+    shared_drone->symbol = drone.symbol;
+    shared_drone->color_pair = drone.color_pair;
+    static double prev_x = 0, prev_y = 0;
+    static double prev_vx = 0, prev_vy = 0;
+    double Fx = fx;
+    double Fy = fy;
 
     while (1)
     {
-        char command;
+        char command = '\0';
         printf("Reading from pipe\n");
         int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
         printf("Read %d bytes\n", bytesRead);
@@ -244,6 +258,9 @@ int main(int argc, char *argv[])
                 fy -= 1.0; // forza verso DDx
                 fx += 1.0;
                 break;
+            case '\0':
+                command = '\0'; // Comando non valido
+                break;
             }
             mvprintw(0, 0, "Comando inviato: %c\n", command);
         }
@@ -255,39 +272,36 @@ int main(int argc, char *argv[])
         {
             perror("read");
         }
-        endwin();
 
         // Update velocity and position
-        double ax = fx / M;
-        double ay = fy / M;
-        if (ax == 0 && ay == 0)
-        {
-            vx = 0;
-            vy = 0;
-        }
-        else
-        {
-            vx += ax;
-            vy += ay;
-            vx *= (1 - K);
-            vy *= (1 - K);
-        }
+        double ax = (fx / M) - (K * vx);
+        double ay = (fy / M) - (K * vy);
+        vx = prev_vx + ax * T;
+        vy = prev_vy + ay * T;
 
-        // Apply friction
+        double new_x = prev_x + vx * T;
+        double new_y = prev_y + vy * T;
 
-        drone.x += vx;
-        drone.y += vy;
+        // Store the current position and velocity for the next iteration
+        prev_x = new_x;
+        prev_y = new_y;
+        prev_vx = vx;
+        prev_vy = vy;
+
+        mvprintw(1, 0, "x: %.2f, y: %.2f\n", new_x, new_y);
+        mvprintw(2, 0, "vx: %f, vy: %f\n", vx, vy);
+
         refresh();
 
         // Use the shared memory
-        shared_drone->x = drone.x;
-        shared_drone->y = drone.y;
+        shared_drone->x = (int)new_x;
+        shared_drone->y = (int)new_y;
         shared_drone->symbol = drone.symbol;
         shared_drone->color_pair = drone.color_pair;
 
         clear(); // Clear the screen of all previously-printed characters
     }
-
+    endwin();
     // Detach the shared memory segment from our process's address space
     if (shmdt(shared_drone) == -1)
     {
