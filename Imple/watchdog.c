@@ -219,6 +219,7 @@ int main(int argc, char *argv[])
     struct timeval process_start_time;
     gettimeofday(&process_start_time, NULL);
     int count;
+    int signal_count = 0;
 
     while (1)
     {
@@ -240,7 +241,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        if (count == PROCESS_SIGNAL_INTERVAL)
+        if (signal_count == PROCESS_SIGNAL_INTERVAL)
         {
             // Send new signal
             for (int i = 0; i < NUM_PROCESSES; i++)
@@ -250,9 +251,12 @@ int main(int argc, char *argv[])
                     // perror("kill");  //This does weird things to the ncurses window if I leave it in
                 }
             }
-            count = 0;
+            signal_count = 0;
         }
-        count++;
+        else
+        {
+            signal_count++;
+        }
 
         usleep(WATCHDOG_SLEEP_US);
     }

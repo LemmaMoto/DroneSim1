@@ -92,6 +92,11 @@ int main(int argc, char *argv[])
 
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
     //close(pipefd[PIPE_WRITE]);
+
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
     
     // Publish your pid
     process_id = getpid();
@@ -180,8 +185,10 @@ int main(int argc, char *argv[])
         else if (retval)
         {*/
             char command;
+            printf("Reading from pipe\n");
             int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
-            
+            printf("Read %d bytes\n", bytesRead);
+            printf("Command: %c\n", command);
             if (bytesRead > 0)
             {
                 switch (command)

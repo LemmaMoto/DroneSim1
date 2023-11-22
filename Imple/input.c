@@ -85,42 +85,42 @@ void ui_process()
         }
 
         // Invia il comando al drone attraverso il pipe
-        if (command == 'w' || command == 'e' || command == 'r' || command == 's' || command == 'd' || command == 'f' || command == 'x' || command == 'c' || command == 'v' || command == 'Q')
+        if (command != '\0')
         {
 
             int retwrite = write(pipefd[PIPE_WRITE], &command, sizeof(char));
             fsync(pipefd[PIPE_WRITE]); // flush the pipe
-            printf("retwrite = %d\n", retwrite);
-            if (retwrite < 0)
+
+            if(retwrite > 0)
+            {
+                if (command == 'Q')
+                {
+                    clear();
+                    mvprintw(0, 0, "Terminazione in corso...\n");
+                    refresh();
+                    sleep(3);
+                    break;
+                }
+                else
+                {
+                    mvprintw(0, 0, "Comando inviato: %c\n", command);
+                }
+            }
+            else if (retwrite < 0)
             {
                 perror("write");
                 mvprintw(0, 0, "Error writing to pipe\n");
-               
+
                 continue;
             }
             else if (retwrite == 0)
             {
                 mvprintw(0, 0, "No bytes written to pipe\n");
-               
+
                 continue;
             }
-            else
-            {
-                mvprintw(0, 0, "Comando inviato: %c\n", command);
-                
-            }
             
-            if (command == 'Q')
-            {
-                break;
-            }
-            else if (command == 'w' || command == 'e' || command == 'r' || command == 's' || command == 'd' || command == 'f' || command == 'x' || command == 'c' || command == 'v')
-            {
-                mvprintw(0, 0, "Comando inviato: %c\n", command);
-            }
         }
-        
-       
     }
 
     // Chiudi ncurses
@@ -169,7 +169,6 @@ int main(int argc, char *argv[])
     }
 
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
-    close(pipefd[PIPE_READ]); // close read end of pipe
 
     // Publish your pid
     process_id = getpid();
@@ -215,12 +214,10 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-
     ui_process();
-    
 
     // Termina il processo del drone
     kill(drone_pid, SIGKILL);
-    //close(pipefd[PIPE_WRITE]);
+
     return 0;
 }
