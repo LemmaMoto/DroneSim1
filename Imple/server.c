@@ -25,6 +25,10 @@ struct Drone
 {
     int x;
     int y;
+    int x_1;
+    int y_1;
+    int x_2;
+    int y_2;
     char symbol;
     short color_pair;
 };
@@ -49,7 +53,8 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
-    struct Drone drone = {0, 0, 'W', 1};
+
+    struct Drone drone = {0, 0, 0, 0, 0, 0, 'W', 1};
     int process_num;
     if (argc == 2)
     {
@@ -145,21 +150,28 @@ int main(int argc, char *argv[])
     }
 
     // Use the shared memory
+    drone.symbol = shared_drone->symbol;
+    drone.color_pair = shared_drone->color_pair;
+    shared_wrld->symbol = drone.symbol;
+    shared_wrld->color_pair = drone.color_pair;
+
     while (1)
     {
 
         drone.x = shared_drone->x;
         drone.y = shared_drone->y;
-        drone.symbol = shared_drone->symbol;
-        drone.color_pair = shared_drone->color_pair;
+
         // printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
         sleep(0.5);
         shared_wrld->x = drone.x;
         shared_wrld->y = drone.y;
-        shared_wrld->symbol = drone.symbol;
-        shared_wrld->color_pair = drone.color_pair;
+
         printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", shared_wrld->x, shared_wrld->y, shared_wrld->symbol, shared_wrld->color_pair);
         sleep(0.5);
+        drone.x_2 = shared_drone->x_1;
+        drone.y_2 = shared_drone->y_1;
+        drone.x_1 = shared_drone->x;
+        drone.y_1 = shared_drone->y;
     }
 
     // Detach the shared memory segment from our process's address space
