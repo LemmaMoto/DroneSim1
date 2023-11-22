@@ -91,13 +91,13 @@ int main(int argc, char *argv[])
     }
 
     printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
-    //close(pipefd[PIPE_WRITE]);
+    // close(pipefd[PIPE_WRITE]);
 
     initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
-    
+
     // Publish your pid
     process_id = getpid();
 
@@ -142,7 +142,6 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-
     // Create a shared memory segment
     int shm_id = shmget(SHM_DRN, sizeof(struct Drone), IPC_CREAT | 0666);
     if (shm_id < 0)
@@ -161,7 +160,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-         
+
         /*FD_ZERO(&read_fds);
         FD_SET(pipefd[PIPE_READ], &read_fds);
 
@@ -184,60 +183,59 @@ int main(int argc, char *argv[])
         }
         else if (retval)
         {*/
-            char command;
-            printf("Reading from pipe\n");
-            int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
-            printf("Read %d bytes\n", bytesRead);
-            printf("Command: %c\n", command);
-            if (bytesRead > 0)
+        char command;
+        printf("Reading from pipe\n");
+        int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
+        printf("Read %d bytes\n", bytesRead);
+        printf("Command: %c\n", command);
+        if (bytesRead > 0)
+        {
+            switch (command)
             {
-                switch (command)
-                {
-                case 'w':
-                    fy += 1.0; // forza verso USx
-                    fx -= 1.0;
-                    break;
-                case 'e':
-                    fy += 1.0; // forza verso U
-                    break;
-                case 'r':
-                    fy += 1.0; // forza verso UDx
-                    fx += 1.0;
-                    break;
-                case 's':
-                    fx -= 1.0; // forza verso Sx
-                    break;
-                case 'd':
-                    fy = 0; // annulla forza
-                    fx = 0;
-                    break;
-                case 'f':
-                    fx += 1.0; // forza verso Dx
-                    break;
-                case 'x':
-                    fy -= 1.0; // forza verso DSx
-                    fx -= 1.0;
-                    break;
-                case 'c':
-                    fy -= 1.0; // forza verso D
-                    break;
-                case 'v':
-                    fy -= 1.0; // forza verso DDx
-                    fx += 1.0;
-                    break;
-                }
-                mvprintw(0, 0, "Comando inviato: %c\n", command);
+            case 'w':
+                fy += 1.0; // forza verso USx
+                fx -= 1.0;
+                break;
+            case 'e':
+                fy += 1.0; // forza verso U
+                break;
+            case 'r':
+                fy += 1.0; // forza verso UDx
+                fx += 1.0;
+                break;
+            case 's':
+                fx -= 1.0; // forza verso Sx
+                break;
+            case 'd':
+                fy = 0; // annulla forza
+                fx = 0;
+                break;
+            case 'f':
+                fx += 1.0; // forza verso Dx
+                break;
+            case 'x':
+                fy -= 1.0; // forza verso DSx
+                fx -= 1.0;
+                break;
+            case 'c':
+                fy -= 1.0; // forza verso D
+                break;
+            case 'v':
+                fy -= 1.0; // forza verso DDx
+                fx += 1.0;
+                break;
             }
-            else if (bytesRead == 0)
-            {
-                printf("Nothing to read\n");
-            }
-            else
-            {
-                perror("read");
-            }
-        
-        
+            mvprintw(0, 0, "Comando inviato: %c\n", command);
+        }
+        else if (bytesRead == 0)
+        {
+            printf("Nothing to read\n");
+        }
+        else
+        {
+            perror("read");
+        }
+        endwin();
 
         // Update velocity and position
         double ax = fx / M;
@@ -271,7 +269,6 @@ int main(int argc, char *argv[])
     }
 
     // Close the write end of the pipe when you're done with it
-    //close(pipefd[PIPE_WRITE]);
-
+    // close(pipefd[PIPE_WRITE]);
     return 0;
 }
