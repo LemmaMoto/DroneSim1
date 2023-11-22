@@ -42,7 +42,7 @@ struct Drone
     char symbol;
     short color_pair;
 };
-struct Drone drone = {0, 0, 'W', 1};
+struct Drone drone = {20, 20, 'W', 1};
 
 int pipefd[2];
 fd_set read_fds;
@@ -192,14 +192,14 @@ int main(int argc, char *argv[])
         {
             switch (command)
             {
-            case 'w':
+            case 'x':
                 fy += 1.0; // forza verso USx
                 fx -= 1.0;
                 break;
-            case 'e':
+            case 'c':
                 fy += 1.0; // forza verso U
                 break;
-            case 'r':
+            case 'v':
                 fy += 1.0; // forza verso UDx
                 fx += 1.0;
                 break;
@@ -213,14 +213,14 @@ int main(int argc, char *argv[])
             case 'f':
                 fx += 1.0; // forza verso Dx
                 break;
-            case 'x':
+            case 'w':
                 fy -= 1.0; // forza verso DSx
                 fx -= 1.0;
                 break;
-            case 'c':
+            case 'e':
                 fy -= 1.0; // forza verso D
                 break;
-            case 'v':
+            case 'r':
                 fy -= 1.0; // forza verso DDx
                 fx += 1.0;
                 break;
@@ -240,12 +240,20 @@ int main(int argc, char *argv[])
         // Update velocity and position
         double ax = fx / M;
         double ay = fy / M;
-        vx += ax;
-        vy += ay;
+        if (ax == 0 && ay == 0)
+        {
+            vx = 0;
+            vy = 0;
+        }
+        else
+        {
+            vx += ax;
+            vy += ay;
+            vx *= (1 - K);
+            vy *= (1 - K);
+        }
 
         // Apply friction
-        vx *= (1 - K);
-        vy *= (1 - K);
 
         drone.x += vx;
         drone.y += vy;
@@ -257,7 +265,6 @@ int main(int argc, char *argv[])
         shared_drone->symbol = drone.symbol;
         shared_drone->color_pair = drone.color_pair;
 
-        sleep(3); // Wait for 3 seconds so you can see the output
         clear();  // Clear the screen of all previously-printed characters
     }
 

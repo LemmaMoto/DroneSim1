@@ -129,25 +129,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Use the shared memory
-    while (1)
-    {
-        shared_drone->x = drone.x;
-        shared_drone->y = drone.y;
-        shared_drone->symbol = drone.symbol;
-        shared_drone->color_pair = drone.color_pair;
-        sleep(0.5);
-    }
-
-    // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_drone) == -1)
-    {
-        perror("shmdt");
-        return -1;
-    }
-
-    // Use the shared memory
-    // Create a shared memory segment
     int shm_id2 = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
     if (shm_id2 < 0)
     {
@@ -166,11 +147,26 @@ int main(int argc, char *argv[])
     // Use the shared memory
     while (1)
     {
+
+        drone.x = shared_drone->x;
+        drone.y = shared_drone->y;
+        drone.symbol = shared_drone->symbol;
+        drone.color_pair = shared_drone->color_pair;
+        // printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
+        sleep(0.5);
         shared_wrld->x = drone.x;
         shared_wrld->y = drone.y;
         shared_wrld->symbol = drone.symbol;
         shared_wrld->color_pair = drone.color_pair;
+        printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", shared_wrld->x, shared_wrld->y, shared_wrld->symbol, shared_wrld->color_pair);
         sleep(0.5);
+    }
+
+    // Detach the shared memory segment from our process's address space
+    if (shmdt(shared_drone) == -1)
+    {
+        perror("shmdt");
+        return -1;
     }
 
     // Detach the shared memory segment from our process's address space

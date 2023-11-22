@@ -145,8 +145,8 @@ int main(int argc, char *argv[])
     while (1)
     {
         // Use the shared memory
-        shared_drone->x = drone.x;
-        shared_drone->y = drone.y;
+        drone.x = shared_drone->x;
+        drone.y = shared_drone->y;
         mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position
         refresh();                                      // Refresh the screen to show the changes
         clear();                                        // Clear the screen of all previously-printed characters
