@@ -29,14 +29,80 @@ int pipefd[2];
 
 pid_t drone_pid;
 
+void drawRoundedSquare(WINDOW *win, int y, int x, int height, int width)
+{
+
+    // Disegna gli angoli arrotondati
+    mvwaddch(win, y, x, ACS_ULCORNER);                          // Angolo in alto a sinistra
+    mvwaddch(win, y, x + width - 1, ACS_URCORNER);              // Angolo in alto a destra
+    mvwaddch(win, y + height - 1, x, ACS_LLCORNER);             // Angolo in basso a sinistra
+    mvwaddch(win, y + height - 1, x + width - 1, ACS_LRCORNER); // Angolo in basso a destra
+
+    // Disegna i lati orizzontali
+    for (int i = x + 1; i < x + width - 1; ++i)
+    {
+        mvwaddch(win, y, i, ACS_HLINE);              // Linea orizzontale superiore
+        mvwaddch(win, y + height - 1, i, ACS_HLINE); // Linea orizzontale inferiore
+    }
+
+    // Disegna i lati verticali
+    for (int i = y + 1; i < y + height - 1; ++i)
+    {
+        mvwaddch(win, i, x, ACS_VLINE);             // Linea verticale sinistra
+        mvwaddch(win, i, x + width - 1, ACS_VLINE); // Linea verticale destra
+    }
+    
+}
+
+void highlightSquare(WINDOW *win, int y, int x, int height, int width)
+{
+    // Imposta attributi per evidenziare il quadrato
+    wattron(win, COLOR_PAIR(2)); // Utilizza il colore invertito per evidenziare
+    drawRoundedSquare(win, y, x, height, width);
+    wattroff(win, COLOR_PAIR(1)); // Ripristina gli attributi precedenti
+    wrefresh(win); // Aggiorna la finestra
+    usleep(20000);
+    drawRoundedSquare(win, y, x, height, width);
+    wrefresh(win); // Aggiorna la finestra di nuovo
+}
+
 void ui_process()
 {
 
     // Inizializza ncurses
     initscr();
+    start_color(); // Abilita il colore
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
+
+    int gridHeight = 3;
+    int gridWidth = 3;
+    int squareHeight = 5;
+    int squareWidth = 10;
+    int maxRows, maxCols;
+    getmaxyx(stdscr, maxRows, maxCols);
+
+    // Calcola la posizione iniziale della finestra
+    int startY = (maxRows - gridHeight * squareHeight) / 2;
+    int startX = (maxCols - gridWidth * squareWidth) / 2;
+
+    WINDOW *mywin = newwin(gridHeight * squareHeight, gridWidth * squareWidth, startY, startX);
+
+    for (int i = 0; i < gridHeight; ++i)
+    {
+        for (int j = 0; j < gridWidth; ++j)
+        {
+            int y = i * squareHeight;
+            int x = j * squareWidth;
+
+            // Stampa il quadrato con angoli arrotondati
+            wattron(mywin, COLOR_PAIR(1)); // Utilizza il colore blu
+            drawRoundedSquare(mywin, y, x, squareHeight, squareWidth);
+             // Ripristina il colore precedente
+        }
+    }
 
     // Loop principale dell'interfaccia utente
     while (1)
@@ -49,30 +115,39 @@ void ui_process()
         {
         case 'w':
             command = 'w'; // forza verso USx
+            highlightSquare(mywin, 0, 0, squareHeight, squareWidth);
             break;
         case 'e':
             command = 'e'; // forza verso U
+            highlightSquare(mywin, 0, squareWidth, squareHeight, squareWidth);
             break;
         case 'r':
             command = 'r'; // forza verso UDx
+            highlightSquare(mywin, 0, 2 * squareWidth, squareHeight, squareWidth);
             break;
         case 's':
             command = 's'; // forza verso Sx
+            highlightSquare(mywin, squareHeight, 0, squareHeight, squareWidth);
             break;
         case 'd':
             command = 'd'; // annulla forza
+            highlightSquare(mywin, squareHeight, squareWidth, squareHeight, squareWidth);
             break;
         case 'f':
             command = 'f'; // forza verso Dx
+            highlightSquare(mywin, squareHeight, 2 * squareWidth, squareHeight, squareWidth);
             break;
         case 'x':
             command = 'x'; // forza verso DSx
+            highlightSquare(mywin, 2 * squareHeight, 0, squareHeight, squareWidth);
             break;
         case 'c':
             command = 'c'; // forza verso D
+            highlightSquare(mywin, 2 * squareHeight, squareWidth, squareHeight, squareWidth);
             break;
         case 'v':
             command = 'v'; // forza verso DDx
+            highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth);
             break;
         case 'q':
             command = 'Q'; // Termina il programma
@@ -84,6 +159,8 @@ void ui_process()
             break;
         }
 
+        wrefresh(mywin); // Aggiungi questa linea
+
         // Invia il comando al drone attraverso il pipe
         if (command != '\0')
         {
@@ -91,7 +168,7 @@ void ui_process()
             int retwrite = write(pipefd[PIPE_WRITE], &command, sizeof(char));
             fsync(pipefd[PIPE_WRITE]); // flush the pipe
 
-            if(retwrite > 0)
+            if (retwrite > 0)
             {
                 if (command == 'Q')
                 {
@@ -119,7 +196,6 @@ void ui_process()
 
                 continue;
             }
-            
         }
     }
 
