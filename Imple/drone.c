@@ -160,29 +160,6 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-
-        /*FD_ZERO(&read_fds);
-        FD_SET(pipefd[PIPE_READ], &read_fds);
-
-        // Timeout after 1 second
-        tv.tv_sec = 1;
-        tv.tv_usec = 0;
-        clear();
-        retval = select(pipefd[PIPE_READ] + 1, &read_fds, NULL, NULL, &tv);
-        if (retval == -1)
-        {
-            if (errno == EINTR)
-            {
-                // The call was interrupted by a signal, just continue with the loop
-                continue;
-            }
-            else
-            {
-                perror("select");
-            }
-        }
-        else if (retval)
-        {*/
         char command;
         printf("Reading from pipe\n");
         int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
