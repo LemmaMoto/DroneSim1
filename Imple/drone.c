@@ -18,9 +18,6 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define M 1.0
-#define K 0.1
-
 // Initialize position and velocity
 double x = 0, y = 0;
 double vx = 0, vy = 0;
@@ -42,7 +39,6 @@ struct Drone
     char symbol;
     short color_pair;
 };
-struct Drone drone;
 
 int pipefd[2];
 fd_set read_fds;
@@ -157,32 +153,53 @@ int main(int argc, char *argv[])
         perror("shmat");
         return -1;
     }
-    // FILE *file = fopen("file_para.txt", "r");
-    // if (file == NULL)
-    // {
-    //     printf("Could not open file_para.txt for reading\n");
-    //     return 1;
-    // }
+    FILE *file = fopen("file_para.txt", "r");
+    if (file == NULL)
+    {
+        printf("Could not open file_para.txt for reading\n");
+        return 1;
+    }
+    struct Drone drone;
+    float M, K;
 
-    // float M, K;
-    // if (fscanf(file, "%c %hd %f %f %d %d\n", &drone.symbol, &drone.color_pair, &M, &K, &drone.x, &drone.y) != 6)
-    // {
-    //     printf("Could not read parameters from file_para.txt\n");
-    //     fclose(file);
-    //     return 1;
-    // }
-    // {
-    //     printf("Could not read parameters from file_para.txt\n");
-    //     fclose(file);
-    //     return 1;
-    // }
-    // printf("drone.symbol = %c\n", drone.symbol);
-    // printf("drone.color_paire = %hd\n", drone.color_pair);
-    // printf("M = %f\n", M);
-    // printf("K = %f\n", K);
-    // printf("drone.x = %d\n", drone.x);
-    // printf("drone.y = %d\n", drone.y);
-    // sleep(10);
+    char label[256];
+    while (fscanf(file, "%s", label) != EOF)
+    {
+        if (strcmp(label, "drone.symbol") == 0)
+        {
+            fscanf(file, " = '%c'", &drone.symbol);
+        }
+        else if (strcmp(label, "drone.color_paire") == 0)
+        {
+            fscanf(file, " = %hd", &drone.color_pair);
+        }
+        else if (strcmp(label, "M") == 0)
+        {
+            fscanf(file, " = %f", &M);
+        }
+        else if (strcmp(label, "K") == 0)
+        {
+            fscanf(file, " = %f", &K);
+        }
+        else if (strcmp(label, "drone.x") == 0)
+        {
+            fscanf(file, " = %d", &drone.x);
+        }
+        else if (strcmp(label, "drone.y") == 0)
+        {
+            fscanf(file, " = %d", &drone.y);
+        }
+    }
+
+    fclose(file);
+
+    printf("drone.symbol = %c\n", drone.symbol);
+    printf("drone.color_paire = %hd\n", drone.color_pair);
+    printf("M = %f\n", M);
+    printf("K = %f\n", K);
+    printf("drone.x = %d\n", drone.x);
+    printf("drone.y = %d\n", drone.y);
+    sleep(10);
 
     while (1)
     {
