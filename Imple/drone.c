@@ -42,7 +42,7 @@ struct Drone
     char symbol;
     short color_pair;
 };
-struct Drone drone = {20, 20, 'W', 1};
+struct Drone drone;
 
 int pipefd[2];
 fd_set read_fds;
@@ -157,6 +157,32 @@ int main(int argc, char *argv[])
         perror("shmat");
         return -1;
     }
+    // FILE *file = fopen("file_para.txt", "r");
+    // if (file == NULL)
+    // {
+    //     printf("Could not open file_para.txt for reading\n");
+    //     return 1;
+    // }
+
+    // float M, K;
+    // if (fscanf(file, "%c %hd %f %f %d %d\n", &drone.symbol, &drone.color_pair, &M, &K, &drone.x, &drone.y) != 6)
+    // {
+    //     printf("Could not read parameters from file_para.txt\n");
+    //     fclose(file);
+    //     return 1;
+    // }
+    // {
+    //     printf("Could not read parameters from file_para.txt\n");
+    //     fclose(file);
+    //     return 1;
+    // }
+    // printf("drone.symbol = %c\n", drone.symbol);
+    // printf("drone.color_paire = %hd\n", drone.color_pair);
+    // printf("M = %f\n", M);
+    // printf("K = %f\n", K);
+    // printf("drone.x = %d\n", drone.x);
+    // printf("drone.y = %d\n", drone.y);
+    // sleep(10);
 
     while (1)
     {
@@ -242,7 +268,7 @@ int main(int argc, char *argv[])
         shared_drone->symbol = drone.symbol;
         shared_drone->color_pair = drone.color_pair;
 
-        clear();  // Clear the screen of all previously-printed characters
+        clear(); // Clear the screen of all previously-printed characters
     }
 
     // Detach the shared memory segment from our process's address space
