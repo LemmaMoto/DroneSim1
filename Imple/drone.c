@@ -243,6 +243,8 @@ int main(int argc, char *argv[])
             case 'd':
                 fy = 0; // annulla forza
                 fx = 0;
+                vx = 0; // annulla velocità
+                vy = 0; 
                 break;
             case 'f':
                 fx += 1.0; // forza verso Dx

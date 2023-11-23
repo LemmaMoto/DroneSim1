@@ -29,7 +29,7 @@ int pipefd[2];
 
 pid_t drone_pid;
 
-void drawRoundedSquare(WINDOW *win, int y, int x, int height, int width)
+void drawRoundedSquare(WINDOW *win, int y, int x, int height, int width, int count)
 {
 
     // Disegna gli angoli arrotondati
@@ -51,21 +51,28 @@ void drawRoundedSquare(WINDOW *win, int y, int x, int height, int width)
         mvwaddch(win, i, x, ACS_VLINE);             // Linea verticale sinistra
         mvwaddch(win, i, x + width - 1, ACS_VLINE); // Linea verticale destra
     }
-    
+
+    // Stampa il conteggio come una stringa al centro del quadrato
+    char countStr[5];                 // Buffer per la stringa del conteggio
+    sprintf(countStr, "%02d", count); // Converte il conteggio in una stringa
+    mvwprintw(win, y + height / 2, x + width / 2 - 2, "%s", countStr);
 }
 
-void highlightSquare(WINDOW *win, int y, int x, int height, int width)
+// Aggiungi il conteggio al quadrato evidenziato
+void highlightSquare(WINDOW *win, int y, int x, int height, int width, int count)
 {
-    // Imposta attributi per evidenziare il quadrato
+    char countStr[5];                 // Buffer per la stringa del conteggio
+    sprintf(countStr, "%02d", count); // Converte il conteggio in una stringa
+
     wattron(win, COLOR_PAIR(2)); // Utilizza il colore invertito per evidenziare
-    drawRoundedSquare(win, y, x, height, width);
-    wattroff(win, COLOR_PAIR(1)); // Ripristina gli attributi precedenti
-    wrefresh(win); // Aggiorna la finestra
-    usleep(20000);
-    drawRoundedSquare(win, y, x, height, width);
+    drawRoundedSquare(win, y, x, height, width, count);
+    mvwprintw(win, y + height / 2, x + width / 2 - 2, "%s", countStr); // Stampa la stringa del conteggio al centro del quadrato
+    wattroff(win, COLOR_PAIR(2));                                      // Ripristina gli attributi precedenti
+    wrefresh(win);                                                     // Aggiorna la finestra
+    usleep(80000);
+    drawRoundedSquare(win, y, x, height, width, count);
     wrefresh(win); // Aggiorna la finestra di nuovo
 }
-
 void ui_process()
 {
 
@@ -83,6 +90,9 @@ void ui_process()
     int squareWidth = 10;
     int maxRows, maxCols;
     getmaxyx(stdscr, maxRows, maxCols);
+    // Aggiungi un array 2D per tenere traccia del conteggio per ogni quadrato
+    int count[gridHeight][gridWidth];
+    memset(count, 0, sizeof(count)); // Inizializza tutti i conteggi a 0
 
     // Calcola la posizione iniziale della finestra
     int startY = (maxRows - gridHeight * squareHeight) / 2;
@@ -99,8 +109,8 @@ void ui_process()
 
             // Stampa il quadrato con angoli arrotondati
             wattron(mywin, COLOR_PAIR(1)); // Utilizza il colore blu
-            drawRoundedSquare(mywin, y, x, squareHeight, squareWidth);
-             // Ripristina il colore precedente
+            drawRoundedSquare(mywin, y, x, squareHeight, squareWidth, count[i][j]);
+            // Ripristina il colore precedente
         }
     }
 
@@ -115,39 +125,106 @@ void ui_process()
         {
         case 'w':
             command = 'w'; // forza verso USx
-            highlightSquare(mywin, 0, 0, squareHeight, squareWidth);
+            if (count[2][2] > 0)
+            {
+                highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth, --count[2][2]);
+            }
+            else
+            {
+                highlightSquare(mywin, 0, 0, squareHeight, squareWidth, ++count[0][0]);
+            }
             break;
         case 'e':
             command = 'e'; // forza verso U
-            highlightSquare(mywin, 0, squareWidth, squareHeight, squareWidth);
+            if (count[2][1] > 0)
+            {
+                highlightSquare(mywin, 2 * squareHeight, squareWidth, squareHeight, squareWidth, --count[2][1]);
+            }
+            else
+            {
+                highlightSquare(mywin, 0, squareWidth, squareHeight, squareWidth, ++count[0][1]);
+            }
             break;
         case 'r':
             command = 'r'; // forza verso UDx
-            highlightSquare(mywin, 0, 2 * squareWidth, squareHeight, squareWidth);
+            if (count[2][0] > 0)
+            {
+                highlightSquare(mywin, 2 * squareHeight, 0, squareHeight, squareWidth, --count[2][0]);
+            }
+            else
+            {
+                highlightSquare(mywin, 0, 2 * squareWidth, squareHeight, squareWidth, ++count[0][2]);
+            }
             break;
         case 's':
             command = 's'; // forza verso Sx
-            highlightSquare(mywin, squareHeight, 0, squareHeight, squareWidth);
+            if (count[1][0] > 0)
+            {
+                highlightSquare(mywin, squareHeight, 2 * squareWidth, squareHeight, squareWidth, --count[1][0]);
+            }
+            else
+            {
+                highlightSquare(mywin, squareHeight, 0, squareHeight, squareWidth, ++count[1][2]);
+            }
             break;
         case 'd':
             command = 'd'; // annulla forza
-            highlightSquare(mywin, squareHeight, squareWidth, squareHeight, squareWidth);
+            memset(count, 0, sizeof(count));
+            highlightSquare(mywin, squareHeight, squareWidth, squareHeight, squareWidth, ++count[1][1]);
+            highlightSquare(mywin, 0, 0, squareHeight, squareWidth, count[0][0]);
+            highlightSquare(mywin, 0, squareWidth, squareHeight, squareWidth, count[0][1]);
+            highlightSquare(mywin, 0, 2 * squareWidth, squareHeight, squareWidth, count[0][2]);
+            highlightSquare(mywin, squareHeight, 0, squareHeight, squareWidth, count[1][0]);
+            highlightSquare(mywin, squareHeight, squareWidth, squareHeight, squareWidth, count[1][1]);
+            highlightSquare(mywin, squareHeight, 2 * squareWidth, squareHeight, squareWidth, count[1][2]);
+            highlightSquare(mywin, 2 * squareHeight, 0, squareHeight, squareWidth, count[2][0]);
+            highlightSquare(mywin, 2 * squareHeight, squareWidth, squareHeight, squareWidth, count[2][1]);
+            highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth, count[2][2]);
+            
             break;
         case 'f':
             command = 'f'; // forza verso Dx
-            highlightSquare(mywin, squareHeight, 2 * squareWidth, squareHeight, squareWidth);
+            if (count[1][2] > 0)
+            {
+                highlightSquare(mywin, squareHeight, 0, squareHeight, squareWidth, --count[1][2]);
+            }
+            else
+            {
+                highlightSquare(mywin, squareHeight, 2 * squareWidth, squareHeight, squareWidth, ++count[1][0]);
+            }
             break;
         case 'x':
             command = 'x'; // forza verso DSx
-            highlightSquare(mywin, 2 * squareHeight, 0, squareHeight, squareWidth);
+            if (count[0][2] > 0)
+            {
+                highlightSquare(mywin, 0, 2 * squareWidth, squareHeight, squareWidth, --count[0][2]);
+            }
+            else
+            {
+                highlightSquare(mywin, 2 * squareHeight, 0, squareHeight, squareWidth, ++count[2][0]);
+            }
             break;
         case 'c':
             command = 'c'; // forza verso D
-            highlightSquare(mywin, 2 * squareHeight, squareWidth, squareHeight, squareWidth);
+            if (count[0][1] > 0)
+            {
+                highlightSquare(mywin, 0, squareWidth, squareHeight, squareWidth, --count[0][1]);
+            }
+            else
+            {
+                highlightSquare(mywin, 2 * squareHeight, squareWidth, squareHeight, squareWidth, ++count[2][1]);
+            }
             break;
         case 'v':
             command = 'v'; // forza verso DDx
-            highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth);
+            if (count[0][0] > 0)
+            {
+                highlightSquare(mywin, 0, 0, squareHeight, squareWidth, --count[0][0]);
+            }
+            else
+            {
+                highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth, ++count[2][2]);
+            }
             break;
         case 'q':
             command = 'Q'; // Termina il programma
