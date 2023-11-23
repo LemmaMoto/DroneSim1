@@ -15,6 +15,9 @@
 #define SHM_DRN 12 // Define a key for the shared memory segment
 #define SHM_WRLD 34
 
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
@@ -28,6 +31,14 @@ struct Drone
     char symbol;
     short color_pair;
 };
+
+int pipesd[2];
+int pipeds[2];
+int pipeso[2];
+int pipeos[2];
+int pipest[2];
+int pipets[2];
+int pipesw[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -51,15 +62,44 @@ int main(int argc, char *argv[])
 {
     struct Drone drone = {0, 0, 'W', 1};
     int process_num;
-    if (argc == 2)
+    if (argc == 16)
     {
         sscanf(argv[1], "%d", &process_num);
+        sscanf(argv[2], "%d", &pipesd[PIPE_READ]);
+        sscanf(argv[3], "%d", &pipesd[PIPE_WRITE]);
+        sscanf(argv[4], "%d", &pipeds[PIPE_READ]);
+        sscanf(argv[5], "%d", &pipeds[PIPE_WRITE]);
+        sscanf(argv[6], "%d", &pipeso[PIPE_READ]);
+        sscanf(argv[7], "%d", &pipeso[PIPE_WRITE]);
+        sscanf(argv[8], "%d", &pipeos[PIPE_READ]);
+        sscanf(argv[9], "%d", &pipeos[PIPE_WRITE]);
+        sscanf(argv[10], "%d", &pipest[PIPE_READ]);
+        sscanf(argv[11], "%d", &pipest[PIPE_WRITE]);
+        sscanf(argv[12], "%d", &pipets[PIPE_READ]);
+        sscanf(argv[13], "%d", &pipets[PIPE_WRITE]);
+        sscanf(argv[14], "%d", &pipesw[PIPE_READ]);
+        sscanf(argv[15], "%d", &pipesw[PIPE_WRITE]);
     }
     else
     {
         printf("wrong args\n");
         return -1;
     }
+    printf("process_num: %d\n", process_num);
+    printf("pipesd[PIPE_READ]: %d\n", pipesd[PIPE_READ]);
+    printf("pipesd[PIPE_WRITE]: %d\n", pipesd[PIPE_WRITE]);
+    printf("pipeds[PIPE_READ]: %d\n", pipeds[PIPE_READ]);
+    printf("pipeds[PIPE_WRITE]: %d\n", pipeds[PIPE_WRITE]);
+    printf("pipeso[PIPE_READ]: %d\n", pipeso[PIPE_READ]);
+    printf("pipeso[PIPE_WRITE]: %d\n", pipeso[PIPE_WRITE]);
+    printf("pipeos[PIPE_READ]: %d\n", pipeos[PIPE_READ]);
+    printf("pipeos[PIPE_WRITE]: %d\n", pipeos[PIPE_WRITE]);
+    printf("pipest[PIPE_READ]: %d\n", pipest[PIPE_READ]);
+    printf("pipest[PIPE_WRITE]: %d\n", pipest[PIPE_WRITE]);
+    printf("pipets[PIPE_READ]: %d\n", pipets[PIPE_READ]);
+    printf("pipets[PIPE_WRITE]: %d\n", pipets[PIPE_WRITE]);
+    printf("pipesw[PIPE_READ]: %d\n", pipesw[PIPE_READ]);
+    printf("pipesw[PIPE_WRITE]: %d\n", pipesw[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -144,20 +184,26 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Use the shared memory
+    // Use pipes
+    // struct Drone drone = {.x = 123, .y = 456};
+    // write(pipefd[1], &data, sizeof(data));
+
     while (1)
     {
 
-        drone.x = shared_drone->x;
-        drone.y = shared_drone->y;
-        drone.symbol = shared_drone->symbol;
-        drone.color_pair = shared_drone->color_pair;
-        // printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
+        // drone.x = shared_drone->x;
+        // drone.y = shared_drone->y;
+        // drone.symbol = shared_drone->symbol;
+        // drone.color_pair = shared_drone->color_pair;
+        read(pipeds[PIPE_READ], &drone, sizeof(drone));
+        printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
         sleep(0.5);
-        shared_wrld->x = drone.x;
-        shared_wrld->y = drone.y;
-        shared_wrld->symbol = drone.symbol;
-        shared_wrld->color_pair = drone.color_pair;
+        // shared_wrld->x = drone.x;
+        // shared_wrld->y = drone.y;
+        // shared_wrld->symbol = drone.symbol;
+        // shared_wrld->color_pair = drone.color_pair;
+        write(pipesw[PIPE_WRITE], &drone, sizeof(drone));
+
         printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", shared_wrld->x, shared_wrld->y, shared_wrld->symbol, shared_wrld->color_pair);
         sleep(0.5);
     }

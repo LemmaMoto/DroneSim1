@@ -16,6 +16,9 @@
 
 #define SHM_WRLD 34 // Define a key for the shared memory segment
 
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
@@ -29,6 +32,8 @@ struct Drone
     char symbol;
     short color_pair;
 };
+
+int pipesw[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -51,15 +56,21 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 int main(int argc, char *argv[])
 {
     int process_num;
-    if (argc == 2)
+    if (argc == 4)
     {
         sscanf(argv[1], "%d", &process_num);
+        sscanf(argv[2], "%d", &pipesw[PIPE_READ]);
+        sscanf(argv[3], "%d", &pipesw[PIPE_WRITE]);
     }
     else
     {
         printf("wrong args\n");
         return -1;
     }
+
+    printf("process num %d \n", process_num);
+    printf("pipe read %d \n", pipesw[PIPE_READ]);
+    printf("pipe write %d \n", pipesw[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -145,8 +156,9 @@ int main(int argc, char *argv[])
     while (1)
     {
         // Use the shared memory
-        drone.x = shared_drone->x;
-        drone.y = shared_drone->y;
+        // drone.x = shared_drone->x;
+        // drone.y = shared_drone->y;
+        read(pipesw[PIPE_WRITE], &drone, sizeof(drone));
         mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position
         refresh();                                      // Refresh the screen to show the changes
         clear();                                        // Clear the screen of all previously-printed characters

@@ -45,10 +45,11 @@ struct Drone
 };
 struct Drone drone;
 
-int pipefd[2];
-fd_set read_fds;
+int pipedi[2];
+int pipesd[2];
+int pipeds[2];
+
 struct timeval tv;
-int retval;
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -79,11 +80,15 @@ int main(int argc, char *argv[])
     }
 
     int process_num;
-    if (argc == 4)
+    if (argc == 8)
     {
         sscanf(argv[1], "%d", &process_num);
-        sscanf(argv[2], "%d", &pipefd[PIPE_READ]);
-        sscanf(argv[3], "%d", &pipefd[PIPE_WRITE]);
+        sscanf(argv[2], "%d", &pipedi[PIPE_READ]);
+        sscanf(argv[3], "%d", &pipedi[PIPE_WRITE]);
+        sscanf(argv[4], "%d", &pipesd[PIPE_READ]);
+        sscanf(argv[5], "%d", &pipesd[PIPE_WRITE]);
+        sscanf(argv[6], "%d", &pipeds[PIPE_READ]);
+        sscanf(argv[7], "%d", &pipeds[PIPE_WRITE]);
     }
     else
     {
@@ -91,8 +96,9 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
-    // close(pipefd[PIPE_WRITE]);
+    printf("pipedi[0] = %d, pipedi[1] = %d\n", pipedi[PIPE_READ], pipedi[PIPE_WRITE]);
+    printf("pipesd[0] = %d, pipesd[1] = %d\n", pipesd[PIPE_READ], pipesd[PIPE_WRITE]);
+    printf("pipeds[0] = %d, pipeds[1] = %d\n", pipeds[PIPE_READ], pipeds[PIPE_WRITE]);
 
     initscr();
     cbreak();
@@ -206,10 +212,11 @@ int main(int argc, char *argv[])
     printf("drone.x = %d\n", drone.x);
     printf("drone.y = %d\n", drone.y);
     sleep(10);
-    shared_drone->x = drone.x;
-    shared_drone->y = drone.y;
-    shared_drone->symbol = drone.symbol;
-    shared_drone->color_pair = drone.color_pair;
+    // shared_drone->x = drone.x;
+    // shared_drone->y = drone.y;
+    // shared_drone->symbol = drone.symbol;
+    // shared_drone->color_pair = drone.color_pair;
+    write(pipeds[PIPE_READ], &drone, sizeof(drone));
     static double prev_x = 0, prev_y = 0;
     static double prev_vx = 0, prev_vy = 0;
     double Fx = fx;
@@ -219,7 +226,7 @@ int main(int argc, char *argv[])
     {
         char command = '\0';
         printf("Reading from pipe\n");
-        int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
+        int bytesRead = read(pipedi[PIPE_READ], &command, sizeof(char));
         printf("Read %d bytes\n", bytesRead);
         printf("Command: %c\n", command);
         if (bytesRead > 0)
@@ -294,10 +301,15 @@ int main(int argc, char *argv[])
         refresh();
 
         // Use the shared memory
-        shared_drone->x = (int)new_x;
-        shared_drone->y = (int)new_y;
-        shared_drone->symbol = drone.symbol;
-        shared_drone->color_pair = drone.color_pair;
+        // shared_drone->x = (int)new_x;
+        // shared_drone->y = (int)new_y;
+        // shared_drone->symbol = drone.symbol;
+        // shared_drone->color_pair = drone.color_pair;
+        drone.x = (int)new_x;
+        drone.y = (int)new_y;
+        drone.symbol = drone.symbol;
+        drone.color_pair = drone.color_pair;
+        write(pipeds[PIPE_WRITE], &drone, sizeof(drone));
 
         clear(); // Clear the screen of all previously-printed characters
     }
@@ -310,6 +322,6 @@ int main(int argc, char *argv[])
     }
 
     // Close the write end of the pipe when you're done with it
-    // close(pipefd[PIPE_WRITE]);
+    // close(pipedi[PIPE_WRITE]);
     return 0;
 }

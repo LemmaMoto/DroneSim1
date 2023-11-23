@@ -15,6 +15,46 @@
 
 #define OBSTACLE_REPULSION_CONSTANT 1.0
 
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
+pid_t watchdog_pid;
+pid_t process_id;
+char *process_name;
+struct timeval prev_t;
+char logfile_name[256] = LOG_FILE_NAME;
+
+struct Drone
+{
+    int x;
+    int y;
+    char symbol;
+    short color_pair;
+};
+
+int pipesw[2];
+
+// logs time update to file
+void log_receipt(struct timeval tv)
+{
+    FILE *lf_fp = fopen(logfile_name, "a");
+    fprintf(lf_fp, "%d %ld %ld\n", process_id, tv.tv_sec, tv.tv_usec);
+    fclose(lf_fp);
+}
+
+void watchdog_handler(int sig, siginfo_t *info, void *context)
+{
+    // printf("received signal \n");
+    if (info->si_pid == watchdog_pid)
+    {
+        gettimeofday(&prev_t, NULL);
+        log_receipt(prev_t);
+    }
+}
+
+
+
+
 struct Obstacle
 {
     int x;
