@@ -133,43 +133,15 @@ int main(int argc, char *argv[])
 
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
 
-    struct Drone drone = {0, 0, 'W', 1};
+    struct Drone drone;
 
-    // Create a shared memory segment
-    int shm_id = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
-    if (shm_id < 0)
-    {
-        perror("shmget");
-        return -1;
-    }
-
-    // Attach the shared memory segment to our process's address space
-    struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
-    if (shared_drone == (struct Drone *)-1)
-    {
-        perror("shmat");
-        return -1;
-    }
-
-    shared_drone->symbol = drone.symbol;
-    shared_drone->color_pair = drone.color_pair;
     while (1)
     {
-        // Use the shared memory
-        // drone.x = shared_drone->x;
-        // drone.y = shared_drone->y;
-        read(pipesw[PIPE_WRITE], &drone, sizeof(drone));
+        clear();
+        read(pipesw[PIPE_READ], &drone, sizeof(drone));
         mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position
         refresh();                                      // Refresh the screen to show the changes
-        clear();                                        // Clear the screen of all previously-printed characters
-
-        sleep(3); // Wait for 5 seconds so you can see the output
-    }
-    // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_drone) == -1)
-    {
-        perror("shmdt");
-        return -1;
+        
     }
     endwin();
     return 0;

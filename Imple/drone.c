@@ -149,22 +149,6 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-    // Create a shared memory segment
-    int shm_id = shmget(SHM_DRN, sizeof(struct Drone), IPC_CREAT | 0666);
-    if (shm_id < 0)
-    {
-        perror("shmget");
-        return -1;
-    }
-
-    // Attach the shared memory segment to our process's address space
-    struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
-    if (shared_drone == (struct Drone *)-1)
-    {
-        perror("shmat");
-        return -1;
-    }
-
     FILE *file = fopen("file_para.txt", "r");
     if (file == NULL)
     {
@@ -212,10 +196,6 @@ int main(int argc, char *argv[])
     printf("drone.x = %d\n", drone.x);
     printf("drone.y = %d\n", drone.y);
     sleep(10);
-    // shared_drone->x = drone.x;
-    // shared_drone->y = drone.y;
-    // shared_drone->symbol = drone.symbol;
-    // shared_drone->color_pair = drone.color_pair;
     write(pipeds[PIPE_READ], &drone, sizeof(drone));
     static double prev_x = 0, prev_y = 0;
     static double prev_vx = 0, prev_vy = 0;
@@ -299,12 +279,6 @@ int main(int argc, char *argv[])
         mvprintw(2, 0, "vx: %f, vy: %f\n", vx, vy);
 
         refresh();
-
-        // Use the shared memory
-        // shared_drone->x = (int)new_x;
-        // shared_drone->y = (int)new_y;
-        // shared_drone->symbol = drone.symbol;
-        // shared_drone->color_pair = drone.color_pair;
         drone.x = (int)new_x;
         drone.y = (int)new_y;
         drone.symbol = drone.symbol;
@@ -314,14 +288,5 @@ int main(int argc, char *argv[])
         clear(); // Clear the screen of all previously-printed characters
     }
     endwin();
-    // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_drone) == -1)
-    {
-        perror("shmdt");
-        return -1;
-    }
-
-    // Close the write end of the pipe when you're done with it
-    // close(pipedi[PIPE_WRITE]);
     return 0;
 }

@@ -154,72 +154,12 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-    int shm_id = shmget(SHM_DRN, sizeof(struct Drone), IPC_CREAT | 0666);
-    if (shm_id < 0)
-    {
-        perror("shmget");
-        return -1;
-    }
-
-    // Attach the shared memory segment to our process's address space
-    struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
-    if (shared_drone == (struct Drone *)-1)
-    {
-        perror("shmat");
-        return -1;
-    }
-
-    int shm_id2 = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
-    if (shm_id2 < 0)
-    {
-        perror("shmget");
-        return -1;
-    }
-
-    // Attach the shared memory segment to our process's address space
-    struct Drone *shared_wrld = (struct Drone *)shmat(shm_id2, NULL, 0);
-    if (shared_wrld == (struct Drone *)-1)
-    {
-        perror("shmat");
-        return -1;
-    }
-
-    // Use pipes
-    // struct Drone drone = {.x = 123, .y = 456};
-    // write(pipefd[1], &data, sizeof(data));
-
     while (1)
     {
-
-        // drone.x = shared_drone->x;
-        // drone.y = shared_drone->y;
-        // drone.symbol = shared_drone->symbol;
-        // drone.color_pair = shared_drone->color_pair;
         read(pipeds[PIPE_READ], &drone, sizeof(drone));
         printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
         sleep(0.5);
-        // shared_wrld->x = drone.x;
-        // shared_wrld->y = drone.y;
-        // shared_wrld->symbol = drone.symbol;
-        // shared_wrld->color_pair = drone.color_pair;
         write(pipesw[PIPE_WRITE], &drone, sizeof(drone));
-
-        printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", shared_wrld->x, shared_wrld->y, shared_wrld->symbol, shared_wrld->color_pair);
-        sleep(0.5);
-    }
-
-    // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_drone) == -1)
-    {
-        perror("shmdt");
-        return -1;
-    }
-
-    // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_wrld) == -1)
-    {
-        perror("shmdt");
-        return -1;
     }
 
     return 0;
