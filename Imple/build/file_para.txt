@@ -4,4 +4,3 @@ M = 0.1
 K = 1.0
 drone.x = 0
 drone.y = 0
-ciao 
