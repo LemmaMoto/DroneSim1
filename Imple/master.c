@@ -229,35 +229,35 @@ int main(int argc, char *argv[])
     }
     num_children += 1;
 
-    // child_process4 = fork();
-    // if (child_process4 < 0)
-    // {
-    //     perror("Fork");
-    //     return -1;
-    // }
+    child_process4 = fork();
+    if (child_process4 < 0)
+    {
+        perror("Fork");
+        return -1;
+    }
 
-    // if (child_process4 == 0)
-    // {
-    //     char *arg_list[] = {"konsole", "-e", "./obstacles", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
-    //     execvp("konsole", arg_list);
-    //     return 0;
-    // }
-    // num_children += 1;
+    if (child_process4 == 0)
+    {
+        char *arg_list[] = {"konsole", "-e", "./obstacles", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
+        execvp("konsole", arg_list);
+        return 0;
+    }
+    num_children += 1;
 
-    // child_process5 = fork();
-    // if (child_process5 < 0)
-    // {
-    //     perror("Fork");
-    //     return -1;
-    // }
+    child_process5 = fork();
+    if (child_process5 < 0)
+    {
+        perror("Fork");
+        return -1;
+    }
 
-    // if (child_process5 == 0)
-    // {
-    //     char *arg_list[] = {"konsole", "-e", "./world", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
-    //     execvp("konsole", arg_list);
-    //     return 0;
-    // }
-    // num_children += 1;
+    if (child_process5 == 0)
+    {
+        char *arg_list[] = {"konsole", "-e", "./targets", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
+        execvp("konsole", arg_list);
+        return 0;
+    }
+    num_children += 1;
 
     // Wait for all children to die
     for (int i = 0; i < num_children; i++)

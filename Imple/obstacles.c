@@ -53,15 +53,37 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 }
 
 
-
-
 struct Obstacle
 {
     int x;
     int y;
 };
 
+int main(int argc, char *argv[])
+{
+
 //leggere da file file_para numero di ostacoli 
+FILE *file = fopen("file_para.txt", "r");
+if (file == NULL) {
+    perror("Unable to open file");
+    exit(EXIT_FAILURE);
+}
+
+char line[256];
+int NUM_OBSTACLES = 0;
+
+while (fgets(line, sizeof(line), file)) {
+    if (sscanf(line, "NUM_OBSTACLES = %d", &NUM_OBSTACLES) == 1) {
+        // Se abbiamo trovato una riga che corrisponde al formato "NUM_OBSTACLES = %d",
+        // interrompiamo il ciclo
+        break;
+    }
+}
+
+fclose(file);
+
+printf("NUM_OBSTACLES = %d\n", NUM_OBSTACLES);
+sleep(20);
 
 struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
 
@@ -94,3 +116,4 @@ struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
 
 //     // ...
 // }
+}

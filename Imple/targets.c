@@ -59,7 +59,32 @@ struct Target
     int y;
 };
 
-//leggere da file file_para numero di target
+int main(int argc, char *argv[])
+{
+    
+
+
+FILE *file = fopen("file_para.txt", "r");
+if (file == NULL) {
+    perror("Unable to open file");
+    exit(EXIT_FAILURE);
+}
+
+char line[256];
+int NUM_TARGETS = 0;
+
+while (fgets(line, sizeof(line), file)) {
+    if (sscanf(line, "NUM_TARGETS = %d", &NUM_TARGETS) == 1) {
+        // Se abbiamo trovato una riga che corrisponde al formato "NUM_OBSTACLES = %d",
+        // interrompiamo il ciclo
+        break;
+    }
+}
+
+fclose(file);
+
+printf("NUM_TARGETS = %d\n", NUM_TARGETS);
+sleep(20);
 
 struct Target targets[NUM_TARGETS]; // Assume targets are initialized
 
@@ -74,23 +99,24 @@ struct Target targets[NUM_TARGETS]; // Assume targets are initialized
 // se passa un tot di tempo e il drone non ha raggiunto il target, il target si sposta in un'altra posizione randomica 
 
 // Main loop
-while (1)
-{
-    // ...
+// while (1)
+// {
+//     // ...
 
-    // Calculate attraction forces
-    double fx = 0, fy = 0;
-    for (int i = 0; i < NUM_TARGETS; ++i)
-    {
-        double dx = targets[i].x - x;
-        double dy = targets[i].y - y;
-        double distance = sqrt(dx * dx + dy * dy);
-        if (distance != 0) // Avoid division by zero
-        {
-            fx += TARGET_ATTRACTION_CONSTANT * dx / distance;
-            fy += TARGET_ATTRACTION_CONSTANT * dy / distance;
-        }
-    }
+//     // Calculate attraction forces
+//     double fx = 0, fy = 0;
+//     for (int i = 0; i < NUM_TARGETS; ++i)
+//     {
+//         double dx = targets[i].x - x;
+//         double dy = targets[i].y - y;
+//         double distance = sqrt(dx * dx + dy * dy);
+//         if (distance != 0) // Avoid division by zero
+//         {
+//             fx += TARGET_ATTRACTION_CONSTANT * dx / distance;
+//             fy += TARGET_ATTRACTION_CONSTANT * dy / distance;
+//         }
+//     }
 
-    // ...
+//     // ...
+// }
 }
