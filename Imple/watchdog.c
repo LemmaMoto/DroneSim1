@@ -11,7 +11,7 @@
 
 pid_t sp_pids[NUM_PROCESSES];
 struct timeval prev_ts[NUM_PROCESSES];
-int process_data_recieved[NUM_PROCESSES] = {0, 0, 0, 0};
+int process_data_recieved[NUM_PROCESSES] = {0, 0, 0, 0, 0, 0};
 char logfile_name[256] = LOG_FILE_NAME;
 int logfile_line = 0;                               // line to read from in the log file
 char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
