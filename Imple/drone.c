@@ -59,7 +59,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle;
+    struct Obstacle obstacle[100];
     struct Screen screen;
 };
 
