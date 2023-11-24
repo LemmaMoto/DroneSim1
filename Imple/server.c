@@ -32,6 +32,12 @@ struct Drone
     short color_pair;
 };
 
+struct Screen
+{
+    int height;
+    int width;
+};
+
 int pipesd[2];
 int pipeds[2];
 int pipeso[2];
@@ -39,6 +45,7 @@ int pipeos[2];
 int pipest[2];
 int pipets[2];
 int pipesw[2];
+int pipews[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -62,7 +69,7 @@ int main(int argc, char *argv[])
 {
     struct Drone drone = {0, 0, 'W', 1};
     int process_num;
-    if (argc == 16)
+    if (argc == 18)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesd[PIPE_READ]);
@@ -79,6 +86,8 @@ int main(int argc, char *argv[])
         sscanf(argv[13], "%d", &pipets[PIPE_WRITE]);
         sscanf(argv[14], "%d", &pipesw[PIPE_READ]);
         sscanf(argv[15], "%d", &pipesw[PIPE_WRITE]);
+        sscanf(argv[16], "%d", &pipews[PIPE_READ]);
+        sscanf(argv[17], "%d", &pipews[PIPE_WRITE]);
     }
     else
     {
@@ -100,6 +109,8 @@ int main(int argc, char *argv[])
     printf("pipets[PIPE_WRITE]: %d\n", pipets[PIPE_WRITE]);
     printf("pipesw[PIPE_READ]: %d\n", pipesw[PIPE_READ]);
     printf("pipesw[PIPE_WRITE]: %d\n", pipesw[PIPE_WRITE]);
+    printf("pipews[PIPE_READ]: %d\n", pipews[PIPE_READ]);
+    printf("pipews[PIPE_WRITE]: %d\n", pipews[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -154,12 +165,19 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
+    struct Screen screen;
     while (1)
     {
         read(pipeds[PIPE_READ], &drone, sizeof(drone));
         printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
-        sleep(0.5);
+        // sleep(0.5);
         write(pipesw[PIPE_WRITE], &drone, sizeof(drone));
+
+        read(pipews[PIPE_READ], &screen, sizeof(screen));
+        printf("height: %d, width: %d\n", screen.height, screen.width);
+
+        write(pipeso[PIPE_WRITE], &screen, sizeof(screen));
+        
     }
 
     return 0;

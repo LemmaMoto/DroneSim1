@@ -42,11 +42,22 @@ int main(int argc, char *argv[])
         perror("pipe");
         return -1;
     }
-
     char pipe_read_sw[10];
     char pipe_write_sw[10];
     sprintf(pipe_read_sw, "%d", pipesw[PIPE_READ]);
     sprintf(pipe_write_sw, "%d", pipesw[PIPE_WRITE]);
+
+    // PIPE PER COLLEGARE WORLD E SERVER
+    int pipews[2];
+    if (pipe(pipews) == -1)
+    {
+        perror("pipe");
+        return -1;
+    }
+    char pipe_read_ws[10];
+    char pipe_write_ws[10];
+    sprintf(pipe_read_ws, "%d", pipews[PIPE_READ]);
+    sprintf(pipe_write_ws, "%d", pipews[PIPE_WRITE]);
 
     // PIPE PER COLLEGARE SERVER E DRONE
     int pipesd[2];
@@ -178,7 +189,7 @@ int main(int argc, char *argv[])
 
     if (child_process0 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, NULL};
+        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, NULL};
         execvp("konsole", arg_list);
         return 0;
     }
@@ -223,7 +234,7 @@ int main(int argc, char *argv[])
 
     if (child_process3 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./world", "3", pipe_read_sw, pipe_write_sw, NULL};
+        char *arg_list[] = {"konsole", "-e", "./world", "3", pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, NULL};
         execvp("konsole", arg_list);
         return 0;
     }
@@ -281,6 +292,8 @@ int main(int argc, char *argv[])
     close(pipets[1]);
     close(pipeds[0]);
     close(pipeds[1]);
+    close(pipews[0]);
+    close(pipews[1]);
 
     printf("pipedi[0] = %d, pipedi[1] = %d\n", pipedi[PIPE_READ], pipedi[PIPE_WRITE]);
     printf("pipesd[0] = %d, pipesd[1] = %d\n", pipesd[PIPE_READ], pipesd[PIPE_WRITE]);
@@ -290,6 +303,8 @@ int main(int argc, char *argv[])
     printf("pipets[0] = %d, pipets[1] = %d\n", pipets[PIPE_READ], pipets[PIPE_WRITE]);
     printf("pipeds[0] = %d, pipeds[1] = %d\n", pipeds[PIPE_READ], pipeds[PIPE_WRITE]);
     printf("pipesw[0] = %d, pipesw[1] = %d\n", pipesw[PIPE_READ], pipesw[PIPE_WRITE]);
+    printf("pipews[0] = %d, pipews[1] = %d\n", pipews[PIPE_READ], pipews[PIPE_WRITE]);
+    
 
     return 0;
 }

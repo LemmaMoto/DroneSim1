@@ -32,6 +32,18 @@ struct Drone
     short color_pair;
 };
 
+struct Obstacle
+{
+    int x;
+    int y;
+};
+
+struct Screen
+{
+    int height;
+    int width;
+};
+
 int pipeso[2];
 int pipeos[2];
 
@@ -52,12 +64,6 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
         log_receipt(prev_t);
     }
 }
-
-struct Obstacle
-{
-    int x;
-    int y;
-};
 
 int main(int argc, char *argv[])
 {
@@ -158,12 +164,16 @@ int main(int argc, char *argv[])
     sleep(20);
 
     struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
+    struct Screen screen;
+
+    // Create a new window
+    WINDOW *win = newwin(0, 0, 0, 0);
+
     while (1)
     {
-       printf("sono il processo ostacols \n");
-       sleep(2);
+        read(pipeso[PIPE_READ], &screen, sizeof(screen));
+        printf("height: %d, width: %d\n", screen.height, screen.width);
     }
-    
 
     // posizionare gli ostacoli intorno alla window di modo da fare i bordi
 
@@ -194,4 +204,5 @@ int main(int argc, char *argv[])
 
     //     // ...
     // }
+    return 0;
 }

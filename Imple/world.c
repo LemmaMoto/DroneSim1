@@ -33,7 +33,14 @@ struct Drone
     short color_pair;
 };
 
+struct Screen
+{
+    int height;
+    int width;
+};
+
 int pipesw[2];
+int pipews[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -56,11 +63,13 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 int main(int argc, char *argv[])
 {
     int process_num;
-    if (argc == 4)
+    if (argc == 6)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesw[PIPE_READ]);
         sscanf(argv[3], "%d", &pipesw[PIPE_WRITE]);
+        sscanf(argv[4], "%d", &pipews[PIPE_READ]);
+        sscanf(argv[5], "%d", &pipews[PIPE_WRITE]);
     }
     else
     {
@@ -71,6 +80,8 @@ int main(int argc, char *argv[])
     printf("process num %d \n", process_num);
     printf("pipe read %d \n", pipesw[PIPE_READ]);
     printf("pipe write %d \n", pipesw[PIPE_WRITE]);
+    printf("pipe read %d \n", pipews[PIPE_READ]);
+    printf("pipe write %d \n", pipews[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -125,7 +136,8 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-    initscr();
+    WINDOW *win;
+    win = initscr();
     start_color();
     curs_set(0);
     timeout(100);
@@ -134,14 +146,19 @@ int main(int argc, char *argv[])
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
 
     struct Drone drone;
-
+    struct Screen screen;
+    int height, width;
     while (1)
     {
         clear();
         read(pipesw[PIPE_READ], &drone, sizeof(drone));
         mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position
-        refresh();                                      // Refresh the screen to show the changes
-        
+        getmaxyx(win, height, width);
+        screen.height = height;
+        screen.width = width;
+        mvprintw(20,20,"height: %d, width: %d\n", height, width);
+        write(pipews[PIPE_WRITE], &screen, sizeof(screen));
+        refresh(); // Refresh the screen to show the changes
     }
     endwin();
     return 0;
