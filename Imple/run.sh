@@ -4,3 +4,5 @@ cd ..
 make all
 cd build
 ./master
+clear
+
