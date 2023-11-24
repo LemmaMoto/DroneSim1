@@ -44,6 +44,13 @@ struct Screen
     int width;
 };
 
+struct World
+{
+    struct Drone drone;
+    struct Obstacle obstacle;
+    struct Screen screen;
+};
+
 int pipeso[2];
 int pipeos[2];
 
@@ -163,16 +170,18 @@ int main(int argc, char *argv[])
     printf("NUM_OBSTACLES = %d\n", NUM_OBSTACLES);
     sleep(20);
 
-    struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
-    struct Screen screen;
+    //struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
+    //struct Screen screen;
+    struct World world;
 
     // Create a new window
     WINDOW *win = newwin(0, 0, 0, 0);
 
     while (1)
     {
-        read(pipeso[PIPE_READ], &screen, sizeof(screen));
-        printf("height: %d, width: %d\n", screen.height, screen.width);
+        read(pipeso[PIPE_READ], &world, sizeof(world));
+        printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
+
     }
 
     // posizionare gli ostacoli intorno alla window di modo da fare i bordi

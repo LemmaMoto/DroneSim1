@@ -38,6 +38,18 @@ struct Screen
     int width;
 };
 
+struct Obstacle
+{
+    int x;
+    int y;
+};
+
+struct World
+{
+    struct Drone drone;
+    struct Obstacle obstacle;
+    struct Screen screen;
+};
 int pipesd[2];
 int pipeds[2];
 int pipeso[2];
@@ -165,7 +177,7 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-    struct Screen screen;
+    struct World world;
     while (1)
     {
         read(pipeds[PIPE_READ], &drone, sizeof(drone));
@@ -173,12 +185,11 @@ int main(int argc, char *argv[])
         // sleep(0.5);
         write(pipesw[PIPE_WRITE], &drone, sizeof(drone));
 
-        read(pipews[PIPE_READ], &screen, sizeof(screen));
-        printf("height: %d, width: %d\n", screen.height, screen.width);
+        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
+        printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
 
-        write(pipeso[PIPE_WRITE], &screen, sizeof(screen));
-        
-    }
+        write(pipeso[PIPE_WRITE], &world, sizeof(world));
+        }
 
     return 0;
 }

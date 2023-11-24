@@ -43,7 +43,25 @@ struct Drone
     char symbol;
     short color_pair;
 };
-struct Drone drone;
+
+struct Obstacle
+{
+    int x;
+    int y;
+};
+
+struct Screen
+{
+    int height;
+    int width;
+};
+
+struct World
+{
+    struct Drone drone;
+    struct Obstacle obstacle;
+    struct Screen screen;
+};
 
 int pipedi[2];
 int pipesd[2];
@@ -155,7 +173,7 @@ int main(int argc, char *argv[])
         printf("Could not open file_para.txt for reading\n");
         return 1;
     }
-    struct Drone drone;
+    struct World world;
     float M, K;
 
     char label[256];
@@ -163,11 +181,11 @@ int main(int argc, char *argv[])
     {
         if (strcmp(label, "drone.symbol") == 0)
         {
-            fscanf(file, " = '%c'", &drone.symbol);
+            fscanf(file, " = '%c'", &world.drone.symbol);
         }
         else if (strcmp(label, "drone.color_paire") == 0)
         {
-            fscanf(file, " = %hd", &drone.color_pair);
+            fscanf(file, " = %hd", &world.drone.color_pair);
         }
         else if (strcmp(label, "M") == 0)
         {
@@ -179,24 +197,24 @@ int main(int argc, char *argv[])
         }
         else if (strcmp(label, "drone.x") == 0)
         {
-            fscanf(file, " = %d", &drone.x);
+            fscanf(file, " = %d", &world.drone.x);
         }
         else if (strcmp(label, "drone.y") == 0)
         {
-            fscanf(file, " = %d", &drone.y);
+            fscanf(file, " = %d", &world.drone.y);
         }
     }
 
     fclose(file);
 
-    printf("drone.symbol = %c\n", drone.symbol);
-    printf("drone.color_paire = %hd\n", drone.color_pair);
+    printf("drone.symbol = %c\n", world.drone.symbol);
+    printf("drone.color_paire = %hd\n", world.drone.color_pair);
     printf("M = %f\n", M);
     printf("K = %f\n", K);
-    printf("drone.x = %d\n", drone.x);
-    printf("drone.y = %d\n", drone.y);
+    printf("drone.x = %d\n", world.drone.x);
+    printf("drone.y = %d\n", world.drone.y);
     sleep(10);
-    write(pipeds[PIPE_READ], &drone, sizeof(drone));
+    write(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
     static double prev_x = 0, prev_y = 0;
     static double prev_vx = 0, prev_vy = 0;
     double Fx = fx;
@@ -279,11 +297,11 @@ int main(int argc, char *argv[])
         mvprintw(2, 0, "vx: %f, vy: %f\n", vx, vy);
 
         refresh();
-        drone.x = (int)new_x;
-        drone.y = (int)new_y;
-        drone.symbol = drone.symbol;
-        drone.color_pair = drone.color_pair;
-        write(pipeds[PIPE_WRITE], &drone, sizeof(drone));
+        world.drone.x = (int)new_x;
+        world.drone.y = (int)new_y;
+        world.drone.symbol = world.drone.symbol;
+        world.drone.color_pair = world.drone.color_pair;
+        write(pipeds[PIPE_WRITE], &world.drone, sizeof(world.drone));
 
         clear(); // Clear the screen of all previously-printed characters
     }
