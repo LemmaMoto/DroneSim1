@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        read(pipeso[PIPE_READ], &world, sizeof(world));
+        read(pipeso[PIPE_READ], &world.screen, sizeof(world.screen));
         printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
 
     }

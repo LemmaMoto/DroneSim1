@@ -43,6 +43,7 @@ struct Obstacle
 {
     int x;
     int y;
+    char symbol;
 };
 struct World
 {
@@ -163,7 +164,9 @@ int main(int argc, char *argv[])
     {
         clear();
         read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
+        read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
+        
         getmaxyx(win, height, width);
         world.screen.height = height;
         world.screen.width = width;

@@ -42,6 +42,7 @@ struct Obstacle
 {
     int x;
     int y;
+    char symbol;
 };
 
 struct World
@@ -180,15 +181,17 @@ int main(int argc, char *argv[])
     struct World world;
     while (1)
     {
-        read(pipeds[PIPE_READ], &drone, sizeof(drone));
+        read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
+        read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
+        
         // sleep(0.5);
-        write(pipesw[PIPE_WRITE], &drone, sizeof(drone));
+        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
 
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
+        write(pipeso[PIPE_WRITE], &world.screen, sizeof(world.screen));
         printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
-
-        write(pipeso[PIPE_WRITE], &world, sizeof(world));
         }
 
     return 0;

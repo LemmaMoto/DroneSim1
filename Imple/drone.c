@@ -48,6 +48,7 @@ struct Obstacle
 {
     int x;
     int y;
+    char symbol;
 };
 
 struct Screen
