@@ -175,7 +175,6 @@ int main(int argc, char *argv[])
 
     printf("NUM_OBSTACLES = %d\n", NUM_OBSTACLES);
     printf("refresh_time_obstacles = %d\n", refresh_time_obstacles);
-    sleep(1);
     // struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
     // struct Screen screen;
     struct World world;
@@ -183,6 +182,10 @@ int main(int argc, char *argv[])
     // Create a new window
     WINDOW *win = newwin(0, 0, 0, 0);
     int tot_borders;
+    time_t last_spawn_time = 0;
+    int first;
+    int border_prec = 0;
+
     while (1)
     {
         read(pipeso[PIPE_READ], &world.screen, sizeof(world.screen));
@@ -192,74 +195,62 @@ int main(int argc, char *argv[])
 
         tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
 
+        if (tot_borders != border_prec)
+        {
+            first = 6;
+        }
+        border_prec = tot_borders;
+
         int i = 0;
 
-        for (; i < NUM_OBSTACLES; i++)
+        // generare ostacoli randomici
+        time_t current_time = time(NULL);
+        if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
         {
-            world.obstacle[i].x = rand() % (world.screen.width - 2) + 1;
-            world.obstacle[i].y = rand() % (world.screen.height - 2) + 1;
-            world.obstacle[i].symbol = '#';
-            //printf("x: %d, y: %d\n", world.obstacle[i].x, world.obstacle[i].y);
-        }
-        // Top and bottom borders
-        for (int x = 0; x < world.screen.width; x++)
-        {
-            world.obstacle[i].x = x;
-            world.obstacle[i].y = 0;
-            world.obstacle[i].symbol = '#';
-            i++;
+            for (; i < NUM_OBSTACLES; i++)
+            {
+                world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+                world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+                world.obstacle[i].symbol = '#';
+            }
+            last_spawn_time = current_time;
 
-            world.obstacle[i].x = x;
-            world.obstacle[i].y = world.screen.height - 1;
-            world.obstacle[i].symbol = '#';
-            i++;
-        }
-        // Left and right borders
-        for (int y = 1; y < world.screen.height - 1; y++)
-        {
-            world.obstacle[i].x = 0;
-            world.obstacle[i].y = y;
-            world.obstacle[i].symbol = '#';
-            i++;
+            // Top and bottom borders
+            for (int x = 0; x < world.screen.width; x++)
+            {
+                world.obstacle[i].x = x;
+                world.obstacle[i].y = 0;
+                world.obstacle[i].symbol = '#';
+                i++;
 
-            world.obstacle[i].x = world.screen.width - 1;
-            world.obstacle[i].y = y;
-            world.obstacle[i].symbol = '#';
-            i++;
-        }
+                world.obstacle[i].x = x;
+                world.obstacle[i].y = world.screen.height - 1;
+                world.obstacle[i].symbol = '#';
+                i++;
+            }
+            // Left and right borders
+            for (int y = 1; y < world.screen.height - 1; y++)
+            {
+                world.obstacle[i].x = 0;
+                world.obstacle[i].y = y;
+                world.obstacle[i].symbol = '#';
+                i++;
 
+                world.obstacle[i].x = world.screen.width - 1;
+                world.obstacle[i].y = y;
+                world.obstacle[i].symbol = '#';
+                i++;
+            }
+        }
+        first--;
         // generare ostacoli randomici
         printf("tot_borders: %d\n", tot_borders);
         printf("i: %d\n", i);
         write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
         fsync(pipeos[PIPE_WRITE]);
-        
     }
-
-    // far si che gli ostacoli non si sovrappongano
 
     // passare gli ostacoli al drone via pipe
 
-    // Main loop
-    // while (1)
-    // {
-    //     // ...
-
-    //     // Calculate repulsion forces
-    //     double fx = 0, fy = 0;
-    //     for (int i = 0; i < NUM_OBSTACLES; ++i)
-    //     {
-    //         double dx = x - obstacles[i].x;
-    //         double dy = y - obstacles[i].y;
-    //         double distance = sqrt(dx * dx + dy * dy);
-    //         if (distance != 0) // Avoid division by zero
-    //         {
-    //             fx += OBSTACLE_REPULSION_CONSTANT * dx / (distance * distance * distance);
-    //             fy += OBSTACLE_REPULSION_CONSTANT * dy / (distance * distance * distance);
-    //         }
-    //     }
-
-    //     // ...
-    // }
     return 0;
 }

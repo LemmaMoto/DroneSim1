@@ -12,18 +12,19 @@
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <math.h>
 
 #define SHM_DRN 12
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-
+#define OBSTACLE_REPULSION_CONSTANT 1.0
 // #define M 1.0
 // #define K 0.1
 #define T 0.01
 
 // Initialize position and velocity
-double x,y;
+double x, y;
 double vx = 0, vy = 0;
 
 // Initialize forces
@@ -214,20 +215,22 @@ int main(int argc, char *argv[])
     printf("K = %f\n", K);
     printf("drone.x = %d\n", world.drone.x);
     printf("drone.y = %d\n", world.drone.y);
-    sleep(1);
     write(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
     double prev_x = world.drone.x, prev_y = world.drone.y;
     static double prev_vx = 0, prev_vy = 0;
     double Fx = fx;
     double Fy = fy;
+    double fx = 0, fy = 0;
 
     while (1)
     {
         char command = '\0';
         printf("Reading from pipe\n");
         int bytesRead = read(pipedi[PIPE_READ], &command, sizeof(char));
+        read(pipesd[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         printf("Read %d bytes\n", bytesRead);
         printf("Command: %c\n", command);
+
         if (bytesRead > 0)
         {
             switch (command)
@@ -279,6 +282,18 @@ int main(int argc, char *argv[])
             perror("read");
         }
 
+        for (int i = 0; i < 558; ++i)
+        {
+            double dx = prev_x - world.obstacle[i].x;
+            double dy = prev_y - world.obstacle[i].y;
+            double distance = sqrt(dx * dx + dy * dy);
+            if (distance != 0) // Avoid division by zero
+            {
+                fx += OBSTACLE_REPULSION_CONSTANT * dx / (distance * distance * distance);
+                fy += OBSTACLE_REPULSION_CONSTANT * dy / (distance * distance * distance);
+            }
+        }
+
         // Update velocity and position
         double ax = (fx / M) - (K * vx);
         double ay = (fy / M) - (K * vy);
@@ -310,3 +325,21 @@ int main(int argc, char *argv[])
     endwin();
     return 0;
 }
+
+// while (1)
+//  {
+//      // ...
+
+//     // Calculate repulsion forces
+//     double fx = 0, fy = 0;
+//     for (int i = 0; i < NUM_OBSTACLES; ++i)
+//     {
+//         double dx = x - obstacles[i].x;
+//         double dy = y - obstacles[i].y;
+//         double distance = sqrt(dx * dx + dy * dy);
+//         if (distance != 0) // Avoid division by zero
+//         {
+//             fx += OBSTACLE_REPULSION_CONSTANT * dx / (distance * distance * distance);
+//             fy += OBSTACLE_REPULSION_CONSTANT * dy / (distance * distance * distance);
+//         }
+//     }
