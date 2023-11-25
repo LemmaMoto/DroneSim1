@@ -18,7 +18,7 @@
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-#define OBSTACLE_REPULSION_CONSTANT 1.0
+#define OBSTACLE_REPULSION_CONSTANT 10.0
 // #define M 1.0
 // #define K 0.1
 #define T 0.01
@@ -216,11 +216,11 @@ int main(int argc, char *argv[])
     printf("drone.x = %d\n", world.drone.x);
     printf("drone.y = %d\n", world.drone.y);
     write(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
+    double fx = 0, fy = 0;
     double prev_x = world.drone.x, prev_y = world.drone.y;
     static double prev_vx = 0, prev_vy = 0;
     double Fx = fx;
     double Fy = fy;
-    double fx = 0, fy = 0;
 
     while (1)
     {
@@ -230,6 +230,23 @@ int main(int argc, char *argv[])
         read(pipesd[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         printf("Read %d bytes\n", bytesRead);
         printf("Command: %c\n", command);
+
+        for (int i = 0; i < 558; ++i)
+        {
+            double dx = world.drone.x - world.obstacle[i].x;
+            double dy = world.drone.y - world.obstacle[i].y;
+            double distance = sqrt(dx * dx + dy * dy);
+            if (distance != 0 && distance <= 1) // Check if the obstacle is within the circle of radius 2
+            {
+                double repulsion_force = OBSTACLE_REPULSION_CONSTANT / distance;
+                fx = fx + (repulsion_force * dx / distance); // Subtract or add the repulsion force based on the direction of dx
+                fy = fy + (repulsion_force * dy / distance); // Subtract or add the repulsion force based on the direction of dy
+            }
+            else {
+                fx = Fx;
+                fy = Fy;
+            }
+        }
 
         if (bytesRead > 0)
         {
@@ -280,18 +297,6 @@ int main(int argc, char *argv[])
         else
         {
             perror("read");
-        }
-
-        for (int i = 0; i < 558; ++i)
-        {
-            double dx = prev_x - world.obstacle[i].x;
-            double dy = prev_y - world.obstacle[i].y;
-            double distance = sqrt(dx * dx + dy * dy);
-            if (distance != 0) // Avoid division by zero
-            {
-                fx += OBSTACLE_REPULSION_CONSTANT * dx / (distance * distance * distance);
-                fy += OBSTACLE_REPULSION_CONSTANT * dy / (distance * distance * distance);
-            }
         }
 
         // Update velocity and position
