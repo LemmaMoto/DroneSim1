@@ -19,7 +19,7 @@
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-#define OBSTACLE_REPULSION_CONSTANT 500
+#define OBSTACLE_REPULSION_CONSTANT 500.0
 // #define M 1.0
 // #define K 0.1
 #define T 0.01
@@ -240,38 +240,41 @@ int main(int argc, char *argv[])
         {
             double dx = world.drone.x - world.obstacle[i].x;
             double dy = world.drone.y - world.obstacle[i].y;
-            double distance = fabs(dx); // Use absolute value to get the distance
+            double distance = sqrt(dx * dx + dy * dy); // Use absolute value to get the distance
 
             if (distance < min_distance)
             {
                 min_distance = distance;
                 closest_obstacle_index = i;
             }
-
-            // Now calculate the distance from the closest obstacle
-            dx = world.drone.x - world.obstacle[closest_obstacle_index].x;
-            dy = world.drone.y - world.obstacle[closest_obstacle_index].y;
-            distance = sqrt(dx * dx + dy * dy);
-
-            if (distance < 4) // Check if the obstacle is within the circle of radius 2
-            {
-                double repulsion_force = OBSTACLE_REPULSION_CONSTANT * ((1 / distance) - (1 / 4)) * (1 / (distance * distance));
-                fx = fx + repulsion_force; // Subtract or add the repulsion force based on the direction of dx
-                fy = fy + repulsion_force; // Subtract or add the repulsion force based on the direction of dy
-                printf("repulsion_force = %f\n", repulsion_force);
-            }
-            else
-            {
-                fx = Fx;
-                fy = Fy;
-            }
-            // printf("fx = %f, fy = %f\n", fx, fy);
-            // printf("dx = %f, dy = %f\n", dx, dy);
-            mvprintw(20, 20, "distance = %f\n", distance);
-            mvprintw(25, 25, "world.obstacle[%d].x = %d\n", i, world.obstacle[i].x);
-            mvprintw(30, 30, "world.obstacle[%d].y = %d\n", i, world.obstacle[i].y);
-            refresh();
         }
+
+        // Now calculate the distance from the closest obstacle
+        double dx = world.drone.x - world.obstacle[closest_obstacle_index].x;
+        double dy = world.drone.y - world.obstacle[closest_obstacle_index].y;
+        double distance = sqrt(dx * dx + dy * dy);
+
+        if (distance < 4) // Check if the obstacle is within the circle of radius 2
+        {
+            double repulsion_force = OBSTACLE_REPULSION_CONSTANT * ((1 / distance) - (1 / 4)) * (1 / (distance * distance));
+            double angle = atan2(dy, dx); // Calculate the angle
+
+            // Apply the repulsion force in the opposite direction of fx
+            fx = fx - repulsion_force * cos(angle);
+            fy = fy - repulsion_force * sin(angle);
+
+            printf("repulsion_force = %f\n", repulsion_force);
+        }
+        else
+        {
+            fx = Fx;
+            fy = Fy;
+        }
+
+        mvprintw(20, 20, "distance = %f\n", distance);
+        mvprintw(25, 25, "world.obstacle[%d].x = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].x);
+        mvprintw(30, 30, "world.obstacle[%d].y = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].y);
+        refresh();
 
         if (bytesRead > 0)
         {

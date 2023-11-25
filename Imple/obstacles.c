@@ -209,8 +209,12 @@ int main(int argc, char *argv[])
         {
             for (; i < NUM_OBSTACLES; i++)
             {
-                world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
-                world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+                do
+                {
+                    world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+                    world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+                } while (world.obstacle[i].x == 10 && world.obstacle[i].y == 10);
+
                 world.obstacle[i].symbol = '#';
             }
             last_spawn_time = current_time;
