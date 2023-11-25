@@ -48,7 +48,7 @@ struct Obstacle
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[558];
+    struct Obstacle obstacle[676];
     struct Screen screen;
 };
 
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
         read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesw[PIPE_READ]);
-        for (int i = 0; i < 558; i++)
+        for (int i = 0; i < 676; i++)
         {   
             mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
             mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol); // Print the obstacle symbol at the obstacle position

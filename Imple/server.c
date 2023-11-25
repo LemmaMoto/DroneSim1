@@ -48,7 +48,7 @@ struct Obstacle
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[558];
+    struct Obstacle obstacle[676];
     struct Screen screen;
 };
 int pipesd[2];
