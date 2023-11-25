@@ -23,7 +23,7 @@
 #define T 0.01
 
 // Initialize position and velocity
-double x = 0, y = 0;
+double x,y;
 double vx = 0, vy = 0;
 
 // Initialize forces
@@ -60,7 +60,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[100];
+    struct Obstacle obstacle[558];
     struct Screen screen;
 };
 
@@ -214,9 +214,9 @@ int main(int argc, char *argv[])
     printf("K = %f\n", K);
     printf("drone.x = %d\n", world.drone.x);
     printf("drone.y = %d\n", world.drone.y);
-    sleep(10);
+    sleep(1);
     write(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
-    static double prev_x = 0, prev_y = 0;
+    double prev_x = world.drone.x, prev_y = world.drone.y;
     static double prev_vx = 0, prev_vy = 0;
     double Fx = fx;
     double Fy = fy;
@@ -303,6 +303,7 @@ int main(int argc, char *argv[])
         world.drone.symbol = world.drone.symbol;
         world.drone.color_pair = world.drone.color_pair;
         write(pipeds[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        fsync(pipeds[PIPE_WRITE]);
 
         clear(); // Clear the screen of all previously-printed characters
     }

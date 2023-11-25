@@ -36,6 +36,7 @@ struct Obstacle
 {
     int x;
     int y;
+    char symbol;
 };
 
 struct Screen
@@ -47,7 +48,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[100];
+    struct Obstacle obstacle[558]; // 512 + 50(NUM_OBSTACLES) +1 a caso
     struct Screen screen;
 };
 
@@ -154,6 +155,7 @@ int main(int argc, char *argv[])
 
     char line[256];
     int NUM_OBSTACLES = 0;
+    int refresh_time_obstacles = 0;
 
     while (fgets(line, sizeof(line), file))
     {
@@ -161,6 +163,10 @@ int main(int argc, char *argv[])
         {
             // Se abbiamo trovato una riga che corrisponde al formato "NUM_OBSTACLES = %d",
             // interrompiamo il ciclo
+            continue;
+        }
+        else if (sscanf(line, "refresh_time_obstacles = %d", &refresh_time_obstacles) == 1)
+        {
             break;
         }
     }
@@ -168,27 +174,69 @@ int main(int argc, char *argv[])
     fclose(file);
 
     printf("NUM_OBSTACLES = %d\n", NUM_OBSTACLES);
-    sleep(20);
-
-    //struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
-    //struct Screen screen;
+    printf("refresh_time_obstacles = %d\n", refresh_time_obstacles);
+    sleep(1);
+    // struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
+    // struct Screen screen;
     struct World world;
 
     // Create a new window
     WINDOW *win = newwin(0, 0, 0, 0);
-
+    int tot_borders;
     while (1)
     {
         read(pipeso[PIPE_READ], &world.screen, sizeof(world.screen));
-        printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
+        // printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
 
+        // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
+
+        tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+
+        int i = 0;
+
+        for (; i < NUM_OBSTACLES; i++)
+        {
+            world.obstacle[i].x = rand() % (world.screen.width - 2) + 1;
+            world.obstacle[i].y = rand() % (world.screen.height - 2) + 1;
+            world.obstacle[i].symbol = '#';
+            //printf("x: %d, y: %d\n", world.obstacle[i].x, world.obstacle[i].y);
+        }
+        // Top and bottom borders
+        for (int x = 0; x < world.screen.width; x++)
+        {
+            world.obstacle[i].x = x;
+            world.obstacle[i].y = 0;
+            world.obstacle[i].symbol = '#';
+            i++;
+
+            world.obstacle[i].x = x;
+            world.obstacle[i].y = world.screen.height - 1;
+            world.obstacle[i].symbol = '#';
+            i++;
+        }
+        // Left and right borders
+        for (int y = 1; y < world.screen.height - 1; y++)
+        {
+            world.obstacle[i].x = 0;
+            world.obstacle[i].y = y;
+            world.obstacle[i].symbol = '#';
+            i++;
+
+            world.obstacle[i].x = world.screen.width - 1;
+            world.obstacle[i].y = y;
+            world.obstacle[i].symbol = '#';
+            i++;
+        }
+
+        // generare ostacoli randomici
+        printf("tot_borders: %d\n", tot_borders);
+        printf("i: %d\n", i);
+        write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        fsync(pipeos[PIPE_WRITE]);
+        
     }
 
-    // posizionare gli ostacoli intorno alla window di modo da fare i bordi
-
     // far si che gli ostacoli non si sovrappongano
-
-    // generare ostacoli randomici
 
     // passare gli ostacoli al drone via pipe
 

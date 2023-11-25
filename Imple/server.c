@@ -48,7 +48,7 @@ struct Obstacle
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[100];
+    struct Obstacle obstacle[558];
     struct Screen screen;
 };
 int pipesd[2];
@@ -80,7 +80,7 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
-    struct Drone drone = {0, 0, 'W', 1};
+    struct Drone drone;
     int process_num;
     if (argc == 18)
     {
@@ -183,16 +183,19 @@ int main(int argc, char *argv[])
     {
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
-        
+        // printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
+
         // sleep(0.5);
         write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        fsync(pipesw[PIPE_WRITE]);
         write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        fsync(pipesw[PIPE_WRITE]);
 
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         write(pipeso[PIPE_WRITE], &world.screen, sizeof(world.screen));
-        printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
-        }
+        fsync(pipeso[PIPE_WRITE]);
+        printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
+    }
 
     return 0;
 }

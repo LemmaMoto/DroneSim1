@@ -48,7 +48,7 @@ struct Obstacle
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[100];
+    struct Obstacle obstacle[558];
     struct Screen screen;
 };
 
@@ -165,13 +165,19 @@ int main(int argc, char *argv[])
         clear();
         read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
+        fsync(pipesw[PIPE_READ]);
+        for (int i = 0; i < 558; i++)
+        {   
+            mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
+            mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol); // Print the obstacle symbol at the obstacle position
+        }
         
         getmaxyx(win, height, width);
         world.screen.height = height;
         world.screen.width = width;
         mvprintw(20, 20, "height: %d, width: %d\n", height, width);
         write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        fsync(pipews[PIPE_WRITE]);
         refresh(); // Refresh the screen to show the changes
     }
     endwin();
