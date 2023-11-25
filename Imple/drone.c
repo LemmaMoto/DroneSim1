@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     printf("K = %f\n", K);
     printf("drone.x = %d\n", world.drone.x);
     printf("drone.y = %d\n", world.drone.y);
-    write(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
+    write(pipeds[PIPE_WRITE], &world.drone, sizeof(world.drone));
     double fx = 0, fy = 0;
     double prev_x = world.drone.x, prev_y = world.drone.y;
     static double prev_vx = 0, prev_vy = 0;

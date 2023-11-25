@@ -213,6 +213,8 @@ int main(int argc, char *argv[])
 
         write(pipeso[PIPE_WRITE], &world.screen, sizeof(world.screen));
         fsync(pipeso[PIPE_WRITE]);
+        write(pipest[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        fsync(pipest[PIPE_WRITE]);
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
        
     }

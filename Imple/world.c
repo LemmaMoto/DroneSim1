@@ -178,26 +178,25 @@ int main(int argc, char *argv[])
         read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         read(pipesw[PIPE_READ], &world.target, sizeof(world.target));
 
-        attron(COLOR_PAIR(2));
+        
         mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
-        attroff(COLOR_PAIR(2));
+        
         for (int i = 0; i < 676; i++)
         {
-            attron(COLOR_PAIR(1));
+            
             mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol); // Print the obstacle symbol at the obstacle position
-            attroff(COLOR_PAIR(1));
+            
         }
         for (int i = 0; i < 9; i++)
         {
-            attron(COLOR_PAIR(4));
+            
             mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol); // Print the target symbol at the target position
-            attroff(COLOR_PAIR(4));
+            
         }
 
         getmaxyx(win, height, width);
         world.screen.height = height;
         world.screen.width = width;
-        mvprintw(20, 20, "height: %d, width: %d\n", height, width);
         write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen));
         fsync(pipews[PIPE_WRITE]);
         refresh(); // Refresh the screen to show the changes

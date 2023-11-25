@@ -80,7 +80,6 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
     }
 }
 
-
 int main(int argc, char *argv[])
 {
     // Set up sigaction for receiving signals from processes
@@ -168,10 +167,10 @@ int main(int argc, char *argv[])
             // interrompiamo il ciclo
             continue;
         }
-        else if (sscanf(line, "refresh_time_targets = %d", &refresh_time_targets) == 1){
+        else if (sscanf(line, "refresh_time_targets = %d", &refresh_time_targets) == 1)
+        {
             break;
         }
-
     }
 
     fclose(file);
@@ -181,17 +180,18 @@ int main(int argc, char *argv[])
 
     struct World world;
     time_t last_spawn_time = 0;
-    int first = 6;
+    int first = 2;
     while (1)
     {
-        read(pipest[PIPE_READ], &world.target, sizeof(world.target));
-        printf("target x: %d\n", world.target[0].x);
+        read(pipest[PIPE_READ], &world.screen, sizeof(world.screen));
+        printf("screen width: %d\n", world.screen.width);
+        printf("screen height: %d\n", world.screen.height);
 
         time_t current_time = time(NULL);
         if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
         {
-            for (int i=0; i < NUM_TARGETS; i++)
-            {   
+            for (int i = 0; i < NUM_TARGETS; i++)
+            {
                 do
                 {
                     world.target[i].x = rand() % (world.screen.width - 4) + 2;
