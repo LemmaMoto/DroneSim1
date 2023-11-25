@@ -231,14 +231,14 @@ int main(int argc, char *argv[])
         printf("Read %d bytes\n", bytesRead);
         printf("Command: %c\n", command);
 
-        for (int i = 0; i < 558; ++i)
+        for (int i = 0; i < 676; ++i)
         {
             double dx = world.drone.x - world.obstacle[i].x;
             double dy = world.drone.y - world.obstacle[i].y;
             double distance = sqrt(dx * dx + dy * dy);
-            if (distance != 0 && distance <= 1) // Check if the obstacle is within the circle of radius 2
+            if ( distance <= 4) // Check if the obstacle is within the circle of radius 2
             {
-                double repulsion_force = OBSTACLE_REPULSION_CONSTANT / (distance-1);
+                double repulsion_force = OBSTACLE_REPULSION_CONSTANT / (distance);
                 fx = fx + (repulsion_force * dx / distance); // Subtract or add the repulsion force based on the direction of dx
                 fy = fy + (repulsion_force * dy / distance); // Subtract or add the repulsion force based on the direction of dy
             }
