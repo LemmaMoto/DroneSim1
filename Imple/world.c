@@ -156,22 +156,29 @@ int main(int argc, char *argv[])
     timeout(100);
     srand(time(NULL));
 
-    init_pair(1, COLOR_BLACK, COLOR_WHITE);
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
 
     struct World world;
     int height, width;
     while (1)
-    {
+    {   
         clear();
         read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesw[PIPE_READ]);
+
+        attron(COLOR_PAIR(2));                                            // Use the blue-black color pair for the drone
+        mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
+        attroff(COLOR_PAIR(2));
+
+        attron(COLOR_PAIR(1)); // Use the black-white color pair for the obstacles
         for (int i = 0; i < 676; i++)
-        {   
-            mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
+        {
             mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol); // Print the obstacle symbol at the obstacle position
         }
-        
+        attroff(COLOR_PAIR(1));
+
         getmaxyx(win, height, width);
         world.screen.height = height;
         world.screen.width = width;

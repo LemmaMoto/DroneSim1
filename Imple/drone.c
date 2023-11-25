@@ -19,7 +19,7 @@
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-#define OBSTACLE_REPULSION_CONSTANT 500.0
+#define OBSTACLE_REPULSION_CONSTANT 100.0
 // #define M 1.0
 // #define K 0.1
 #define T 0.01
@@ -260,8 +260,8 @@ int main(int argc, char *argv[])
             double angle = atan2(dy, dx); // Calculate the angle
 
             // Apply the repulsion force in the opposite direction of fx
-            fx = fx - repulsion_force * cos(angle);
-            fy = fy - repulsion_force * sin(angle);
+            fx = fx + repulsion_force * cos(angle);
+            fy = fy + repulsion_force * sin(angle);
 
             printf("repulsion_force = %f\n", repulsion_force);
         }
@@ -312,6 +312,18 @@ int main(int argc, char *argv[])
                 fy -= 100.0; // forza verso DDx
                 fx += 100.0;
                 break;
+            case 'a':
+                break;
+            case 'b':
+                fx = 0; // annulla forza
+                fy = 0;
+                vx = 0; // annulla velocità
+                vy = 0;
+                prev_x = world.drone.x; // annulla posizione
+                prev_y = world.drone.y;
+                prev_vx = 0; // annulla velocità
+                prev_vy = 0;
+                break;
             case '\0':
                 command = '\0'; // Comando non valido
                 break;
@@ -332,6 +344,9 @@ int main(int argc, char *argv[])
         double ay = (fy / M) - (K * vy);
         vx = prev_vx + ax * T;
         vy = prev_vy + ay * T;
+
+        vx = fmax(fmin(vx, 100), -100);
+        vy = fmax(fmin(vy, 100), -100);
 
         double new_x = prev_x + vx * T;
         double new_y = prev_y + vy * T;

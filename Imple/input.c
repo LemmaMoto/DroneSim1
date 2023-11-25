@@ -226,6 +226,12 @@ void ui_process()
                 highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth, ++count[2][2]);
             }
             break;
+        case 'a':
+            command = 'a'; // easter egg
+            break;
+        case 'b':
+            command = 'b'; // break
+            break;
         case 'q':
             command = 'Q'; // Termina il programma
             mvprintw(0, 0, "Terminazione in corso...\n");
