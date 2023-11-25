@@ -45,11 +45,19 @@ struct Obstacle
     int y;
     char symbol;
 };
+struct Target
+{
+    int x;
+    int y;
+    char symbol;
+};
+
 struct World
 {
     struct Drone drone;
     struct Obstacle obstacle[676];
     struct Screen screen;
+    struct Target target[9];
 };
 
 int pipesw[2];
@@ -158,26 +166,33 @@ int main(int argc, char *argv[])
 
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(3, COLOR_RED, COLOR_BLACK);
+    init_pair(4, COLOR_GREEN, COLOR_BLACK);
 
     struct World world;
     int height, width;
     while (1)
-    {   
+    {
         clear();
         read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        fsync(pipesw[PIPE_READ]);
+        read(pipesw[PIPE_READ], &world.target, sizeof(world.target));
 
-        attron(COLOR_PAIR(2));                                            // Use the blue-black color pair for the drone
+        attron(COLOR_PAIR(2));
         mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
         attroff(COLOR_PAIR(2));
-
-        attron(COLOR_PAIR(1)); // Use the black-white color pair for the obstacles
         for (int i = 0; i < 676; i++)
         {
+            attron(COLOR_PAIR(1));
             mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol); // Print the obstacle symbol at the obstacle position
+            attroff(COLOR_PAIR(1));
         }
-        attroff(COLOR_PAIR(1));
+        for (int i = 0; i < 9; i++)
+        {
+            attron(COLOR_PAIR(4));
+            mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol); // Print the target symbol at the target position
+            attroff(COLOR_PAIR(4));
+        }
 
         getmaxyx(win, height, width);
         world.screen.height = height;

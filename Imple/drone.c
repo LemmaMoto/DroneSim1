@@ -52,6 +52,12 @@ struct Obstacle
     int y;
     char symbol;
 };
+struct Target
+{
+    int x;
+    int y;
+    char symbol;
+};
 
 struct Screen
 {
@@ -64,6 +70,7 @@ struct World
     struct Drone drone;
     struct Obstacle obstacle[676];
     struct Screen screen;
+    struct Target target[9];
 };
 
 int pipedi[2];

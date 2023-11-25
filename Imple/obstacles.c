@@ -38,6 +38,12 @@ struct Obstacle
     int y;
     char symbol;
 };
+struct Target
+{
+    int x;
+    int y;
+    char symbol;
+};
 
 struct Screen
 {
@@ -50,6 +56,7 @@ struct World
     struct Drone drone;
     struct Obstacle obstacle[676]; // 512 + 50(NUM_OBSTACLES) +1 a caso
     struct Screen screen;
+    struct Target target[9];
 };
 
 int pipeso[2];
@@ -213,7 +220,7 @@ int main(int argc, char *argv[])
                 {
                     world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
                     world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
-                } while (world.obstacle[i].x == 10 && world.obstacle[i].y == 10);
+                } while (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y);
 
                 world.obstacle[i].symbol = '#';
             }

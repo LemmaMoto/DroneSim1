@@ -31,6 +31,34 @@ struct Drone
     short color_pair;
 };
 
+struct Obstacle
+{
+    int x;
+    int y;
+    char symbol;
+};
+
+struct Target
+{
+    int x;
+    int y;
+    char symbol;
+};
+
+struct Screen
+{
+    int height;
+    int width;
+};
+
+struct World
+{
+    struct Drone drone;
+    struct Obstacle obstacle[676]; // 512 + 50(NUM_OBSTACLES) +1 a caso
+    struct Screen screen;
+    struct Target target[9];
+};
+
 int pipest[2];
 int pipets[2];
 
@@ -52,11 +80,6 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
     }
 }
 
-struct Target
-{
-    int x;
-    int y;
-};
 
 int main(int argc, char *argv[])
 {
@@ -135,6 +158,7 @@ int main(int argc, char *argv[])
 
     char line[256];
     int NUM_TARGETS = 0;
+    int refresh_time_targets = 0;
 
     while (fgets(line, sizeof(line), file))
     {
@@ -142,53 +166,76 @@ int main(int argc, char *argv[])
         {
             // Se abbiamo trovato una riga che corrisponde al formato "NUM_OBSTACLES = %d",
             // interrompiamo il ciclo
+            continue;
+        }
+        else if (sscanf(line, "refresh_time_targets = %d", &refresh_time_targets) == 1){
             break;
         }
+
     }
 
     fclose(file);
 
     printf("NUM_TARGETS = %d\n", NUM_TARGETS);
-    sleep(20);
+    printf("refresh_time_targets = %d\n", refresh_time_targets);
 
-    struct Target targets[NUM_TARGETS]; // Assume targets are initialized
-
+    struct World world;
+    time_t last_spawn_time = 0;
+    int first = 6;
     while (1)
     {
-        printf("sono il processo target\n");
-        sleep(2);
+        read(pipest[PIPE_READ], &world.target, sizeof(world.target));
+        printf("target x: %d\n", world.target[0].x);
+
+        time_t current_time = time(NULL);
+        if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+        {
+            for (int i=0; i < NUM_TARGETS; i++)
+            {   
+                do
+                {
+                    world.target[i].x = rand() % (world.screen.width - 4) + 2;
+                    world.target[i].y = rand() % (world.screen.height - 4) + 2;
+                } while (world.target[i].x == world.drone.x && world.target[i].y == world.drone.y);
+
+                world.target[i].symbol = '0' + i;
+            }
+            last_spawn_time = current_time;
+        }
+        first--;
+        write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
+        fsync(pipets[PIPE_WRITE]);
+        // far si che i target non si sovrappongano
+
+        // generare target randomici numerati da 1 a 9
+
+        // passare i target al drone via pipe passando per il server e controllare che il drone non si sovrapponga ai target
+
+        // far sparire i target una volta raggiunti dal drone leggendo da pipe dal server
+
+        // se passa un tot di tempo e il drone non ha raggiunto il target, il target si sposta in un'altra posizione randomica
+
+        // Main loop
+        // while (1)
+        // {
+        //     // ...
+
+        //     // Calculate attraction forces
+        //     double fx = 0, fy = 0;
+        //     for (int i = 0; i < NUM_TARGETS; ++i)
+        //     {
+        //         double dx = targets[i].x - x;
+        //         double dy = targets[i].y - y;
+        //         double distance = sqrt(dx * dx + dy * dy);
+        //         if (distance != 0) // Avoid division by zero
+        //         {
+        //             fx += TARGET_ATTRACTION_CONSTANT * dx / distance;
+        //             fy += TARGET_ATTRACTION_CONSTANT * dy / distance;
+        //         }
+        //     }
+
+        //     // ...
+        // }
     }
-    
-
-    // far si che i target non si sovrappongano
-
-    // generare target randomici numerati da 1 a 9
-
-    // passare i target al drone via pipe passando per il server e controllare che il drone non si sovrapponga ai target
-
-    // far sparire i target una volta raggiunti dal drone leggendo da pipe dal server
-
-    // se passa un tot di tempo e il drone non ha raggiunto il target, il target si sposta in un'altra posizione randomica
-
-    // Main loop
-    // while (1)
-    // {
-    //     // ...
-
-    //     // Calculate attraction forces
-    //     double fx = 0, fy = 0;
-    //     for (int i = 0; i < NUM_TARGETS; ++i)
-    //     {
-    //         double dx = targets[i].x - x;
-    //         double dy = targets[i].y - y;
-    //         double distance = sqrt(dx * dx + dy * dy);
-    //         if (distance != 0) // Avoid division by zero
-    //         {
-    //             fx += TARGET_ATTRACTION_CONSTANT * dx / distance;
-    //             fy += TARGET_ATTRACTION_CONSTANT * dy / distance;
-    //         }
-    //     }
-
-    //     // ...
-    // }
+    return 0;
 }
