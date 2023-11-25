@@ -13,12 +13,13 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <math.h>
+#include <float.h>
 
 #define SHM_DRN 12
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-#define OBSTACLE_REPULSION_CONSTANT 10.0
+#define OBSTACLE_REPULSION_CONSTANT 500
 // #define M 1.0
 // #define K 0.1
 #define T 0.01
@@ -231,21 +232,45 @@ int main(int argc, char *argv[])
         printf("Read %d bytes\n", bytesRead);
         printf("Command: %c\n", command);
 
+        int closest_obstacle_index = -1;
+        double min_distance = DBL_MAX;
+
+        // Find the closest obstacle
         for (int i = 0; i < 676; ++i)
         {
             double dx = world.drone.x - world.obstacle[i].x;
             double dy = world.drone.y - world.obstacle[i].y;
-            double distance = sqrt(dx * dx + dy * dy);
-            if ( distance <= 4) // Check if the obstacle is within the circle of radius 2
+            double distance = fabs(dx); // Use absolute value to get the distance
+
+            if (distance < min_distance)
             {
-                double repulsion_force = OBSTACLE_REPULSION_CONSTANT / (distance);
-                fx = fx + (repulsion_force * dx / distance); // Subtract or add the repulsion force based on the direction of dx
-                fy = fy + (repulsion_force * dy / distance); // Subtract or add the repulsion force based on the direction of dy
+                min_distance = distance;
+                closest_obstacle_index = i;
             }
-            else {
+
+            // Now calculate the distance from the closest obstacle
+            dx = world.drone.x - world.obstacle[closest_obstacle_index].x;
+            dy = world.drone.y - world.obstacle[closest_obstacle_index].y;
+            distance = sqrt(dx * dx + dy * dy);
+
+            if (distance < 4) // Check if the obstacle is within the circle of radius 2
+            {
+                double repulsion_force = OBSTACLE_REPULSION_CONSTANT * ((1 / distance) - (1 / 4)) * (1 / (distance * distance));
+                fx = fx + repulsion_force; // Subtract or add the repulsion force based on the direction of dx
+                fy = fy + repulsion_force; // Subtract or add the repulsion force based on the direction of dy
+                printf("repulsion_force = %f\n", repulsion_force);
+            }
+            else
+            {
                 fx = Fx;
                 fy = Fy;
             }
+            // printf("fx = %f, fy = %f\n", fx, fy);
+            // printf("dx = %f, dy = %f\n", dx, dy);
+            mvprintw(20, 20, "distance = %f\n", distance);
+            mvprintw(25, 25, "world.obstacle[%d].x = %d\n", i, world.obstacle[i].x);
+            mvprintw(30, 30, "world.obstacle[%d].y = %d\n", i, world.obstacle[i].y);
+            refresh();
         }
 
         if (bytesRead > 0)
@@ -253,36 +278,36 @@ int main(int argc, char *argv[])
             switch (command)
             {
             case 'x':
-                fy += 1.0; // forza verso USx
-                fx -= 1.0;
+                fy += 100.0; // forza verso USx
+                fx -= 100.0;
                 break;
             case 'c':
-                fy += 1.0; // forza verso U
+                fy += 100.0; // forza verso U
                 break;
             case 'v':
-                fy += 1.0; // forza verso UDx
-                fx += 1.0;
+                fy += 100.0; // forza verso UDx
+                fx += 100.0;
                 break;
             case 's':
-                fx -= 1.0; // forza verso Sx
+                fx -= 100.0; // forza verso Sx
                 break;
             case 'd':
                 fy = 0; // annulla forza
                 fx = 0;
                 break;
             case 'f':
-                fx += 1.0; // forza verso Dx
+                fx += 100.0; // forza verso Dx
                 break;
             case 'w':
-                fy -= 1.0; // forza verso DSx
-                fx -= 1.0;
+                fy -= 100.0; // forza verso DSx
+                fx -= 100.0;
                 break;
             case 'e':
-                fy -= 1.0; // forza verso D
+                fy -= 100.0; // forza verso D
                 break;
             case 'r':
-                fy -= 1.0; // forza verso DDx
-                fx += 1.0;
+                fy -= 100.0; // forza verso DDx
+                fx += 100.0;
                 break;
             case '\0':
                 command = '\0'; // Comando non valido

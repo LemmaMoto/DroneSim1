@@ -189,11 +189,13 @@ int main(int argc, char *argv[])
         fsync(pipesw[PIPE_WRITE]);
         write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesw[PIPE_WRITE]);
-
+        write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        fsync(pipesd[PIPE_WRITE]);
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         write(pipeso[PIPE_WRITE], &world.screen, sizeof(world.screen));
         fsync(pipeso[PIPE_WRITE]);
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
+       
     }
 
     return 0;
