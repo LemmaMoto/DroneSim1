@@ -50,6 +50,38 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
+
+    // Define a signal set
+    sigset_t set;
+
+    // Initialize the signal set to empty
+    sigemptyset(&set);
+
+    // Add SIGUSR1 to the set
+    sigaddset(&set, SIGUSR1);
+
+    // Block SIGUSR1
+    if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
+    {
+        perror("sigprocmask"); // Print an error message if the signal can't be blocked
+        return -1;
+    }
+    // Set up sigaction for receiving signals from the watchdog process
+    struct sigaction p_action;
+    p_action.sa_flags = SA_SIGINFO;
+    p_action.sa_sigaction = watchdog_handler;
+    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
+    {
+        perror("sigaction"); // Print an error message if the signal can't be set up
+    }
+
+    // Unblock SIGUSR1
+    if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
+    {
+        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+        return -1;
+    }
+
     int process_num;
     if (argc == 2)
     {
@@ -98,15 +130,6 @@ int main(int argc, char *argv[])
     fscanf(watchdog_fp, "%d", &watchdog_pid);
     printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
-
-    // Set up sigaction for receiving signals from processes
-    struct sigaction p_action;
-    p_action.sa_flags = SA_SIGINFO;
-    p_action.sa_sigaction = watchdog_handler;
-    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
-    {
-        perror("sigaction");
-    }
 
     // Read how long to sleep process for
     int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;

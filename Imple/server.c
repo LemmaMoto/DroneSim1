@@ -49,7 +49,34 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
-    struct Drone drone = {0, 0, 'W', 1};
+    sigset_t mask, oldmask;
+
+    // Initialize the signal mask.
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGUSR1); // Add the signal you want to block
+
+    // Block the signals before entering the critical section.
+    if (sigprocmask(SIG_BLOCK, &mask, &oldmask) < 0)
+    {
+        perror("sigprocmask");
+        return -1;
+    }
+
+    // Set up sigaction for receiving signals from processes
+    struct sigaction p_action;
+    p_action.sa_flags = SA_SIGINFO;
+    p_action.sa_sigaction = watchdog_handler;
+    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
+    {
+        perror("sigaction");
+    }
+    // Unblock the signals after leaving the critical section.
+    if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0)
+    {
+        perror("sigprocmask");
+        return -1;
+    }
+    struct Drone drone;
     int process_num;
     if (argc == 2)
     {
@@ -98,15 +125,6 @@ int main(int argc, char *argv[])
     fscanf(watchdog_fp, "%d", &watchdog_pid);
     printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
-
-    // Set up sigaction for receiving signals from processes
-    struct sigaction p_action;
-    p_action.sa_flags = SA_SIGINFO;
-    p_action.sa_sigaction = watchdog_handler;
-    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
-    {
-        perror("sigaction");
-    }
 
     // Read how long to sleep process for
     int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;

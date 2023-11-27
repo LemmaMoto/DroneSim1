@@ -99,24 +99,6 @@ int main(int argc, char *argv[])
     }
     num_children += 1;
 
-    // Make child processes
-    child_process0 = fork();
-    if (child_process0 < 0)
-    {
-        perror("Fork");
-        return -1;
-    }
-    printf("Child process 0 created successfully with PID %d\n", child_process0);
-
-    if (child_process0 == 0)
-    {
-        char *arg_list[] = {"konsole", "-e", "./server", "0", NULL};
-        execvp("konsole", arg_list);
-        perror("execvp failed for child_process0");
-        return 0;
-    }
-    num_children += 1;
-
     // Create the second child process and replace it with the drone program
     child_process1 = fork();
     if (child_process1 < 0)
