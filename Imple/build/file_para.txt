@@ -1,7 +1,7 @@
 drone.symbol = 'W'
 drone.color_paire = 1 
 M = 0.1
-K = 0.1
+K = 10.0
 drone.x = 10
 drone.y = 10
 NUM_OBSTACLES = 50

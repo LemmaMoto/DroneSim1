@@ -199,6 +199,7 @@ int main(int argc, char *argv[])
         world.screen.width = width;
         write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen));
         fsync(pipews[PIPE_WRITE]);
+        sleep(0.01);
         refresh(); // Refresh the screen to show the changes
     }
     endwin();
