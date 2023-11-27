@@ -197,31 +197,68 @@ int main(int argc, char *argv[])
     while (1)
     {
         clear();
-        read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
-        read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        read(pipesw[PIPE_READ], &world.target, sizeof(world.target));
 
-        
-        mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol); // Print the drone symbol at the drone position
-        
-        for (int i = 0; i < 676; i++)
+        // Read data from the pipe
+        if (read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone)) == -1)
         {
-            
-            mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol); // Print the obstacle symbol at the obstacle position
-            
+            perror("read drone");
+            continue;
         }
-        for (int i = 0; i < 9; i++)
+        if (read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle)) == -1)
         {
-            
-            mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol); // Print the target symbol at the target position
-            
+            perror("read obstacle");
+            continue;
+        }
+        if (read(pipesw[PIPE_READ], &world.target, sizeof(world.target)) == -1)
+        {
+            perror("read target");
+            continue;
         }
 
         getmaxyx(win, height, width);
         world.screen.height = height;
         world.screen.width = width;
-        write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen));
-        fsync(pipews[PIPE_WRITE]);
+        clear();
+
+        if (world.drone.y < height && world.drone.x < width)
+        {
+            attron(COLOR_PAIR(world.drone.color_pair));
+            mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol);
+            attroff(COLOR_PAIR(world.drone.color_pair));
+        }
+
+        for (int i = 0; i < 676; i++)
+        {
+            if (world.obstacle[i].y < height && world.obstacle[i].x < width)
+            {
+                attron(COLOR_PAIR(3));
+                mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol);
+                attroff(COLOR_PAIR(3));
+            }
+        }
+        // Print the target symbols at their positions if they're within the window dimensions
+        for (int i = 0; i < 9; i++)
+        {
+            if (world.target[i].y < height && world.target[i].x < width)
+            {
+                attron(COLOR_PAIR(4));
+                mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);
+                attroff(COLOR_PAIR(4));
+            }
+        }
+        refresh();
+
+        // Write the screen dimensions to the pipe
+        if (write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen)) == -1)
+        {
+            perror("write screen");
+            continue;
+        }
+        else
+        {
+            fsync(pipews[PIPE_WRITE]) == -1;
+        }
+
         sleep(0.01);
         refresh(); // Refresh the screen to show the changes
     }

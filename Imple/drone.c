@@ -20,8 +20,7 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 #define OBSTACLE_REPULSION_CONSTANT 100.0
-// #define M 1.0
-// #define K 0.1
+
 #define T 0.01
 
 // Initialize position and velocity

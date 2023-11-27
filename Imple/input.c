@@ -77,8 +77,20 @@ void ui_process()
 {
 
     // Inizializza ncurses
-    initscr();
-    start_color(); // Abilita il colore
+    if (initscr() == NULL)
+    {
+        fprintf(stderr, "Error initializing ncurses.\n");
+        exit(1);
+    }
+    // Enable color
+    if (has_colors() == FALSE)
+    {
+        endwin();
+        fprintf(stderr, "Your terminal does not support color.\n");
+        exit(1);
+    }
+
+    start_color();
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     cbreak();
     noecho();
@@ -99,6 +111,12 @@ void ui_process()
     int startX = (maxCols - gridWidth * squareWidth) / 2;
 
     WINDOW *mywin = newwin(gridHeight * squareHeight, gridWidth * squareWidth, startY, startX);
+    if (mywin == NULL)
+    {
+        endwin();
+        fprintf(stderr, "Error creating window.\n");
+        exit(1);
+    }
 
     for (int i = 0; i < gridHeight; ++i)
     {
@@ -180,7 +198,7 @@ void ui_process()
             highlightSquare(mywin, 2 * squareHeight, 0, squareHeight, squareWidth, count[2][0]);
             highlightSquare(mywin, 2 * squareHeight, squareWidth, squareHeight, squareWidth, count[2][1]);
             highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth, count[2][2]);
-            
+
             break;
         case 'f':
             command = 'f'; // forza verso Dx
@@ -290,6 +308,11 @@ void ui_process()
 void log_receipt(struct timeval tv)
 {
     FILE *lf_fp = fopen(logfile_name, "a");
+    if (lf_fp == NULL)
+    {
+        perror("fopen");
+        return;
+    }
     fprintf(lf_fp, "%d %ld %ld\n", process_id, tv.tv_sec, tv.tv_usec);
     fclose(lf_fp);
 }

@@ -221,6 +221,8 @@ int main(int argc, char *argv[])
                 } while (world.target[i].x == world.drone.x && world.target[i].y == world.drone.y);
 
                 world.target[i].symbol = '0' + i;
+
+                printf("Target %d: x = %d, y = %d\n", i, world.target[i].x, world.target[i].y);
             }
             last_spawn_time = current_time;
         }
