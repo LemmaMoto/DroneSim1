@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     FILE *logfile = fopen(logfile_name, "w");
     if (logfile == NULL)
     {
-        perror("fopen");
+        perror("Error opening log file");
         return -1;
     }
 
@@ -39,9 +39,11 @@ int main(int argc, char *argv[])
     int pipesw[2];
     if (pipe(pipesw) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipesw");
         return -1;
     }
+    printf("Pipesw created successfully\n");
+
     char pipe_read_sw[10];
     char pipe_write_sw[10];
     sprintf(pipe_read_sw, "%d", pipesw[PIPE_READ]);
@@ -51,9 +53,11 @@ int main(int argc, char *argv[])
     int pipews[2];
     if (pipe(pipews) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipews");
         return -1;
     }
+    printf("Pipews created successfully\n");
+
     char pipe_read_ws[10];
     char pipe_write_ws[10];
     sprintf(pipe_read_ws, "%d", pipews[PIPE_READ]);
@@ -63,9 +67,10 @@ int main(int argc, char *argv[])
     int pipesd[2];
     if (pipe(pipesd) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipesd");
         return -1;
     }
+    printf("Pipesd created successfully\n");
 
     char pipe_read_sd[10];
     char pipe_write_sd[10];
@@ -76,9 +81,11 @@ int main(int argc, char *argv[])
     int pipeds[2];
     if (pipe(pipeds) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipeds");
         return -1;
     }
+    printf("Pipeds created successfully\n");
+
     char pipe_read_ds[10];
     char pipe_write_ds[10];
     sprintf(pipe_read_ds, "%d", pipeds[PIPE_READ]);
@@ -88,9 +95,10 @@ int main(int argc, char *argv[])
     int pipeso[2];
     if (pipe(pipeso) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipeso");
         return -1;
     }
+    printf("Pipeso created successfully\n");
 
     char pipe_read_so[10];
     char pipe_write_so[10];
@@ -101,9 +109,10 @@ int main(int argc, char *argv[])
     int pipeos[2];
     if (pipe(pipeos) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipeos");
         return -1;
     }
+    printf("Pipeos created successfully\n");
 
     char pipe_read_os[10];
     char pipe_write_os[10];
@@ -114,9 +123,10 @@ int main(int argc, char *argv[])
     int pipest[2];
     if (pipe(pipest) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipest");
         return -1;
     }
+    printf("Pipest created successfully\n");
 
     char pipe_read_st[10];
     char pipe_write_st[10];
@@ -127,9 +137,10 @@ int main(int argc, char *argv[])
     int pipets[2];
     if (pipe(pipets) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipets");
         return -1;
     }
+    printf("Pipets created successfully\n");
 
     char pipe_read_ts[10];
     char pipe_write_ts[10];
@@ -140,9 +151,10 @@ int main(int argc, char *argv[])
     int pipedi[2];
     if (pipe(pipedi) == -1)
     {
-        perror("pipe");
+        perror("Error creating pipedi");
         return -1;
     }
+    printf("Pipedi created successfully\n");
 
     char pipe_read_di[10];
     char pipe_write_di[10];
@@ -150,9 +162,8 @@ int main(int argc, char *argv[])
     sprintf(pipe_write_di, "%d", pipedi[PIPE_WRITE]);
 
     // There should be a check that the log folder exists but I haven't done that
-    // sprintf(logfile_name, "./log/watchdog/watchdog%i-%i-%i_%i:%i:%i.txt", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
-
     fopen(PID_FILE_PW, "w");
+
     char *fnames[NUM_PROCESSES] = PID_FILE_SP;
 
     for (int i = 0; i < NUM_PROCESSES; i++)
@@ -170,11 +181,13 @@ int main(int argc, char *argv[])
         perror("Fork");
         return -1;
     }
+    printf("Watchdog process created successfully with PID %d\n", child_watchdog);
 
     if (child_watchdog == 0)
     {
         char *arg_list[] = {"konsole", "-e", "./watchdog", NULL};
         execvp("konsole", arg_list);
+        perror("execvp failed for watchdog");
         return 0;
     }
     num_children += 1;
@@ -186,11 +199,13 @@ int main(int argc, char *argv[])
         perror("Fork");
         return -1;
     }
+    printf("Server process created successfully with PID %d\n", child_process0);
 
     if (child_process0 == 0)
     {
         char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, NULL};
         execvp("konsole", arg_list);
+        perror("execvp failed for server");
         return 0;
     }
     num_children += 1;
@@ -201,11 +216,13 @@ int main(int argc, char *argv[])
         perror("Fork");
         return -1;
     }
+    printf("Drone process created successfully with PID %d\n", child_process1);
 
     if (child_process1 == 0)
     {
         char *arg_list[] = {"konsole", "-e", "./drone", "1", pipe_read_di, pipe_write_di, pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, NULL};
         execvp("konsole", arg_list);
+        perror("execvp failed for drone");
         return 0;
     }
     num_children += 1;
@@ -216,11 +233,13 @@ int main(int argc, char *argv[])
         perror("Fork");
         return -1;
     }
+    printf("Input process created successfully with PID %d\n", child_process2);
 
     if (child_process2 == 0)
     {
         char *arg_list[] = {"konsole", "-e", "./input", "2", pipe_read_di, pipe_write_di, NULL};
         execvp("konsole", arg_list);
+        perror("execvp failed for input");
         return 0;
     }
     num_children += 1;
@@ -231,11 +250,13 @@ int main(int argc, char *argv[])
         perror("Fork");
         return -1;
     }
+    printf("World process created successfully with PID %d\n", child_process3);
 
     if (child_process3 == 0)
     {
         char *arg_list[] = {"konsole", "-e", "./world", "3", pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, NULL};
         execvp("konsole", arg_list);
+        perror("execvp failed for world");
         return 0;
     }
     num_children += 1;
@@ -246,11 +267,13 @@ int main(int argc, char *argv[])
         perror("Fork");
         return -1;
     }
+    printf("Obstacles process created successfully with PID %d\n", child_process4);
 
     if (child_process4 == 0)
     {
         char *arg_list[] = {"konsole", "-e", "./obstacles", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
         execvp("konsole", arg_list);
+        perror("execvp failed for obstacles");
         return 0;
     }
     num_children += 1;
@@ -261,20 +284,37 @@ int main(int argc, char *argv[])
         perror("Fork");
         return -1;
     }
+    printf("Targets process created successfully with PID %d\n", child_process5);
 
     if (child_process5 == 0)
     {
         char *arg_list[] = {"konsole", "-e", "./targets", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
         execvp("konsole", arg_list);
+        perror("execvp failed for targets");
         return 0;
     }
     num_children += 1;
 
-    // Wait for all children to die
+    // Wait for all child processes to terminate
+    int status;
+    int last_non_zero_status = 0;
     for (int i = 0; i < num_children; i++)
     {
-        wait(&res);
+        pid_t pid = wait(&status); // Wait for a child process to terminate
+        if (WIFEXITED(status))     // If the child process terminated normally
+        {
+            printf("Child process %d exited with status %d\n", pid, WEXITSTATUS(status)); // Print the PID and exit status of the terminated child process
+            if (WEXITSTATUS(status) != 0)                                                 // If the exit status is not 0 (indicating an error)
+            {
+                last_non_zero_status = WEXITSTATUS(status); // Store the non-zero exit status
+            }
+        }
+        else // If the child process did not terminate normally
+        {
+            printf("Child process %d did not exit successfully\n", pid); // Print an error message
+        }
     }
+    printf("All child processes terminated\n"); // Print a message indicating that all child processes have terminated
 
     close(pipedi[0]);
     close(pipedi[1]);
@@ -304,7 +344,8 @@ int main(int argc, char *argv[])
     printf("pipeds[0] = %d, pipeds[1] = %d\n", pipeds[PIPE_READ], pipeds[PIPE_WRITE]);
     printf("pipesw[0] = %d, pipesw[1] = %d\n", pipesw[PIPE_READ], pipesw[PIPE_WRITE]);
     printf("pipews[0] = %d, pipews[1] = %d\n", pipews[PIPE_READ], pipews[PIPE_WRITE]);
-    
 
-    return 0;
+    printf("Pipe closed successfully\n"); // Print a message indicating that the pipe has been closed successfully
+
+    return last_non_zero_status;
 }
