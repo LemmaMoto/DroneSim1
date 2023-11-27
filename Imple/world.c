@@ -122,8 +122,7 @@ int main(int argc, char *argv[])
 
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
 
-    struct Drone drone = {0, 0, 'W', 1};
-
+    struct Drone drone;
     // Create a shared memory segment
     int shm_id = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
     if (shm_id < 0)
@@ -139,9 +138,10 @@ int main(int argc, char *argv[])
         perror("shmat");
         return -1;
     }
-
-    shared_drone->symbol = drone.symbol;
-    shared_drone->color_pair = drone.color_pair;
+    drone.x = shared_drone->x;
+    drone.y = shared_drone->y;
+    drone.symbol = shared_drone->symbol;
+    drone.color_pair = shared_drone->color_pair;
     while (1)
     {
         // Use the shared memory

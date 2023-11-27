@@ -180,7 +180,7 @@ void ui_process()
             highlightSquare(mywin, 2 * squareHeight, 0, squareHeight, squareWidth, count[2][0]);
             highlightSquare(mywin, 2 * squareHeight, squareWidth, squareHeight, squareWidth, count[2][1]);
             highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth, count[2][2]);
-            
+
             break;
         case 'f':
             command = 'f'; // forza verso Dx
@@ -225,6 +225,12 @@ void ui_process()
             {
                 highlightSquare(mywin, 2 * squareHeight, 2 * squareWidth, squareHeight, squareWidth, ++count[2][2]);
             }
+            break;
+        case 'a':
+            command = 'a'; // easter egg
+            break;
+        case 'b':
+            command = 'b'; // break
             break;
         case 'q':
             command = 'Q'; // Termina il programma

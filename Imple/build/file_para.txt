@@ -1,6 +1,6 @@
 drone.symbol = 'W'
-drone.color_paire = 1
+drone.color_pair = 1
 M = 0.1
-K = 1.0
-drone.x = 0
-drone.y = 0
+K = 10.0
+drone.x = 10
+drone.y = 10

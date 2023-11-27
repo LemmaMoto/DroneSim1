@@ -12,14 +12,13 @@
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <math.h>
 
 #define SHM_DRN 12
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-// #define M 1.0
-// #define K 0.1
 #define T 0.01
 
 // Initialize position and velocity
@@ -175,7 +174,7 @@ int main(int argc, char *argv[])
         {
             fscanf(file, " = '%c'", &drone.symbol);
         }
-        else if (strcmp(label, "drone.color_paire") == 0)
+        else if (strcmp(label, "drone.color_pair") == 0)
         {
             fscanf(file, " = %hd", &drone.color_pair);
         }
@@ -200,7 +199,7 @@ int main(int argc, char *argv[])
     fclose(file);
 
     printf("drone.symbol = %c\n", drone.symbol);
-    printf("drone.color_paire = %hd\n", drone.color_pair);
+    printf("drone.color_pair = %hd\n", drone.color_pair);
     printf("M = %f\n", M);
     printf("K = %f\n", K);
     printf("drone.x = %d\n", drone.x);
@@ -210,8 +209,8 @@ int main(int argc, char *argv[])
     shared_drone->y = drone.y;
     shared_drone->symbol = drone.symbol;
     shared_drone->color_pair = drone.color_pair;
-    static double prev_x = 0, prev_y = 0;
-    static double prev_vx = 0, prev_vy = 0;
+    double prev_x = drone.x, prev_y = drone.y;
+    double prev_vx = 0, prev_vy = 0;
     double Fx = fx;
     double Fy = fy;
 
@@ -227,36 +226,48 @@ int main(int argc, char *argv[])
             switch (command)
             {
             case 'x':
-                fy += 1.0; // forza verso USx
-                fx -= 1.0;
+                fy += 100.0; // forza verso USx
+                fx -= 100.0;
                 break;
             case 'c':
-                fy += 1.0; // forza verso U
+                fy += 100.0; // forza verso U
                 break;
             case 'v':
-                fy += 1.0; // forza verso UDx
-                fx += 1.0;
+                fy += 100.0; // forza verso UDx
+                fx += 100.0;
                 break;
             case 's':
-                fx -= 1.0; // forza verso Sx
+                fx -= 100.0; // forza verso Sx
                 break;
             case 'd':
                 fy = 0; // annulla forza
                 fx = 0;
                 break;
             case 'f':
-                fx += 1.0; // forza verso Dx
+                fx += 100.0; // forza verso Dx
                 break;
             case 'w':
-                fy -= 1.0; // forza verso DSx
-                fx -= 1.0;
+                fy -= 100.0; // forza verso DSx
+                fx -= 100.0;
                 break;
             case 'e':
-                fy -= 1.0; // forza verso D
+                fy -= 100.0; // forza verso D
                 break;
             case 'r':
-                fy -= 1.0; // forza verso DDx
-                fx += 1.0;
+                fy -= 100.0; // forza verso DDx
+                fx += 100.0;
+                break;
+            case 'a':
+                break;
+            case 'b':
+                fx = 0; // annulla forza
+                fy = 0;
+                vx = 0; // annulla velocità
+                vy = 0;
+                prev_x = drone.x; // annulla posizione
+                prev_y = drone.y;
+                prev_vx = 0; // annulla velocità
+                prev_vy = 0;
                 break;
             case '\0':
                 command = '\0'; // Comando non valido
@@ -278,6 +289,9 @@ int main(int argc, char *argv[])
         double ay = (fy / M) - (K * vy);
         vx = prev_vx + ax * T;
         vy = prev_vy + ay * T;
+
+        vx = fmax(fmin(vx, 100), -100);
+        vy = fmax(fmin(vy, 100), -100);
 
         double new_x = prev_x + vx * T;
         double new_y = prev_y + vy * T;
