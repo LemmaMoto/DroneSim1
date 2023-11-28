@@ -363,6 +363,8 @@ int main(int argc, char *argv[]) // Main function
         // Store the current position and velocity for the next iteration
         prev_x = new_x;
         prev_y = new_y;
+        drone.x = (int)new_x;
+        drone.y = (int)new_y;
         prev_vx = vx;
         prev_vy = vy;
 
