@@ -1,4 +1,4 @@
-# Advanced and Robot Programming - Asssignment 1 #
+# Advanced and Robot Programming - Assignment 1 #
 ## Authors: Bua Odetti Emanuele, Malatesta Federico ##
 
 ### Introduction ###
