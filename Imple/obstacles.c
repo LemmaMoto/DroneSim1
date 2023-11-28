@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
     time_t last_spawn_time = 0;
     int first;
     int border_prec = 0;
+    int current_num_targets = 9;
 
     while (1)
     {
@@ -245,11 +246,29 @@ int main(int argc, char *argv[])
             {
                 for (; i < NUM_OBSTACLES; i++)
                 {
+                    int isSamePosition;
                     do
                     {
+                        isSamePosition = 0;
                         world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
                         world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
-                    } while (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y);
+
+                        // Check if the obstacle is in the same position as the drone
+                        if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
+                        {
+                            isSamePosition = 1;
+                        }
+
+                        // Check if the obstacle is in the same position as any of the targets
+                        for (int j = 0; j < current_num_targets; j++)
+                        {
+                            if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
+                            {
+                                isSamePosition = 1;
+                                break;
+                            }
+                        }
+                    } while (isSamePosition);
 
                     world.obstacle[i].symbol = '#';
                 }

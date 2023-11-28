@@ -201,6 +201,8 @@ int main(int argc, char *argv[])
     printf("refresh_time_targets = %d\n", refresh_time_targets);
 
     struct World world;
+    int current_num_targets = NUM_TARGETS;
+    struct Target current_targets[current_num_targets];
     time_t last_spawn_time = 0;
     int tot_borders;
     int first;
@@ -229,15 +231,18 @@ int main(int argc, char *argv[])
             time_t current_time = time(NULL);
             if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
             {
-                for (; i < NUM_TARGETS; i++)
+                for (; i < current_num_targets; i++)
                 {
                     do
                     {
-                        world.target[i].x = rand() % (world.screen.width - 4) + 2;
-                        world.target[i].y = rand() % (world.screen.height - 4) + 2;
-                    } while (world.target[i].x == world.drone.x && world.target[i].y == world.drone.y);
+                        current_targets[i].x = rand() % (world.screen.width - 4) + 2;
+                        current_targets[i].y = rand() % (world.screen.height - 4) + 2;
+                    } while (current_targets[i].x == world.drone.x && current_targets[i].y == world.drone.y);
 
-                    world.target[i].symbol = '0' + i;
+                    current_targets[i].symbol = '0' + i;
+
+                    // Copy the target to the world's targets
+                    world.target[i] = current_targets[i];
 
                     printf("Target %d: x = %d, y = %d\n", i, world.target[i].x, world.target[i].y);
                 }

@@ -213,7 +213,6 @@ int main(int argc, char *argv[])
     {
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        // printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
 
@@ -229,8 +228,8 @@ int main(int argc, char *argv[])
         write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesd[PIPE_WRITE]);
 
-        write(pipesd[PIPE_WRITE], &world.target, sizeof(world.target));
-        fsync(pipesd[PIPE_WRITE]);
+        // write(pipesd[PIPE_WRITE], &world.target, sizeof(world.target));
+        // fsync(pipesd[PIPE_WRITE]);
 
 
         write(pipeso[PIPE_WRITE], &world, sizeof(world));

@@ -220,11 +220,15 @@ int main(int argc, char *argv[])
         world.screen.width = width;
         clear();
 
-        if (world.drone.y < height && world.drone.x < width)
+        // Print the target symbols at their positions if they're within the window dimensions
+        for (int i = 0; i < 9; i++)
         {
-            attron(COLOR_PAIR(world.drone.color_pair));
-            mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol);
-            attroff(COLOR_PAIR(world.drone.color_pair));
+            if (world.target[i].y < height && world.target[i].x < width)
+            {
+                attron(COLOR_PAIR(4));
+                mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);
+                attroff(COLOR_PAIR(4));
+            }
         }
 
         for (int i = 0; i < 700; i++)
@@ -236,16 +240,15 @@ int main(int argc, char *argv[])
                 attroff(COLOR_PAIR(3));
             }
         }
-        // Print the target symbols at their positions if they're within the window dimensions
-        for (int i = 0; i < 9; i++)
+        
+
+        if (world.drone.y < height && world.drone.x < width)
         {
-            if (world.target[i].y < height && world.target[i].x < width)
-            {
-                attron(COLOR_PAIR(4));
-                mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);
-                attroff(COLOR_PAIR(4));
-            }
+            attron(COLOR_PAIR(world.drone.color_pair));
+            mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol);
+            attroff(COLOR_PAIR(world.drone.color_pair));
         }
+
         refresh();
 
         // Write the screen dimensions to the pipe
