@@ -32,4 +32,16 @@ This project involves the development of a drone operation interactive simulator
 </code></pre>
 
 ### How to manage drone's movements ###
+the keys to be pressed in the input window used to move the drone and to make other actions are:
+* `w`: move up-left
+* `e`: move up
+* `r`: move up-right
+* `s`: move left
+* `d`: stop all forces 
+* `f`: move right
+* `x`: move down-right
+* `c`: move down
+* `v`: move down-left
+* `q`: terminate the input process
+* `b`: stop the drone 
 
