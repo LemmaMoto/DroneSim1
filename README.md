@@ -31,4 +31,5 @@ This project involves the development of a drone operation interactive simulator
 <pre><code id="codeBlock">./run.sh
 </code></pre>
 
+### How to manage drone's movements ###
 
