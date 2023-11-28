@@ -13,6 +13,9 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <math.h>
+#include <semaphore.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 
 #define SHM_DRN 12 // Define a shared memory key
 
@@ -198,7 +201,12 @@ int main(int argc, char *argv[]) // Main function
         perror("shmget");
         return -1;
     }
-
+    sem_t *semaphore = sem_open("/semaphore", O_CREAT, 0644, 1);
+    if (semaphore == SEM_FAILED)
+    {
+        perror("sem_open/semaphore");
+        exit(EXIT_FAILURE);
+    }
     // Attach the shared memory segment to our process's address space
     struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
     if (shared_drone == (struct Drone *)-1)
@@ -257,13 +265,13 @@ int main(int argc, char *argv[]) // Main function
     printf("K = %f\n", K);
     printf("drone.x = %d\n", drone.x);
     printf("drone.y = %d\n", drone.y);
-    
+
     // Assign shared drone parameters
     shared_drone->x = drone.x;
     shared_drone->y = drone.y;
     shared_drone->symbol = drone.symbol;
     shared_drone->color_pair = drone.color_pair;
-    
+
     // Initialize variables
     double prev_x = drone.x, prev_y = drone.y;
     double prev_vx = 0, prev_vy = 0;
@@ -363,15 +371,38 @@ int main(int argc, char *argv[]) // Main function
 
         refresh();
 
+        if (sem_wait(semaphore) < 0)
+        {
+            perror("sem_wait");
+            exit(EXIT_FAILURE);
+        }
+
         // Use the shared memory
         shared_drone->x = (int)new_x;
         shared_drone->y = (int)new_y;
         shared_drone->symbol = drone.symbol;
         shared_drone->color_pair = drone.color_pair;
 
+        if (sem_post(semaphore) < 0)
+        {
+            perror("sem_post");
+            exit(EXIT_FAILURE);
+        }
+
         clear(); // Clear the screen of all previously-printed characters
     }
     endwin();
+    if (sem_close(semaphore) < 0)
+    {
+        perror("sem_close");
+        exit(EXIT_FAILURE);
+    }
+
+    if (sem_unlink("/semaphore") < 0)
+    {
+        perror("sem_unlink");
+        exit(EXIT_FAILURE);
+    }
     // Detach the shared memory segment from our process's address space
     if (shmdt(shared_drone) == -1)
     {

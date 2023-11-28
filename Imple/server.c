@@ -11,9 +11,10 @@
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <semaphore.h>
+#include <sys/mman.h>
 
 #define SHM_DRN 12 // Define a key for the shared memory segment
-#define SHM_WRLD 34
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -139,6 +140,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    sem_t *semaphore = sem_open("/semaphore", O_CREAT, 0644, 1);
+    if (semaphore == SEM_FAILED)
+    {
+        perror("sem_open/semaphore");
+        exit(EXIT_FAILURE);
+    }
+
     // Attach the shared memory segment to our process's address space
     struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
     if (shared_drone == (struct Drone *)-1)
@@ -147,36 +155,25 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int shm_id2 = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
-    if (shm_id2 < 0)
-    {
-        perror("shmget");
-        return -1;
-    }
-
-    // Attach the shared memory segment to our process's address space
-    struct Drone *shared_wrld = (struct Drone *)shmat(shm_id2, NULL, 0);
-    if (shared_wrld == (struct Drone *)-1)
-    {
-        perror("shmat");
-        return -1;
-    }
-
     // Use the shared memory
     while (1)
     {
-
+        if (sem_wait(semaphore) < 0)
+        {
+            perror("sem_wait");
+            exit(EXIT_FAILURE);
+        }
         drone.x = shared_drone->x;
         drone.y = shared_drone->y;
         drone.symbol = shared_drone->symbol;
         drone.color_pair = shared_drone->color_pair;
-        // printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
-        sleep(0.5);
-        shared_wrld->x = drone.x;
-        shared_wrld->y = drone.y;
-        shared_wrld->symbol = drone.symbol;
-        shared_wrld->color_pair = drone.color_pair;
-        printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", shared_wrld->x, shared_wrld->y, shared_wrld->symbol, shared_wrld->color_pair);
+
+        if (sem_post(semaphore) < 0)
+        {
+            perror("sem_post");
+            exit(EXIT_FAILURE);
+        }
+        printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
         sleep(0.5);
     }
 
@@ -187,11 +184,16 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    // Detach the shared memory segment from our process's address space
-    if (shmdt(shared_wrld) == -1)
+    if (sem_close(semaphore) < 0)
     {
-        perror("shmdt");
-        return -1;
+        perror("sem_close");
+        exit(EXIT_FAILURE);
+    }
+
+    if (sem_unlink("/semaphore") < 0)
+    {
+        perror("sem_unlink");
+        exit(EXIT_FAILURE);
     }
 
     return 0;

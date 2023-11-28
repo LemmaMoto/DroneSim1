@@ -13,8 +13,10 @@
 #include <stdbool.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <semaphore.h>
+#include <sys/mman.h>
 
-#define SHM_WRLD 34 // Define a key for the shared memory segment
+#define SHM_WRLD 12 // Define a key for the shared memory segment
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -154,6 +156,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    sem_t *semaphore = sem_open("/semaphore", O_CREAT, 0644, 1);
+    if (semaphore == SEM_FAILED)
+    {
+        perror("sem_open/semaphore");
+        exit(EXIT_FAILURE);
+    }
+
     // Attach the shared memory segment to our process's address space
     struct Drone *shared_drone = (struct Drone *)shmat(shm_id, NULL, 0);
     if (shared_drone == (struct Drone *)-1)
@@ -161,18 +170,42 @@ int main(int argc, char *argv[])
         perror("shmat");
         return -1;
     }
+
+    if (sem_wait(semaphore) < 0)
+    {
+        perror("sem_wait");
+        exit(EXIT_FAILURE);
+    }
+
     drone.x = shared_drone->x;
     drone.y = shared_drone->y;
     drone.symbol = shared_drone->symbol;
     drone.color_pair = shared_drone->color_pair;
+
+    if (sem_post(semaphore) < 0)
+    {
+        perror("sem_post");
+        exit(EXIT_FAILURE);
+    }
+
     while (1)
     {
+        if (sem_wait(semaphore) < 0)
+        {
+            perror("sem_wait");
+            exit(EXIT_FAILURE);
+        }
         // Use the shared memory
         drone.x = shared_drone->x;
         drone.y = shared_drone->y;
         mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position
         refresh();                                      // Refresh the screen to show the changes
-        clear();                                        // Clear the screen of all previously-printed characters
+        if (sem_post(semaphore) < 0)
+        {
+            perror("sem_post");
+            exit(EXIT_FAILURE);
+        }
+        clear(); // Clear the screen of all previously-printed characters
 
         sleep(3); // Wait for 5 seconds so you can see the output
     }
@@ -182,6 +215,19 @@ int main(int argc, char *argv[])
         perror("shmdt");
         return -1;
     }
+
+    if (sem_close(semaphore) < 0)
+    {
+        perror("sem_close");
+        exit(EXIT_FAILURE);
+    }
+
+    if (sem_unlink("/semaphore") < 0)
+    {
+        perror("sem_unlink");
+        exit(EXIT_FAILURE);
+    }
+
     endwin();
     return 0;
 }
