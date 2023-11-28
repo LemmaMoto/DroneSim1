@@ -340,8 +340,6 @@ int main(int argc, char *argv[])
                 fy -= 100.0; // forza verso DDx
                 fx += 100.0;
                 break;
-            case 'a':
-                break;
             case 'b':
                 fx = 0; // annulla forza
                 fy = 0;
@@ -352,6 +350,19 @@ int main(int argc, char *argv[])
                 prev_vx = 0; // annulla velocità
                 prev_vy = 0;
                 break;
+            case 'a':
+
+                fx = 0; // annulla forza
+                fy = 0;
+                vx = 0; // annulla velocità
+                vy = 0;
+                world.drone.x=10; // ann
+                world.drone.y=10;
+                prev_x = world.drone.x; // annulla posizione
+                prev_y = world.drone.y;
+                prev_vx = 0; // annulla velocità
+                prev_vy = 0;
+
             case '\0':
                 command = '\0'; // Comando non valido
                 break;

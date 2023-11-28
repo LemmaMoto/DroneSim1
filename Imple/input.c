@@ -125,8 +125,7 @@ void ui_process()
             int y = i * squareHeight;
             int x = j * squareWidth;
 
-            // Stampa il quadrato con angoli arrotondati
-            wattron(mywin, COLOR_PAIR(1)); // Utilizza il colore blu
+            wattron(mywin, COLOR_PAIR(1));
             drawRoundedSquare(mywin, y, x, squareHeight, squareWidth, count[i][j]);
             // Ripristina il colore precedente
         }
