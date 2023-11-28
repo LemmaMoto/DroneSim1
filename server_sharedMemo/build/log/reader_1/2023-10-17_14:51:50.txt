@@ -1,6 +1,0 @@
-Logged 0 in cell 1 
-Logged 49 in cell 1 
-Logged 40 in cell 1 
-Logged 13 in cell 1 
-Logged 49 in cell 1 
-Logged 43 in cell 1 
