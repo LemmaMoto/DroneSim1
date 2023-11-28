@@ -1,4 +1,4 @@
-# Advanced and Robot Programming - Assignment 1 #
+# Advanced and Robot Programming - Assignment 2 #
 ## Authors: Bua Odetti Emanuele, Malatesta Federico ##
 
 ### Introduction ###
@@ -9,8 +9,10 @@ This project involves the development of a drone operation interactive simulator
 * `drone`: uses shared memory segments and pipes to simulate a drone's movement, implementing a physical model with forces applied through user commands read from a pipe, updating its position and velocity in real-time based on received commands and physical calculations while communicating with a watchdog process via signals for logging and coordination.
 * `input`: using the NCurses library, creates a graphical user interface (UI) that represents a grid of squares. It interacts with a drone simulation process via pipes, allowing users to input commands through the UI, updating square counts and controlling the simulated drone's movements based on user input.
 * `world`: initializes a shared memory segment and uses the NCurses library to create a simple graphical representation of a drone's movement by reading its position from the shared memory, displaying the drone's symbol on the terminal, and refreshing the display periodically based on the shared memory updates.
+* `obstacles`:
+* `targets`:
 
-[Link to Schematics](https://github.com/LemmaMoto/DroneSim1/blob/main/Arp%20schematics.pdf)
+[Link to Schematics](https://github.com/LemmaMoto/DroneSim1/blob/main/Arp%20schematics2.pdf)
 
 
 
@@ -47,5 +49,6 @@ the keys to be pressed in the input window used to move the drone and to make ot
 * `c`: move down
 * `v`: move down-left
 * `q`: terminate the input process
-* `b`: stop the drone 
+* `b`: stop the drone
+* `a`: respawn drone in the initial position
 
