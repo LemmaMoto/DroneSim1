@@ -50,6 +50,7 @@ struct Target
     int x;
     int y;
     char symbol;
+    bool is_active;
 };
 
 struct World
