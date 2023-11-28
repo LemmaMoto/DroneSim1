@@ -24,7 +24,7 @@ This project involves the development of a drone operation interactive simulator
 </div>
 <pre><code id="codeBlock">git clone https://github.com/LemmaMoto/DroneSim1
 </code></pre>
-3. Go to the `Imple` directory 
+3. Go to the Imple directory 
 <div>
   <button onclick="copyCode()"></button>
 </div>
