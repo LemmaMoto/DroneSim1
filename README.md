@@ -9,6 +9,9 @@ This project involves the development of a drone operation interactive simulator
 * `drone`: uses shared memory segments and pipes to simulate a drone's movement, implementing a physical model with forces applied through user commands read from a pipe, updating its position and velocity in real-time based on received commands and physical calculations while communicating with a watchdog process via signals for logging and coordination.
 * `input`: using the NCurses library, creates a graphical user interface (UI) that represents a grid of squares. It interacts with a drone simulation process via pipes, allowing users to input commands through the UI, updating square counts and controlling the simulated drone's movements based on user input.
 * `world`: initializes a shared memory segment and uses the NCurses library to create a simple graphical representation of a drone's movement by reading its position from the shared memory, displaying the drone's symbol on the terminal, and refreshing the display periodically based on the shared memory updates.
+[Link to PDF](Arp schematics.pdf)
+
+
 
 ### How to install and run ###
 1. Open the terminal
