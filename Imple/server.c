@@ -55,7 +55,7 @@ struct Target
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[676];
+    struct Obstacle obstacle[700];
     struct Screen screen;
     struct Target target[9];
 };
@@ -215,6 +215,7 @@ int main(int argc, char *argv[])
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         // printf("x: %d, y: %d, symbol: %c, color_pair: %d\n", drone.x, drone.y, drone.symbol, drone.color_pair);
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
 
         write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
         fsync(pipesw[PIPE_WRITE]);
@@ -231,11 +232,10 @@ int main(int argc, char *argv[])
         write(pipesd[PIPE_WRITE], &world.target, sizeof(world.target));
         fsync(pipesd[PIPE_WRITE]);
 
-        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
 
-        write(pipeso[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        write(pipeso[PIPE_WRITE], &world, sizeof(world));
         fsync(pipeso[PIPE_WRITE]);
-        write(pipest[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        write(pipest[PIPE_WRITE], &world, sizeof(world));
         fsync(pipest[PIPE_WRITE]);
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
        

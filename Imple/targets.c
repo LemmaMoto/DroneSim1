@@ -54,7 +54,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[676]; // 512 + 50(NUM_OBSTACLES) +1 a caso
+    struct Obstacle obstacle[700]; // 512 + 50(NUM_OBSTACLES) +1 a caso
     struct Screen screen;
     struct Target target[9];
 };
@@ -202,33 +202,51 @@ int main(int argc, char *argv[])
 
     struct World world;
     time_t last_spawn_time = 0;
-    int first = 2;
+    int tot_borders;
+    int first;
+    int border_prec = 0;
+
     while (1)
     {
-        read(pipest[PIPE_READ], &world.screen, sizeof(world.screen));
-        printf("screen width: %d\n", world.screen.width);
-        printf("screen height: %d\n", world.screen.height);
-
-        time_t current_time = time(NULL);
-        if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+        if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
         {
-            for (int i = 0; i < NUM_TARGETS; i++)
-            {
-                do
-                {
-                    world.target[i].x = rand() % (world.screen.width - 4) + 2;
-                    world.target[i].y = rand() % (world.screen.height - 4) + 2;
-                } while (world.target[i].x == world.drone.x && world.target[i].y == world.drone.y);
-
-                world.target[i].symbol = '0' + i;
-
-                printf("Target %d: x = %d, y = %d\n", i, world.target[i].x, world.target[i].y);
-            }
-            last_spawn_time = current_time;
+            perror("read");
+            continue;
         }
-        first--;
-        write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
-        fsync(pipets[PIPE_WRITE]);
+        else
+        {
+
+            tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+
+            if (tot_borders != border_prec)
+            {
+                first = 2;
+            }
+            border_prec = tot_borders;
+
+            int i = 0;
+
+            time_t current_time = time(NULL);
+            if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+            {
+                for (; i < NUM_TARGETS; i++)
+                {
+                    do
+                    {
+                        world.target[i].x = rand() % (world.screen.width - 4) + 2;
+                        world.target[i].y = rand() % (world.screen.height - 4) + 2;
+                    } while (world.target[i].x == world.drone.x && world.target[i].y == world.drone.y);
+
+                    world.target[i].symbol = '0' + i;
+
+                    printf("Target %d: x = %d, y = %d\n", i, world.target[i].x, world.target[i].y);
+                }
+                last_spawn_time = current_time;
+            }
+            first--;
+            write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
+            fsync(pipets[PIPE_WRITE]);
+        }
         // far si che i target non si sovrappongano
 
         // generare target randomici numerati da 1 a 9

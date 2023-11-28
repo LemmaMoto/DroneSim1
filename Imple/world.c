@@ -55,7 +55,7 @@ struct Target
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[676];
+    struct Obstacle obstacle[700];
     struct Screen screen;
     struct Target target[9];
 };
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
             attroff(COLOR_PAIR(world.drone.color_pair));
         }
 
-        for (int i = 0; i < 676; i++)
+        for (int i = 0; i < 700; i++)
         {
             if (world.obstacle[i].y < height && world.obstacle[i].x < width)
             {

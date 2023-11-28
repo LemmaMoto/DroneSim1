@@ -67,7 +67,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[676];
+    struct Obstacle obstacle[700];
     struct Screen screen;
     struct Target target[9];
 };
@@ -255,16 +255,16 @@ int main(int argc, char *argv[])
     {
         char command = '\0';
         printf("Reading from pipe\n");
-        int bytesRead = read(pipedi[PIPE_READ], &command, sizeof(char));
-        read(pipesd[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        printf("Read %d bytes\n", bytesRead);
-        printf("Command: %c\n", command);
-
+        if(read(pipesd[PIPE_READ], &world.obstacle, sizeof(world.obstacle))==-1){
+            perror("read obstacle");
+            continue;
+        }
+        else{
         int closest_obstacle_index = -1;
         double min_distance = DBL_MAX;
 
         // Find the closest obstacle
-        for (int i = 0; i < 676; ++i)
+        for (int i = 0; i < 700; ++i)
         {
             double dx = world.drone.x - world.obstacle[i].x;
             double dy = world.drone.y - world.obstacle[i].y;
@@ -303,7 +303,8 @@ int main(int argc, char *argv[])
         mvprintw(25, 25, "world.obstacle[%d].x = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].x);
         mvprintw(30, 30, "world.obstacle[%d].y = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].y);
         refresh();
-
+        }
+        int bytesRead = read(pipedi[PIPE_READ], &command, sizeof(char));
         if (bytesRead > 0)
         {
             switch (command)
@@ -375,8 +376,9 @@ int main(int argc, char *argv[])
         }
         else
         {
-            perror("read");
+            perror("read input:");
         }
+        clear();
 
         // Update velocity and position
         double ax = (fx / M) - (K * vx);
@@ -399,7 +401,7 @@ int main(int argc, char *argv[])
         mvprintw(1, 0, "x: %.2f, y: %.2f\n", new_x, new_y);
         mvprintw(2, 0, "vx: %f, vy: %f\n", vx, vy);
 
-        refresh();
+        
         world.drone.x = (int)new_x;
         world.drone.y = (int)new_y;
         world.drone.symbol = world.drone.symbol;
@@ -407,7 +409,7 @@ int main(int argc, char *argv[])
         write(pipeds[PIPE_WRITE], &world.drone, sizeof(world.drone));
         fsync(pipeds[PIPE_WRITE]);
 
-        clear(); // Clear the screen of all previously-printed characters
+        refresh();
     }
     endwin();
     return 0;

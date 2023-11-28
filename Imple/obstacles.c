@@ -54,7 +54,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[676]; // 512 + 50(NUM_OBSTACLES) +1 a caso
+    struct Obstacle obstacle[700];
     struct Screen screen;
     struct Target target[9];
 };
@@ -217,70 +217,78 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        read(pipeso[PIPE_READ], &world.screen, sizeof(world.screen));
-        // printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
-
-        // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
-
-        tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
-
-        if (tot_borders != border_prec)
+        if (read(pipeso[PIPE_READ], &world, sizeof(world)) == -1)
         {
-            first = 6;
+            perror("read");
+            continue;
         }
-        border_prec = tot_borders;
-
-        int i = 0;
-
-        // generare ostacoli randomici
-        time_t current_time = time(NULL);
-        if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
+        else
         {
-            for (; i < NUM_OBSTACLES; i++)
+
+            // printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
+
+            // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
+
+            tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+
+            if (tot_borders != border_prec)
             {
-                do
+                first = 2;
+            }
+            border_prec = tot_borders;
+
+            int i = 0;
+
+            // generare ostacoli randomici
+            time_t current_time = time(NULL);
+            if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
+            {
+                for (; i < NUM_OBSTACLES; i++)
                 {
-                    world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
-                    world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
-                } while (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y);
+                    do
+                    {
+                        world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+                        world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+                    } while (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y);
 
-                world.obstacle[i].symbol = '#';
+                    world.obstacle[i].symbol = '#';
+                }
+                last_spawn_time = current_time;
+
+                // Top and bottom borders
+                for (int x = 0; x < world.screen.width; x++)
+                {
+                    world.obstacle[i].x = x;
+                    world.obstacle[i].y = 0;
+                    world.obstacle[i].symbol = '#';
+                    i++;
+
+                    world.obstacle[i].x = x;
+                    world.obstacle[i].y = world.screen.height - 1;
+                    world.obstacle[i].symbol = '#';
+                    i++;
+                }
+                // Left and right borders
+                for (int y = 1; y < world.screen.height - 1; y++)
+                {
+                    world.obstacle[i].x = 0;
+                    world.obstacle[i].y = y;
+                    world.obstacle[i].symbol = '#';
+                    i++;
+
+                    world.obstacle[i].x = world.screen.width - 1;
+                    world.obstacle[i].y = y;
+                    world.obstacle[i].symbol = '#';
+                    i++;
+                }
             }
-            last_spawn_time = current_time;
-
-            // Top and bottom borders
-            for (int x = 0; x < world.screen.width; x++)
-            {
-                world.obstacle[i].x = x;
-                world.obstacle[i].y = 0;
-                world.obstacle[i].symbol = '#';
-                i++;
-
-                world.obstacle[i].x = x;
-                world.obstacle[i].y = world.screen.height - 1;
-                world.obstacle[i].symbol = '#';
-                i++;
-            }
-            // Left and right borders
-            for (int y = 1; y < world.screen.height - 1; y++)
-            {
-                world.obstacle[i].x = 0;
-                world.obstacle[i].y = y;
-                world.obstacle[i].symbol = '#';
-                i++;
-
-                world.obstacle[i].x = world.screen.width - 1;
-                world.obstacle[i].y = y;
-                world.obstacle[i].symbol = '#';
-                i++;
-            }
+            first--;
+            // generare ostacoli randomici
+            printf("tot_borders: %d\n", tot_borders);
+            printf("i: %d\n", i);
+            write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+            fsync(pipeos[PIPE_WRITE]);
         }
-        first--;
-        // generare ostacoli randomici
-        printf("tot_borders: %d\n", tot_borders);
-        printf("i: %d\n", i);
-        write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        fsync(pipeos[PIPE_WRITE]);
     }
 
     // passare gli ostacoli al drone via pipe
