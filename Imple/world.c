@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
         // Print the target symbols at their positions if they're within the window dimensions
         for (int i = 0; i < 9; i++)
         {
-            if (world.target[i].y < height && world.target[i].x < width && world.target[i].is_visible)
+            if ((world.target[i].y < height && world.target[i].x < width) && world.target[i].is_visible && world.target[i].is_active)
             {
                 attron(COLOR_PAIR(4));
                 mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);

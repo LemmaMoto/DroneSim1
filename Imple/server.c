@@ -218,6 +218,13 @@ int main(int argc, char *argv[])
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
+        for(int i = 0; i < 9; i++){
+            if(world.target[i].is_active == true){
+                printf("target %d is active\n", i);
+                printf("target %d x: %d, y: %d\n", i, world.target[i].x, world.target[i].y);
+            }
+        }
+        
 
         write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
         fsync(pipesw[PIPE_WRITE]);

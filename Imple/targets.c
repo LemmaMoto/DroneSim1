@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
         else
         {
             current_targets[i].is_active = false;
-            current_targets[i].is_visible = false;
+            current_targets[i].is_visible = true;
         }
     }
 
@@ -246,6 +246,11 @@ int main(int argc, char *argv[])
 
             for (; i < current_num_targets; i++)
             {
+                printf("drone.x: %d, drone.y: %d\n", world.drone.x, world.drone.y);
+                if (current_targets[i].is_active)
+                {
+                    printf("target.x: %d, target.y: %d\n", world.target[i].x, world.target[i].y);
+                }
                 // If the drone is in the same position as the active target, make the target inactive and invisible
                 if (world.drone.x == world.target[i].x && world.drone.y == world.target[i].y && current_targets[i].is_active)
                 {
@@ -260,7 +265,7 @@ int main(int argc, char *argv[])
                 }
 
                 // If the target is visible, generate a random position for it
-                if (current_targets[i].is_visible && current_time - last_spawn_time >= refresh_time_targets || first > 0)
+                if (current_targets[i].is_visible && (current_time - last_spawn_time >= refresh_time_targets || first > 0))
                 {
                     do
                     {
@@ -273,7 +278,7 @@ int main(int argc, char *argv[])
                     // Copy the target to the world's targets
                     world.target[i] = current_targets[i];
 
-                    printf("Target %d: x = %d, y = %d\n", i, world.target[i].x, world.target[i].y);
+                    // printf("Target %d: x = %d, y = %d\n", i, world.target[i].x, world.target[i].y);
                 }
             }
 
