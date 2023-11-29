@@ -70,6 +70,7 @@ int pipest[2];
 int pipets[2];
 int pipesw[2];
 int pipews[2];
+int pipesd_t[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -124,7 +125,7 @@ int main(int argc, char *argv[])
 
     struct Drone drone;
     int process_num;
-    if (argc == 18)
+    if (argc == 20)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesd[PIPE_READ]);
@@ -143,6 +144,8 @@ int main(int argc, char *argv[])
         sscanf(argv[15], "%d", &pipesw[PIPE_WRITE]);
         sscanf(argv[16], "%d", &pipews[PIPE_READ]);
         sscanf(argv[17], "%d", &pipews[PIPE_WRITE]);
+        sscanf(argv[18], "%d", &pipesd_t[PIPE_READ]);
+        sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
     }
     else
     {
@@ -166,6 +169,8 @@ int main(int argc, char *argv[])
     printf("pipesw[PIPE_WRITE]: %d\n", pipesw[PIPE_WRITE]);
     printf("pipews[PIPE_READ]: %d\n", pipews[PIPE_READ]);
     printf("pipews[PIPE_WRITE]: %d\n", pipews[PIPE_WRITE]);
+    printf("pipesd_t[PIPE_READ]: %d\n", pipesd_t[PIPE_READ]);
+    printf("pipesd_t[PIPE_WRITE]: %d\n", pipesd_t[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -214,17 +219,18 @@ int main(int argc, char *argv[])
     struct World world;
     while (1)
     {
+        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
-        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
-        for(int i = 0; i < 9; i++){
-            if(world.target[i].is_active == true){
-                printf("target %d is active\n", i);
-                printf("target %d x: %d, y: %d\n", i, world.target[i].x, world.target[i].y);
+        
+        for (int i = 0; i < 9; i++)
+        {
+            if (world.target[i].is_active == true)
+            {
+                printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
             }
         }
-        
 
         write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
         fsync(pipesw[PIPE_WRITE]);
@@ -238,16 +244,15 @@ int main(int argc, char *argv[])
         write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesd[PIPE_WRITE]);
 
-        // write(pipesd[PIPE_WRITE], &world.target, sizeof(world.target));
-        // fsync(pipesd[PIPE_WRITE]);
-
+        write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+        fsync(pipesd_t[PIPE_WRITE]);
 
         write(pipeso[PIPE_WRITE], &world, sizeof(world));
         fsync(pipeso[PIPE_WRITE]);
+
         write(pipest[PIPE_WRITE], &world, sizeof(world));
         fsync(pipest[PIPE_WRITE]);
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
-       
     }
 
     return 0;

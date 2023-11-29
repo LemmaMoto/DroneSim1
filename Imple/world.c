@@ -260,7 +260,6 @@ int main(int argc, char *argv[])
             fsync(pipews[PIPE_WRITE]) == -1;
         }
 
-        sleep(0.01);
         refresh(); // Refresh the screen to show the changes
     }
     endwin();

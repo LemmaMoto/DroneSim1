@@ -161,6 +161,20 @@ int main(int argc, char *argv[])
     sprintf(pipe_read_di, "%d", pipedi[PIPE_READ]);
     sprintf(pipe_write_di, "%d", pipedi[PIPE_WRITE]);
 
+    // PIPE PER COLLEGARE server E DRONE (targets)
+    int pipesd_t[2];
+    if (pipe(pipesd_t) == -1)
+    {
+        perror("Error creating pipesd_t");
+        return -1;
+    }
+    printf("Pipesd_t created successfully\n");
+
+    char pipe_read_sd_t[10];
+    char pipe_write_sd_t[10];
+    sprintf(pipe_read_sd_t, "%d", pipesd_t[PIPE_READ]);
+    sprintf(pipe_write_sd_t, "%d", pipesd_t[PIPE_WRITE]);
+
     // There should be a check that the log folder exists but I haven't done that
     fopen(PID_FILE_PW, "w");
 
@@ -203,7 +217,7 @@ int main(int argc, char *argv[])
 
     if (child_process0 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, NULL};
+        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, NULL};
         execvp("konsole", arg_list);
         perror("execvp failed for server");
         return 0;
@@ -220,7 +234,7 @@ int main(int argc, char *argv[])
 
     if (child_process1 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./drone", "1", pipe_read_di, pipe_write_di, pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, NULL};
+        char *arg_list[] = {"konsole", "-e", "./drone", "1", pipe_read_di, pipe_write_di, pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_sd_t, pipe_write_sd_t, NULL};
         execvp("konsole", arg_list);
         perror("execvp failed for drone");
         return 0;
@@ -334,6 +348,8 @@ int main(int argc, char *argv[])
     close(pipeds[1]);
     close(pipews[0]);
     close(pipews[1]);
+    close(pipesd_t[0]);
+    close(pipesd_t[1]);
 
     printf("pipedi[0] = %d, pipedi[1] = %d\n", pipedi[PIPE_READ], pipedi[PIPE_WRITE]);
     printf("pipesd[0] = %d, pipesd[1] = %d\n", pipesd[PIPE_READ], pipesd[PIPE_WRITE]);
@@ -344,6 +360,7 @@ int main(int argc, char *argv[])
     printf("pipeds[0] = %d, pipeds[1] = %d\n", pipeds[PIPE_READ], pipeds[PIPE_WRITE]);
     printf("pipesw[0] = %d, pipesw[1] = %d\n", pipesw[PIPE_READ], pipesw[PIPE_WRITE]);
     printf("pipews[0] = %d, pipews[1] = %d\n", pipews[PIPE_READ], pipews[PIPE_WRITE]);
+    printf("pipesd_t[0] = %d, pipesd_t[1] = %d\n", pipesd_t[PIPE_READ], pipesd_t[PIPE_WRITE]);
 
     printf("Pipe closed successfully\n"); // Print a message indicating that the pipe has been closed successfully
 

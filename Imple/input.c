@@ -251,8 +251,6 @@ void ui_process()
             break;
         case 'q':
             command = 'Q'; // Termina il programma
-            mvprintw(0, 0, "Terminazione in corso...\n");
-            sleep(3);
             break;
         default:
             command = '\0'; // Comando non valido

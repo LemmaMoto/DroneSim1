@@ -270,14 +270,12 @@ int main(int argc, char *argv[])
                 // If the drone is in the same position as the active target, make the target inactive and invisible
                 if (world.drone.x == world.target[i].x && world.drone.y == world.target[i].y && current_targets[i].is_active)
                 {
-                    printf("ENTRATISSIMO\n");
                     current_targets[i].is_active = false;
                     current_targets[i].is_visible = false;
 
                     // If there is a next target, make it active
                     if (i + 1 < current_num_targets)
                     {
-                        printf("ENTRATOOOOOOOOOOOOOOO\n");
                         current_targets[i + 1].is_active = true;
                     }
                     world.target[i] = current_targets[i];
