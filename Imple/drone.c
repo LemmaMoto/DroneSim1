@@ -78,7 +78,7 @@ struct World
 int pipedi[2];
 int pipesd[2];
 int pipeds[2];
-int pipesd_t[2];
+int pipesdt[2];
 
 struct timeval tv;
 
@@ -142,8 +142,8 @@ int main(int argc, char *argv[])
         sscanf(argv[5], "%d", &pipesd[PIPE_WRITE]);
         sscanf(argv[6], "%d", &pipeds[PIPE_READ]);
         sscanf(argv[7], "%d", &pipeds[PIPE_WRITE]);
-        sscanf(argv[8], "%d", &pipesd_t[PIPE_READ]);
-        sscanf(argv[9], "%d", &pipesd_t[PIPE_WRITE]);
+        sscanf(argv[8], "%d", &pipesdt[PIPE_READ]);
+        sscanf(argv[9], "%d", &pipesdt[PIPE_WRITE]);
     }
     else
     {
@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
             refresh();
         }
 
-        if (read(pipesd_t[PIPE_READ], &world.target, sizeof(world.target)) == -1)
+        if (read(pipesdt[PIPE_READ], &world.target, sizeof(world.target)) == -1)
         {
             perror("read target");
             continue;

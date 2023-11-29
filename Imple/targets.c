@@ -12,16 +12,26 @@
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #define TARGET_ATTRACTION_CONSTANT 1.0
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define PORT 8080
 
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
 char logfile_name[256] = LOG_FILE_NAME;
+// Client code
+struct sockaddr_in address;
+int sock = 0;
+struct sockaddr_in serv_addr;
 
 struct Drone
 {
@@ -202,6 +212,33 @@ int main(int argc, char *argv[])
     printf("NUM_TARGETS = %d\n", NUM_TARGETS);
     printf("refresh_time_targets = %d\n", refresh_time_targets);
 
+    struct sockaddr_in address;
+    int sock = 0;
+    struct sockaddr_in serv_addr;
+
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return -1;
+    }
+
+    memset(&serv_addr, '0', sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    // Convert IPv4 and IPv6 addresses from text to binary form
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0)
+    {
+        printf("\nInvalid address/ Address not supported \n");
+        return -1;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return -1;
+    }
+
     struct World world;
     int current_num_targets = NUM_TARGETS;
     struct Target current_targets[current_num_targets];
@@ -226,9 +263,9 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
+        if (recv(sock, &world, sizeof(world), 0) == -1)
         {
-            perror("read");
+            perror("recv");
             continue;
         }
         else
@@ -288,41 +325,11 @@ int main(int argc, char *argv[])
             }
 
             first--;
-            write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
-            fsync(pipets[PIPE_WRITE]);
+            // write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
+            // fsync(pipets[PIPE_WRITE]);
+            // Send data to the server
+            write(sock, &world.target, sizeof(world.target));
         }
-
-        // far si che i target non si sovrappongano
-
-        // generare target randomici numerati da 1 a 9
-
-        // passare i target al drone via pipe passando per il server e controllare che il drone non si sovrapponga ai target
-
-        // far sparire i target una volta raggiunti dal drone leggendo da pipe dal server
-
-        // se passa un tot di tempo e il drone non ha raggiunto il target, il target si sposta in un'altra posizione randomica
-
-        // Main loop
-        // while (1)
-        // {
-        //     // ...
-
-        //     // Calculate attraction forces
-        //     double fx = 0, fy = 0;
-        //     for (int i = 0; i < NUM_TARGETS; ++i)
-        //     {
-        //         double dx = targets[i].x - x;
-        //         double dy = targets[i].y - y;
-        //         double distance = sqrt(dx * dx + dy * dy);
-        //         if (distance != 0) // Avoid division by zero
-        //         {
-        //             fx += TARGET_ATTRACTION_CONSTANT * dx / distance;
-        //             fy += TARGET_ATTRACTION_CONSTANT * dy / distance;
-        //         }
-        //     }
-
-        //     // ...
-        // }
     }
     return 0;
 }

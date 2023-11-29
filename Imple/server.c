@@ -12,6 +12,9 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <stdbool.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define SHM_DRN 12 // Define a key for the shared memory segment
 #define SHM_WRLD 34
@@ -19,11 +22,18 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
+#define PORT 8080
+
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
 char logfile_name[256] = LOG_FILE_NAME;
+
+int server_fd, new_socket;
+struct sockaddr_in address;
+int opt = 1;
+int addrlen = sizeof(address);
 
 struct Drone
 {
@@ -70,7 +80,7 @@ int pipest[2];
 int pipets[2];
 int pipesw[2];
 int pipews[2];
-int pipesd_t[2];
+int pipesdt[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -144,8 +154,8 @@ int main(int argc, char *argv[])
         sscanf(argv[15], "%d", &pipesw[PIPE_WRITE]);
         sscanf(argv[16], "%d", &pipews[PIPE_READ]);
         sscanf(argv[17], "%d", &pipews[PIPE_WRITE]);
-        sscanf(argv[18], "%d", &pipesd_t[PIPE_READ]);
-        sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
+        sscanf(argv[18], "%d", &pipesdt[PIPE_READ]);
+        sscanf(argv[19], "%d", &pipesdt[PIPE_WRITE]);
     }
     else
     {
@@ -169,8 +179,8 @@ int main(int argc, char *argv[])
     printf("pipesw[PIPE_WRITE]: %d\n", pipesw[PIPE_WRITE]);
     printf("pipews[PIPE_READ]: %d\n", pipews[PIPE_READ]);
     printf("pipews[PIPE_WRITE]: %d\n", pipews[PIPE_WRITE]);
-    printf("pipesd_t[PIPE_READ]: %d\n", pipesd_t[PIPE_READ]);
-    printf("pipesd_t[PIPE_WRITE]: %d\n", pipesd_t[PIPE_WRITE]);
+    printf("pipesd_t[PIPE_READ]: %d\n", pipesdt[PIPE_READ]);
+    printf("pipesd_t[PIPE_WRITE]: %d\n", pipesdt[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -210,6 +220,40 @@ int main(int argc, char *argv[])
     printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
 
+    // Creazione del file descriptor della socket
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Forzare l'associazione della socket alla porta
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+
+    // Forzare l'associazione della socket alla porta
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+    {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    if (listen(server_fd, 3) < 0)
+    {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+    {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
     // Read how long to sleep process for
     int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;
     int sleep_duration = sleep_durations[process_num];
@@ -222,8 +266,8 @@ int main(int argc, char *argv[])
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        read(pipets[PIPE_READ], &world.target, sizeof(world.target));
-        
+        recv(new_socket, &world.target, sizeof(world.target), 0);
+
         for (int i = 0; i < 9; i++)
         {
             if (world.target[i].is_active == true)
@@ -244,14 +288,16 @@ int main(int argc, char *argv[])
         write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesd[PIPE_WRITE]);
 
-        write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
-        fsync(pipesd_t[PIPE_WRITE]);
+        write(pipesdt[PIPE_WRITE], &world.target, sizeof(world.target));
+        fsync(pipesdt[PIPE_WRITE]);
 
         write(pipeso[PIPE_WRITE], &world, sizeof(world));
         fsync(pipeso[PIPE_WRITE]);
 
-        write(pipest[PIPE_WRITE], &world, sizeof(world));
-        fsync(pipest[PIPE_WRITE]);
+        // write(pipest[PIPE_WRITE], &world, sizeof(world));
+        // fsync(pipest[PIPE_WRITE]);
+
+        send(new_socket, &world, sizeof(world), 0);
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
     }
 
