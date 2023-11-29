@@ -11,7 +11,6 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

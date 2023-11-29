@@ -10,14 +10,10 @@
 #include <time.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
-#include <sys/shm.h>
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#define SHM_DRN 12 // Define a key for the shared memory segment
-#define SHM_WRLD 34
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
