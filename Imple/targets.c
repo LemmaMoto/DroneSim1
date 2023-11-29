@@ -11,7 +11,7 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
-#include <sys/shm.h>
+
 #define TARGET_ATTRACTION_CONSTANT 1.0
 
 #define PIPE_READ 0

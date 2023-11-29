@@ -11,7 +11,6 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
-#include <sys/shm.h>
 
 #define OBSTACLE_REPULSION_CONSTANT 1.0
 

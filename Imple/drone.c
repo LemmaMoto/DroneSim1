@@ -11,11 +11,9 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
-#include <sys/shm.h>
 #include <math.h>
 #include <float.h>
 
-#define SHM_DRN 12
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
