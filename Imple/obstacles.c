@@ -44,6 +44,7 @@ struct Target
     int y;
     char symbol;
     bool is_active;
+    bool is_visible;
 };
 
 struct Screen

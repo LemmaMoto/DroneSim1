@@ -44,6 +44,7 @@ struct Target
     int y;
     char symbol;
     bool is_active;
+    bool is_visible;
 };
 
 struct Screen
@@ -209,6 +210,20 @@ int main(int argc, char *argv[])
     int first;
     int border_prec = 0;
 
+    for (int i = 0; i < current_num_targets; i++)
+    {
+        if (i == 0)
+        {
+            current_targets[i].is_active = true;
+            current_targets[i].is_visible = true;
+        }
+        else
+        {
+            current_targets[i].is_active = false;
+            current_targets[i].is_visible = false;
+        }
+    }
+
     while (1)
     {
         if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
@@ -218,7 +233,6 @@ int main(int argc, char *argv[])
         }
         else
         {
-
             tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
 
             if (tot_borders != border_prec)
@@ -228,11 +242,25 @@ int main(int argc, char *argv[])
             border_prec = tot_borders;
 
             int i = 0;
-
             time_t current_time = time(NULL);
-            if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+
+            for (; i < current_num_targets; i++)
             {
-                for (; i < current_num_targets; i++)
+                // If the drone is in the same position as the active target, make the target inactive and invisible
+                if (world.drone.x == world.target[i].x && world.drone.y == world.target[i].y && current_targets[i].is_active)
+                {
+                    current_targets[i].is_active = false;
+                    current_targets[i].is_visible = false;
+
+                    // If there is a next target, make it active
+                    if (i + 1 < current_num_targets)
+                    {
+                        current_targets[i + 1].is_active = true;
+                    }
+                }
+
+                // If the target is visible, generate a random position for it
+                if (current_targets[i].is_visible && current_time - last_spawn_time >= refresh_time_targets || first > 0)
                 {
                     do
                     {
@@ -247,12 +275,18 @@ int main(int argc, char *argv[])
 
                     printf("Target %d: x = %d, y = %d\n", i, world.target[i].x, world.target[i].y);
                 }
+            }
+
+            if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+            {
                 last_spawn_time = current_time;
             }
+
             first--;
             write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
             fsync(pipets[PIPE_WRITE]);
         }
+
         // far si che i target non si sovrappongano
 
         // generare target randomici numerati da 1 a 9

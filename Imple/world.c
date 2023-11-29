@@ -51,6 +51,7 @@ struct Target
     int y;
     char symbol;
     bool is_active;
+    bool is_visible;
 };
 
 struct World
@@ -224,7 +225,7 @@ int main(int argc, char *argv[])
         // Print the target symbols at their positions if they're within the window dimensions
         for (int i = 0; i < 9; i++)
         {
-            if (world.target[i].y < height && world.target[i].x < width)
+            if (world.target[i].y < height && world.target[i].x < width && world.target[i].is_visible)
             {
                 attron(COLOR_PAIR(4));
                 mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);
@@ -241,7 +242,6 @@ int main(int argc, char *argv[])
                 attroff(COLOR_PAIR(3));
             }
         }
-        
 
         if (world.drone.y < height && world.drone.x < width)
         {

@@ -11,6 +11,7 @@
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <stdbool.h>
 
 #define SHM_DRN 12 // Define a key for the shared memory segment
 #define SHM_WRLD 34
@@ -51,6 +52,7 @@ struct Target
     int y;
     char symbol;
     bool is_active;
+    bool is_visible;
 };
 
 struct World
