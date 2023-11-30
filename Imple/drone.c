@@ -267,18 +267,14 @@ int main(int argc, char *argv[]) // Main function
     shared_drone->color_pair = drone.color_pair;
 
     // Initialize variables
+    double fx = 0, fy = 0;
     double prev_x = drone.x, prev_y = drone.y;
-    double prev_vx = 0, prev_vy = 0;
-    double Fx = fx;
-    double Fy = fy;
+    static double prev_vx = 0, prev_vy = 0;
 
     while (1)
     {
         char command = '\0';
-        printf("Reading from pipe\n");
         int bytesRead = read(pipefd[PIPE_READ], &command, sizeof(char));
-        printf("Read %d bytes\n", bytesRead);
-        printf("Command: %c\n", command);
         if (bytesRead > 0)
         {
             switch (command)
@@ -315,8 +311,6 @@ int main(int argc, char *argv[]) // Main function
                 fy -= 100.0; // forza verso DDx
                 fx += 100.0;
                 break;
-            case 'a':
-                break;
             case 'b':
                 fx = 0; // annulla forza
                 fy = 0;
@@ -327,6 +321,19 @@ int main(int argc, char *argv[]) // Main function
                 prev_vx = 0; // annulla velocità
                 prev_vy = 0;
                 break;
+            case 'a':
+
+                fx = 0; // annulla forza
+                fy = 0;
+                vx = 0; // annulla velocità
+                vy = 0;
+                drone.x = 10; // ann
+                drone.y = 10;
+                prev_x = drone.x; // annulla posizione
+                prev_y = drone.y;
+                prev_vx = 0; // annulla velocità
+                prev_vy = 0;
+
             case '\0':
                 command = '\0'; // Comando non valido
                 break;
@@ -335,16 +342,17 @@ int main(int argc, char *argv[]) // Main function
         }
         else if (bytesRead == 0)
         {
-            perror("Nothing to read\n");
+            printf("Nothing to read\n");
         }
         else
         {
-            perror("read");
+            perror("read input:");
         }
+        clear();
 
         // Update velocity and position
-        double ax = (fx / M) - (K * vx);
-        double ay = (fy / M) - (K * vy);
+        double ax = (fx / M) - (K * prev_vx);
+        double ay = (fy / M) - (K * prev_vy);
         vx = prev_vx + ax * T;
         vy = prev_vy + ay * T;
 
@@ -357,11 +365,8 @@ int main(int argc, char *argv[]) // Main function
         // Store the current position and velocity for the next iteration
         prev_x = new_x;
         prev_y = new_y;
-        drone.x = (int)new_x;
-        drone.y = (int)new_y;
         prev_vx = vx;
         prev_vy = vy;
-
         mvprintw(1, 0, "x: %.2f, y: %.2f\n", new_x, new_y);
         mvprintw(2, 0, "vx: %f, vy: %f\n", vx, vy);
 

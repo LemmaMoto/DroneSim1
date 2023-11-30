@@ -46,12 +46,14 @@ int main(int argc, char *argv[])
     sprintf(pipe_write_str, "%d", pipefd[PIPE_WRITE]);
 
     // Open PID files for writing
-    fopen(PID_FILE_PW, "w");
+    FILE *pid_file = fopen(PID_FILE_PW, "w");
     char *fnames[NUM_PROCESSES] = PID_FILE_SP;
 
     for (int i = 0; i < NUM_PROCESSES; i++)
     {
-        fopen(fnames[i], "w");
+        pid_file = fopen(fnames[i], "w");
+        // Write to the file...
+        fclose(pid_file); // Close the file descripto
     }
 
     int res;
