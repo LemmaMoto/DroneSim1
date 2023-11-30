@@ -17,7 +17,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#define SHM_DRN 12 // Define a shared memory key
+#define SHM_DRN 1234 // Define a shared memory key
 
 #define PIPE_READ 0  // Define the read end of the pipe
 #define PIPE_WRITE 1 // Define the write end of the pipe

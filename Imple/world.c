@@ -16,7 +16,7 @@
 #include <semaphore.h>
 #include <sys/mman.h>
 
-#define SHM_WRLD 12 // Define a key for the shared memory segment
+#define SHM_WRLD 1234 // Define a key for the shared memory segment
 
 pid_t watchdog_pid;
 pid_t process_id;
