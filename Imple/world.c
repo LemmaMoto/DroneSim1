@@ -1,22 +1,20 @@
-#include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
+#include <ncurses.h>
+#include <semaphore.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/mman.h>
+#include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <signal.h>
-#include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include "include/constants.h"
-#include <ncurses.h>
-#include <stdbool.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <semaphore.h>
-#include <sys/mman.h>
-
-#define SHM_WRLD 1234 // Define a key for the shared memory segment
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -53,14 +51,16 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 int main(int argc, char *argv[])
 {
 
-    // Define a signal set
     sigset_t set;
+    sigset_t unb_set;
 
     // Initialize the signal set to empty
     sigemptyset(&set);
+    sigemptyset(&unb_set);
 
     // Add SIGUSR1 to the set
-    sigaddset(&set, SIGUSR1);
+    sigfillset(&set);
+    sigaddset(&unb_set, SIGUSR1);
 
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     }
 
     // Unblock SIGUSR1
-    if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
+    if (sigprocmask(SIG_UNBLOCK, &unb_set, NULL) < 0)
     {
         perror("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
 
     struct Drone drone;
     // Create a shared memory segment
-    int shm_id = shmget(SHM_WRLD, sizeof(struct Drone), IPC_CREAT | 0666);
+    int shm_id = shmget(SHM_DRN, sizeof(struct Drone), IPC_CREAT | 0666);
     if (shm_id < 0)
     {
         perror("shmget");

@@ -1,20 +1,17 @@
-#include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
+#include <semaphore.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/mman.h>
+#include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <time.h>
 #include "include/constants.h"
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <semaphore.h>
-#include <sys/mman.h>
-
-#define SHM_DRN 1234 // Define a key for the shared memory segment
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -50,31 +47,36 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
-    sigset_t mask, oldmask;
+    sigset_t set;
+    sigset_t unb_set;
 
-    // Initialize the signal mask.
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGUSR1); // Add the signal you want to block
+    // Initialize the signal set to empty
+    sigemptyset(&set);
+    sigemptyset(&unb_set);
 
-    // Block the signals before entering the critical section.
-    if (sigprocmask(SIG_BLOCK, &mask, &oldmask) < 0)
+    // Add SIGUSR1 to the set
+    sigfillset(&set);
+    sigaddset(&unb_set, SIGUSR1);
+
+    // Block SIGUSR1
+    if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask");
+        perror("sigprocmask"); // Print an error message if the signal can't be blocked
         return -1;
     }
-
-    // Set up sigaction for receiving signals from processes
+    // Set up sigaction for receiving signals from the watchdog process
     struct sigaction p_action;
     p_action.sa_flags = SA_SIGINFO;
     p_action.sa_sigaction = watchdog_handler;
     if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
-        perror("sigaction");
+        perror("sigaction"); // Print an error message if the signal can't be set up
     }
-    // Unblock the signals after leaving the critical section.
-    if (sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0)
+
+    // Unblock SIGUSR1
+    if (sigprocmask(SIG_UNBLOCK, &unb_set, NULL) < 0)
     {
-        perror("sigprocmask");
+        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
     struct Drone drone;

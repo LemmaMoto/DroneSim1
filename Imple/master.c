@@ -1,17 +1,12 @@
-#include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #include "include/constants.h"
-
-#define PIPE_READ 0
-#define PIPE_WRITE 1
 
 int main(int argc, char *argv[])
 {

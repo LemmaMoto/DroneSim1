@@ -1,28 +1,20 @@
+#include <errno.h>
+#include <fcntl.h>
+#include <math.h>
+#include <ncurses.h>
+#include <semaphore.h>
+#include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/ipc.h>
+#include <sys/mman.h>
+#include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <time.h>
-#include <ncurses.h>
-#include <errno.h>
 #include "include/constants.h"
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <math.h>
-#include <semaphore.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-
-#define SHM_DRN 1234 // Define a shared memory key
-
-#define PIPE_READ 0  // Define the read end of the pipe
-#define PIPE_WRITE 1 // Define the write end of the pipe
-
-#define T 0.01 // Define a time constant
 
 // Initialize position and velocity
 double x = 0, y = 0;
@@ -80,14 +72,16 @@ void watchdog_handler(int sig, siginfo_t *info, void *context) // Signal handler
 
 int main(int argc, char *argv[]) // Main function
 {
-    // Define a signal set
     sigset_t set;
+    sigset_t unb_set;
 
     // Initialize the signal set to empty
     sigemptyset(&set);
+    sigemptyset(&unb_set);
 
     // Add SIGUSR1 to the set
-    sigaddset(&set, SIGUSR1);
+    sigfillset(&set);
+    sigaddset(&unb_set, SIGUSR1);
 
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
@@ -105,7 +99,7 @@ int main(int argc, char *argv[]) // Main function
     }
 
     // Unblock SIGUSR1
-    if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
+    if (sigprocmask(SIG_UNBLOCK, &unb_set, NULL) < 0)
     {
         perror("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;

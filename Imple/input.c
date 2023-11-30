@@ -1,22 +1,13 @@
+#include <ncurses.h>
+#include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <time.h>
 #include "include/constants.h"
-#include <ncurses.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-
-#define PIPE_READ 0
-#define PIPE_WRITE 1
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -307,12 +298,15 @@ int main(int argc, char *argv[])
 {
     // Define a signal set
     sigset_t set;
+    sigset_t unb_set;
 
     // Initialize the signal set to empty
     sigemptyset(&set);
+    sigemptyset(&unb_set);
 
     // Add SIGUSR1 to the set
-    sigaddset(&set, SIGUSR1);
+    sigfillset(&set);
+    sigaddset(&unb_set, SIGUSR1);
 
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
@@ -330,7 +324,7 @@ int main(int argc, char *argv[])
     }
 
     // Unblock SIGUSR1
-    if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
+    if (sigprocmask(SIG_UNBLOCK, &unb_set, NULL) < 0)
     {
         perror("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;

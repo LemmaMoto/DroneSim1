@@ -1,8 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define SHMOBJ_PATH "/shm_server"
-#define SEM_PATH "/sem_server"
+#define SHM_DRN 1234 // Define a shared memory key
 
 #define SEED_MULTIPLIER 120
 #define MAX_NUMBER 50
@@ -20,5 +19,10 @@
 #define PROCESS_NAMES {"server", "drone", "input", "world"}  /* process names used for ncurses windows and in log file */
 
 #define LOG_FILE_NAME "./log/watchdog/watchdog.txt"
+
+#define PIPE_READ 0  // Define the read end of the pipe
+#define PIPE_WRITE 1 // Define the write end of the pipe
+
+#define T 0.01 // Define a time constant
 
 #endif // !CONSTANTS_H
