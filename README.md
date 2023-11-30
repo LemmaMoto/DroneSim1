@@ -1,5 +1,7 @@
 # Advanced and Robot Programming - Assignment 1 #
 ## Authors: Bua Odetti Emanuele, Malatesta Federico ##
+### Primitve used ###
+`int` `char` `double` `pointer` `short` 
 
 ### Introduction ###
 This project involves the development of a drone operation interactive simulator. The simulator is built as a window using the NCurses library. Here's a breakdown of key components and functionalities:
