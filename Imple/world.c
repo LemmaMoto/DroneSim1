@@ -29,7 +29,6 @@ struct Drone
     char symbol;
     short color_pair;
 };
-
 // logs time update to file
 void log_receipt(struct timeval tv)
 {
@@ -146,6 +145,7 @@ int main(int argc, char *argv[])
     srand(time(NULL));
 
     init_pair(1, COLOR_BLACK, COLOR_WHITE);
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
 
     struct Drone drone;
     // Create a shared memory segment
@@ -177,11 +177,6 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    drone.x = shared_drone->x;
-    drone.y = shared_drone->y;
-    drone.symbol = shared_drone->symbol;
-    drone.color_pair = shared_drone->color_pair;
-
     if (sem_post(semaphore) < 0)
     {
         perror("sem_post");
@@ -198,8 +193,12 @@ int main(int argc, char *argv[])
         // Use the shared memory
         drone.x = shared_drone->x;
         drone.y = shared_drone->y;
+        drone.symbol = shared_drone->symbol;
+        drone.color_pair = shared_drone->color_pair;
+        attron(COLOR_PAIR(drone.color_pair));
         mvprintw(drone.y, drone.x, "%c", drone.symbol); // Print the drone symbol at the drone position
-        refresh();                                      // Refresh the screen to show the changes
+        attroff(COLOR_PAIR(drone.color_pair));
+        refresh(); // Refresh the screen to show the changes
         if (sem_post(semaphore) < 0)
         {
             perror("sem_post");

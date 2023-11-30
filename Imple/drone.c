@@ -356,8 +356,8 @@ int main(int argc, char *argv[]) // Main function
         vx = prev_vx + ax * T;
         vy = prev_vy + ay * T;
 
-        vx = fmax(fmin(vx, 100), -100);
-        vy = fmax(fmin(vy, 100), -100);
+        vx = fmax(fmin(vx, 200), -200);
+        vy = fmax(fmin(vy, 200), -200);
 
         double new_x = prev_x + vx * T;
         double new_y = prev_y + vy * T;
@@ -383,6 +383,9 @@ int main(int argc, char *argv[]) // Main function
         shared_drone->y = (int)new_y;
         shared_drone->symbol = drone.symbol;
         shared_drone->color_pair = drone.color_pair;
+        
+        drone.x = new_x;
+        drone.y = new_y;
 
         if (sem_post(semaphore) < 0)
         {
