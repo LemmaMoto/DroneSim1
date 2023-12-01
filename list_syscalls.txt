@@ -1,0 +1,213 @@
+WORLD
+
+fopen: Opens a file.
+fprintf: Writes formatted output to a stream.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+sigemptyset: Initializes a signal set to empty.
+sigaddset: Adds a signal to a signal set.
+sigprocmask: Examines or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+sscanf: Reads formatted input from a string.
+printf: Prints formatted output to stdout.
+getpid: Gets the process ID of the current process.
+stat: Gets file status.
+usleep: Suspends execution for microsecond intervals.
+fscanf: Reads formatted input from a stream.
+initscr: Initializes the terminal in curses mode.
+start_color: Starts color functionality.
+curs_set: Makes the cursor invisible.
+timeout: Sets the maximum delay for input.
+srand: Seeds the random number generator.
+init_pair: Changes the definition of a color-pair.
+clear: Clears the terminal screen.
+read: Reads from a file descriptor.
+getmaxyx: Gets the size of the window.
+attron: Turns on the named attributes.
+mvprintw: Moves the cursor and prints a string.
+attroff: Turns off the named attributes.
+refresh: Refreshes the screen.
+write: Writes to a file descriptor.
+fsync: Synchronizes a file's in-core state with storage device.
+endwin: Restores terminal settings to values they had before initscr was called.
+
+WATCHDOG
+
+fopen: Opens a file.
+fgets: Reads a line from a stream.
+sscanf: Reads formatted input from a string.
+fclose: Closes a file.
+newwin: Creates a new window.
+wrefresh: Refreshes a window.
+gettimeofday: Gets the current time.
+mvwprintw: Moves the cursor and prints a string in a window.
+wattron: Changes the attributes of a window.
+kill: Sends a signal to a process.
+getpid: Gets the process ID of the current process.
+fprintf: Writes formatted output to a stream.
+stat: Gets file status.
+fscanf: Reads formatted input from a stream.
+usleep: Suspends execution for microsecond intervals.
+initscr: Initializes the curses library.
+cbreak: Disables line buffering.
+start_color: Starts color functionality.
+init_pair: Initializes a pair of colors.
+refresh: Refreshes the screen.
+box: Draws a box around the edges of a window.
+
+SERVER
+
+fopen: Opens a file.
+fprintf: Writes formatted output to a stream.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+sigemptyset: Initializes a signal set to empty.
+sigaddset: Adds a signal to a signal set.
+sigprocmask: Examines or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+sscanf: Reads formatted input from a string.
+printf: Prints formatted output to stdout.
+getpid: Gets the process ID of the current process.
+stat: Gets file status.
+usleep: Suspends execution for microsecond intervals.
+fscanf: Reads formatted input from a stream.
+read: Reads from a file descriptor.
+write: Writes to a file descriptor.
+fsync: Synchronizes a file's in-core state with storage device.
+
+MASTER
+
+sprintf: This function is used to write formatted data to a string.
+remove: This function is used to delete a file.
+fopen: This function is used to open a file.
+perror: This function is used to print a descriptive error message to stderr.
+pipe: This function is used to create a pipe, which is a unidirectional data channel that can be used for interprocess communication.
+printf: This function is used to output formatted data.
+fork: This function is used to create a new process by duplicating the existing process.
+execvp: This function is used to replace the current process image with a new process image.
+wait: This function is used to make a parent process wait until its child process terminates.
+WIFEXITED: This macro is used to check if the child terminated normally, that is, by calling exit.
+WEXITSTATUS: This macro is used to return the exit status of the child. This macro should only be employed if WIFEXITED returned true.
+close: This function is used to close a file descriptor so that it no longer refers to any file and may be reused.
+
+INPUT
+
+mvwaddch: Moves the cursor to a given position in a specified window and adds a character.
+sprintf: Writes formatted output to a string.
+mvwprintw: Moves the cursor to a given position in a specified window and prints a string.
+wattron: Turns on the specified attributes.
+wattroff: Turns off the specified attributes.
+wrefresh: Updates the specified window.
+usleep: Suspends execution for microsecond intervals.
+initscr: Initializes the terminal in curses mode.
+fprintf: Writes formatted output to a stream.
+endwin: Restores terminal settings to values they had before initscr was called.
+has_colors: Checks if the terminal can display colors.
+start_color: Starts color functionality.
+init_pair: Defines a color pair.
+cbreak: Sets the terminal to cbreak mode.
+noecho: Turns off echoing of typed characters.
+keypad: Enables the keypad of the user's terminal.
+getmaxyx: Gets the size of the window.
+memset: Fills a block of memory with a specified value.
+newwin: Creates a new window.
+getch: Waits for user input.
+write: Writes to a file descriptor.
+fsync: Synchronizes a file's in-core state with a storage device.
+clear: Clears the terminal screen.
+mvprintw: Moves the cursor and prints a string.
+refresh: Refreshes the screen.
+sleep: Suspends execution for second intervals.
+perror: Prints a system error message.
+fopen: Opens a file.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+sigemptyset: Initializes a signal set to empty.
+sigaddset: Adds a signal to a signal set.
+sigprocmask: Examines or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+sscanf: Reads formatted input from a string.
+printf: Prints formatted output to stdout.
+getpid: Gets the process ID of the current process.
+stat: Gets file status.
+fscanf: Reads formatted input from a stream.
+kill: Sends a signal to a process.
+
+
+DRONE 
+
+fopen: Opens a file.
+fprintf: Writes formatted output to a stream.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+sigemptyset: Initializes a signal set to empty.
+sigaddset: Adds a signal to a signal set.
+sigprocmask: Examines or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+sscanf: Reads formatted input from a string.
+printf: Prints formatted output to stdout.
+getpid: Gets the process ID of the current process.
+stat: Gets file status.
+usleep: Suspends execution for microsecond intervals.
+fscanf: Reads formatted input from a stream.
+initscr: Initializes the terminal in curses mode.
+cbreak: Sets the terminal to cbreak mode.
+noecho: Turns off echoing of typed characters.
+keypad: Enables the keypad of the user's terminal.
+write: Writes to a file descriptor.
+read: Reads from a file descriptor.
+perror: Prints a system error message.
+mvprintw: Moves the cursor and prints a string.
+refresh: Refreshes the screen.
+clear: Clears the terminal screen.
+fsync: Synchronizes a file's in-core state with a storage device.
+endwin: Restores terminal settings to values they had before initscr was called.
+
+OBSTACLES
+
+fopen: Opens a file.
+fprintf: Writes formatted output to a stream.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+sigemptyset: Initializes a signal set to empty.
+sigaddset: Adds a signal to a signal set.
+sigprocmask: Examines or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+sscanf: Reads formatted input from a string.
+printf: Prints formatted output to stdout.
+getpid: Gets the process ID of the current process.
+stat: Gets file status.
+usleep: Suspends execution for microsecond intervals.
+fscanf: Reads formatted input from a stream.
+exit: Terminates the process.
+fgets: Reads a line from a stream.
+newwin: Creates a new window.
+read: Reads from a file descriptor.
+time: Gets the current time.
+rand: Generates a random number.
+write: Writes to a file descriptor.
+fsync: Synchronizes a file's in-core state with storage device.
+
+TARGETS
+
+fopen: Opens a file.
+fprintf: Writes formatted output to a stream.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+sigemptyset: Initializes a signal set to empty.
+sigaddset: Adds a signal to a signal set.
+sigprocmask: Examines or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+sscanf: Reads formatted input from a string.
+printf: Prints formatted output to stdout.
+getpid: Gets the process ID of the current process.
+stat: Gets file status.
+usleep: Suspends execution for microsecond intervals.
+fscanf: Reads formatted input from a stream.
+exit: Terminates the process.
+fgets: Reads a line from a stream.
+time: Gets the current time.
+rand: Generates a random number.
+read: Reads from a file descriptor.
+write: Writes to a file descriptor.
+fsync: Synchronizes a file's in-core state with storage device.
