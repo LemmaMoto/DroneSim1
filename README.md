@@ -13,7 +13,9 @@ This project involves the development of a drone operation interactive simulator
 * `targets`: manage multiple targets handling their generation, activation, and interaction with a drone within the world process using inter-process communication through pipes and file I/O for configuration parameters. It continuously updates the state of targets based on a predefined refresh time and drone interaction.
 
 [Link to Schematics](https://github.com/LemmaMoto/DroneSim1/blob/assignment2/schematics.pdf)
+
 [Link to List of components](https://github.com/LemmaMoto/DroneSim1/blob/assignment2/list_of_components.txt)
+
 [Link to Primitives](https://github.com/LemmaMoto/DroneSim1/blob/assignment2/list_syscalls.txt)
 
 
