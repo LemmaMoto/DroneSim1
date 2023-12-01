@@ -1,0 +1,33 @@
+USEFUL INSTRUCTIONS
+
+READ README.md for:
+- short definitions of all active components
+- instructions for installing and running
+- operational instructions
+
+READ list_of_components.txt for:
+-list of components
+
+General folder: DroneSim1
+	PDF document: Arp schematics.pdf
+	plain text document: list_of_components.txt
+	plain text document: list_syscalls.txt
+	Markdown document: README.md
+	folder: Imple 
+		shell script: run.sh
+		C source code: drone.c
+		C source code: input.c
+		C source code: master.c
+		C source code: server.c
+		C source code: watchdog.c
+		C source code: world.c 
+		C source code: targets.c
+		C source code: obstacles.c 
+		Makefile build file: makefile
+		folder: include
+			C header: constants.h
+		folder: build
+			plain text document: file_para.txt
+			folder: log
+				folder: watchdog
+					plain text document: watchdog.txt
