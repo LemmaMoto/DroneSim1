@@ -16,26 +16,6 @@ char logfile_name[256] = LOG_FILE_NAME;
 int logfile_line = 0;                               // line to read from in the log file
 char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
 
-// logs time update to file
-// void log_receipt(pid_t process_id, char *process_name, struct timeval tv)
-// {
-//     FILE *lf_fp = fopen(logfile_name, "a");
-//     fprintf(lf_fp, "%s [%d]: %ld %ld\n", process_name, process_id, tv.tv_sec, tv.tv_usec);
-//     fclose(lf_fp);
-// }
-
-// // updates the process data received and previous time
-// void process_update_handler(int sig, siginfo_t *info, void *context)
-// {
-//     for(int i = 0; i < NUM_PROCESSES; i++){
-//         if(info->si_pid == sp_pids[i]){
-//             process_data_recieved[i] = 1;
-//             gettimeofday(&prev_ts[i], NULL);
-//             log_receipt(sp_pids[i], process_names[i], prev_ts[i]);
-//         }
-//     }
-// }
-
 void check_log_file()
 {
     FILE *file = fopen(logfile_name, "r");
