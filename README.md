@@ -11,7 +11,9 @@ This project involves the development of a drone operation interactive simulator
 * `world`: initializes a shared memory segment and uses the NCurses library to create a simple graphical representation of a drone's movement by reading its position from the shared memory, displaying the drone's symbol on the terminal, and refreshing the display periodically based on the shared memory updates.
 
 [Link to Schematics](https://github.com/LemmaMoto/DroneSim1/blob/main/Arp%20schematics.pdf)
+
 [Link to Primitives](https://github.com/LemmaMoto/DroneSim1/blob/main/list_syscalls.txt)
+
 [Link to List of components](https://github.com/LemmaMoto/DroneSim1/blob/main/list_of_components.txt)
 
 
