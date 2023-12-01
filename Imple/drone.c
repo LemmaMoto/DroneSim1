@@ -478,21 +478,3 @@ int main(int argc, char *argv[])
     endwin();
     return 0;
 }
-
-// while (1)
-//  {
-//      // ...
-
-//     // Calculate repulsion forces
-//     double fx = 0, fy = 0;
-//     for (int i = 0; i < NUM_OBSTACLES; ++i)
-//     {
-//         double dx = x - obstacles[i].x;
-//         double dy = y - obstacles[i].y;
-//         double distance = sqrt(dx * dx + dy * dy);
-//         if (distance != 0) // Avoid division by zero
-//         {
-//             fx += OBSTACLE_REPULSION_CONSTANT * dx / (distance * distance * distance);
-//             fy += OBSTACLE_REPULSION_CONSTANT * dy / (distance * distance * distance);
-//         }
-//     }
