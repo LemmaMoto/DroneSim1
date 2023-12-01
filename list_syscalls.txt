@@ -1,0 +1,156 @@
+WORLD
+
+open: Used implicitly by fopen to open a file.
+close: Used implicitly by fclose to close a file.
+read: Used implicitly by fscanf and fread to read from a file.
+write: Used implicitly by fprintf and fwrite to write to a file.
+getpid: Used to get the process ID of the current process.
+stat: Used to get the status of a file.
+usleep: Used to pause execution for microsecond intervals.
+shmget: Used to get a shared memory segment.
+shmat: Used to attach the shared memory segment to the process's address space.
+shmdt: Used to detach the shared memory segment from the process's address space.
+sem_open: Used to open a named semaphore.
+sem_close: Used to close a named semaphore.
+sem_unlink: Used to remove a named semaphore.
+sem_wait: Used to lock a semaphore.
+sem_post: Used to unlock a semaphore.
+sigemptyset: Used to initialize a signal set to empty.
+sigfillset: Used to add all signals to a signal set.
+sigaddset: Used to add a specific signal to a signal set.
+sigprocmask: Used to block or unblock signals.
+sigaction: Used to change the action taken by a process on receipt of a specific signal.
+gettimeofday: Used to get the current time.
+exit: Used to terminate the process.
+srand: Used to set the seed for the random number generator.
+time: Used to get the current calendar time.
+sleep: Used to make the current executing thread sleep for a certain number of seconds.
+
+WATCHDOG
+
+fopen: Opens a file.
+fgets: Reads a line from a file.
+sscanf: Reads formatted input from a string.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+kill: Sends a signal to a process or a group of processes.
+printf: Outputs a formatted string to stdout.
+fprintf: Outputs a formatted string to a file.
+mvprintw: Moves the cursor to a specified location and prints a formatted string in a curses window.
+mvwprintw: Moves the cursor to a specified location within a specified window and prints a formatted string.
+usleep: Suspends execution for microsecond intervals.
+getpid: Returns the process ID of the current process.
+stat: Gets the status of a file.
+fscanf: Reads formatted input from a file.
+perror: Prints a descriptive error message to stderr.
+newwin: Creates a new window.
+box: Draws a box around the edges of a window.
+wrefresh: Refreshes a window.
+getmaxyx: Gets the size of a window.
+wattron: Turns on a specified attribute for a window.
+initscr: Initializes the curses library.
+cbreak: Disables line buffering and erase/kill character-processing.
+start_color: Starts color functionality.
+init_pair: Changes the definition of a color-pair.
+refresh: Refreshes the standard screen to match the current contents of the window.
+
+SERVER
+
+fopen: Opens a file.
+fprintf: Writes formatted output to a stream.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+printf: Prints formatted output to stdout.
+perror: Prints a descriptive error message to stderr.
+sigemptyset: Initializes a signal set to empty.
+sigfillset: Adds all signals to a signal set.
+sigaddset: Adds a specific signal to a signal set.
+sigprocmask: Examines or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+getpid: Returns the process ID of the current process.
+sscanf: Reads formatted input from a string.
+stat: Gets file status.
+usleep: Suspends execution for microsecond intervals.
+fscanf: Reads formatted input from a stream.
+shmget: Gets a System V shared memory segment.
+sem_open: Opens a named semaphore.
+exit: Causes normal process termination.
+shmat: Attaches a System V shared memory segment.
+sem_wait: Locks a semaphore.
+sem_post: Unlocks a semaphore.
+sleep: Suspends execution for second intervals.
+shmdt: Detaches a System V shared memory segment.
+sem_close: Closes a named semaphore.
+sem_unlink: Removes a named semaphore.
+
+MASTER
+
+fork(): Creates a new process by duplicating the existing process.
+execvp(): Replaces the current process image with a new process image.
+wait(): Waits for a child process to terminate.
+pipe(): Creates a pipe, which is a unidirectional data channel that can be used for interprocess communication.
+close(): Closes a file descriptor, so that it no longer refers to any file and may be reused.
+remove(): Deletes a name from the filesystem.
+fopen(): Opens the file whose name is specified in the parameter filename and associates it with a stream that can be identified in future operations by the FILE pointer returned.
+fclose(): Closes the file associated with the stream and disassociates it.
+sprintf(): Writes formatted output to a string.
+perror(): Prints a descriptive error message to stderr. Just like printf, it can write more than string of text.
+
+INPUT 
+
+sprintf(): This function is used to write formatted output to a string.
+usleep(): This function suspends execution of the calling thread for (at least) usec microseconds. The sleep may be lengthened slightly by any system activity or by the time spent processing the call or by the granularity of system timers.
+memset(): This function is used to fill a block of memory with a particular value.
+newwin(): This function creates a new window with the given number of lines and columns.
+getch(): Reads a character from the terminal. Internally, it may use the read() system call.
+write(): Writes to a file descriptor, in this case, a pipe.
+fsync(): Synchronizes a file's in-core state with storage device.
+mvprintw(): Moves the cursor to a specified location and prints a string. Internally, it may use the write() system call.
+sleep(): Suspends execution for an interval of time.
+wrefresh(): Refreshes a window. Internally, it may use the write() system call.
+endwin(): Ends the ncurses mode. Internally, it may use the write() system call.
+fopen(), fprintf(), fclose(): These functions are used for file operations. Internally, they may use the open(), write(), and close() system calls.
+gettimeofday(): Gets the current time.
+sigemptyset(), sigfillset(), sigaddset(), sigprocmask(), sigaction(): These functions are used for signal handling. Internally, they may use the rt_sigprocmask(), rt_sigaction() system calls.
+getpid(): Gets the process ID.
+stat(): Gets the status of a file. Internally, it may use the fstat(), lstat(), or stat() system calls.
+usleep(): Suspends execution for microsecond intervals.
+kill(): Sends a signal to a process.
+
+DRONE 
+
+fopen: Opens a file.
+perror: Prints a system error message.
+fprintf: Writes formatted output to a stream.
+fclose: Closes a file.
+gettimeofday: Gets the current time.
+sigemptyset: Initializes a signal set to empty.
+sigfillset: Adds all the defined signals to a signal set.
+sigaddset: Adds a specific signal to a signal set.
+sigprocmask: Examines and/or changes blocked signals.
+sigaction: Changes the action taken by a process on receipt of a specific signal.
+sscanf: Reads formatted input from a string.
+printf: Prints formatted output to stdout.
+getpid: Gets the process ID.
+stat: Gets file status.
+usleep: Suspends execution for microsecond intervals.
+fscanf: Reads formatted input from a stream.
+shmget: Gets a System V shared memory segment.
+sem_open: Opens a named semaphore.
+shmat: Attaches a System V shared memory segment to the address space of the calling process.
+fscanf(): This is used to read formatted data from a file.
+strcmp(): This is used to compare two strings.
+fclose(): This is used to close a file.
+perror(): This is used to print a descriptive error message to stderr.
+printf(): This is used to output formatted data.
+read(): This is used to read from a file descriptor.
+mvprintw(): This is a function from the ncurses library, used to move the cursor to a specified location and print a formatted string.
+clear(): This is a function from the ncurses library, used to clear the terminal screen.
+refresh(): This is a function from the ncurses library, used to refresh the terminal screen.
+sem_wait(): This is used to lock a semaphore.
+sem_post(): This is used to unlock a semaphore.
+sem_close(): This is used to close a named semaphore.
+sem_unlink(): This is used to remove a named semaphore.
+shmdt(): This is used to detach a shared memory segment.
+close(): This is used to close a file descriptor.
+endwin(): This is a function from the ncurses library, used to restore the terminal to its original state.
