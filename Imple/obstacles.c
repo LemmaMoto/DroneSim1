@@ -55,7 +55,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[700];
+    struct Obstacle obstacle[20];
     struct Screen screen;
     struct Target target[9];
 };
@@ -274,33 +274,6 @@ int main(int argc, char *argv[])
                     world.obstacle[i].symbol = '#';
                 }
                 last_spawn_time = current_time;
-
-                // Top and bottom borders
-                for (int x = 0; x < world.screen.width; x++)
-                {
-                    world.obstacle[i].x = x;
-                    world.obstacle[i].y = 0;
-                    world.obstacle[i].symbol = '#';
-                    i++;
-
-                    world.obstacle[i].x = x;
-                    world.obstacle[i].y = world.screen.height - 1;
-                    world.obstacle[i].symbol = '#';
-                    i++;
-                }
-                // Left and right borders
-                for (int y = 1; y < world.screen.height - 1; y++)
-                {
-                    world.obstacle[i].x = 0;
-                    world.obstacle[i].y = y;
-                    world.obstacle[i].symbol = '#';
-                    i++;
-
-                    world.obstacle[i].x = world.screen.width - 1;
-                    world.obstacle[i].y = y;
-                    world.obstacle[i].symbol = '#';
-                    i++;
-                }
             }
             first--;
             // generare ostacoli randomici

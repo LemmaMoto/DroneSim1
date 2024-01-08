@@ -55,7 +55,7 @@ struct Target
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[700];
+    struct Obstacle obstacle[20];
     struct Screen screen;
     struct Target target[9];
 };
@@ -68,6 +68,7 @@ int pipets[2];
 int pipesw[2];
 int pipews[2];
 int pipesd_t[2];
+// int pipesd_s[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -143,6 +144,8 @@ int main(int argc, char *argv[])
         sscanf(argv[17], "%d", &pipews[PIPE_WRITE]);
         sscanf(argv[18], "%d", &pipesd_t[PIPE_READ]);
         sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
+        // sscanf(argv[20], "%d", &pipesd_s[PIPE_READ]);
+        // sscanf(argv[21], "%d", &pipesd_s[PIPE_WRITE]);
     }
     else
     {
@@ -168,6 +171,8 @@ int main(int argc, char *argv[])
     printf("pipews[PIPE_WRITE]: %d\n", pipews[PIPE_WRITE]);
     printf("pipesd_t[PIPE_READ]: %d\n", pipesd_t[PIPE_READ]);
     printf("pipesd_t[PIPE_WRITE]: %d\n", pipesd_t[PIPE_WRITE]);
+    // printf("pipesd_s[PIPE_READ]: %d\n", pipesd_s[PIPE_READ]);
+    // printf("pipesd_s[PIPE_WRITE]: %d\n", pipesd_s[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -220,6 +225,7 @@ int main(int argc, char *argv[])
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+        printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
         
         for (int i = 0; i < 9; i++)
         {
@@ -243,6 +249,9 @@ int main(int argc, char *argv[])
 
         write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
         fsync(pipesd_t[PIPE_WRITE]);
+
+        // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        // fsync(pipesd_s[PIPE_WRITE]);
 
         write(pipeso[PIPE_WRITE], &world, sizeof(world));
         fsync(pipeso[PIPE_WRITE]);

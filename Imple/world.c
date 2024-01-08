@@ -54,13 +54,14 @@ struct Target
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[700];
+    struct Obstacle obstacle[20];
     struct Screen screen;
     struct Target target[9];
 };
 
 int pipesw[2];
 int pipews[2];
+int pipesd_s[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -115,13 +116,15 @@ int main(int argc, char *argv[])
     }
 
     int process_num;
-    if (argc == 6)
+    if (argc == 8)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesw[PIPE_READ]);
         sscanf(argv[3], "%d", &pipesw[PIPE_WRITE]);
         sscanf(argv[4], "%d", &pipews[PIPE_READ]);
         sscanf(argv[5], "%d", &pipews[PIPE_WRITE]);
+        sscanf(argv[6], "%d", &pipesd_s[PIPE_READ]);
+        sscanf(argv[7], "%d", &pipesd_s[PIPE_WRITE]);
     }
     else
     {
@@ -134,6 +137,8 @@ int main(int argc, char *argv[])
     printf("pipe write %d \n", pipesw[PIPE_WRITE]);
     printf("pipe read %d \n", pipews[PIPE_READ]);
     printf("pipe write %d \n", pipews[PIPE_WRITE]);
+    printf("pipe read %d \n", pipesd_s[PIPE_READ]);
+    printf("pipe write %d \n", pipesd_s[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -230,7 +235,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        for (int i = 0; i < 700; i++)
+        for (int i = 0; i < 20; i++)
         {
             if (world.obstacle[i].y < height && world.obstacle[i].x < width)
             {
@@ -258,6 +263,16 @@ int main(int argc, char *argv[])
         else
         {
             fsync(pipews[PIPE_WRITE]) == -1;
+        }
+        
+        if (write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen)) == -1)
+        {
+            perror("write screen");
+            continue;
+        }
+        else
+        {
+            fsync(pipesd_s[PIPE_WRITE]) == -1;
         }
 
         refresh(); // Refresh the screen to show the changes

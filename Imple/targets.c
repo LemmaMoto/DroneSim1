@@ -56,7 +56,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[700]; // 512 + 50(NUM_OBSTACLES) +1 a caso
+    struct Obstacle obstacle[20]; 
     struct Screen screen;
     struct Target target[9];
 };
