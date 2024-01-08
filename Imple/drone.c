@@ -282,11 +282,6 @@ int main(int argc, char *argv[])
             perror("read screen");
             continue;
         }
-        else
-        {
-            mvprintw(10, 10, "world.screen.height = %d\n", world.screen.height);
-            mvprintw(15, 15, "world.screen.width = %d\n", world.screen.width);
-        }
 
         int board_x0 = 0;
         int board_y0 = 0;
@@ -320,11 +315,11 @@ int main(int argc, char *argv[])
             i = 3;
         }
 
-        mvprintw(12, 12, "distance1 = %f\n", distance1);
-        mvprintw(13, 13, "distance2 = %f\n", distance2);
-        mvprintw(26, 26, "distance3 = %f\n", distance3);
-        mvprintw(27, 27, "distance4 = %f\n", distance4);
-        mvprintw(11, 11, "distance_board = %f\n", distance_board);
+        mvprintw(30, 2, "distance1 = %f\n", distance1);
+        mvprintw(31, 2, "distance2 = %f\n", distance2);
+        mvprintw(32, 2, "distance3 = %f\n", distance3);
+        mvprintw(33, 2, "distance4 = %f\n", distance4);
+        mvprintw(34, 2, "distance_board = %f\n", distance_board);
 
         if (read(pipesd[PIPE_READ], &world.obstacle, sizeof(world.obstacle)) == -1)
         {
@@ -353,9 +348,8 @@ int main(int argc, char *argv[])
         dy = world.drone.y - world.obstacle[closest_obstacle_index].y;
         distance = sqrt(dx * dx + dy * dy);
 
-        mvprintw(25, 25, "world.obstacle[%d].x = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].x);
-        mvprintw(30, 30, "world.obstacle[%d].y = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].y);
-        refresh();
+        // mvprintw(25, 25, "world.obstacle[%d].x = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].x);
+        // mvprintw(30, 30, "world.obstacle[%d].y = %d\n", closest_obstacle_index, world.obstacle[closest_obstacle_index].y);
 
         if (distance_board < distance)
         {
@@ -381,7 +375,8 @@ int main(int argc, char *argv[])
                 dy = world.drone.y - board_y1;
             }
         }
-        mvprintw(20, 20, "distance = %f\n", distance);
+        mvprintw(28, 25, "distance = %f\n", distance);
+        refresh();
         if (distance < 4) // Check if the obstacle is within the circle of radius 2
         {
             double repulsion_force = OBSTACLE_REPULSION_CONSTANT * ((1 / distance) - (1 / 4)) * (1 / (distance * distance));
@@ -391,8 +386,9 @@ int main(int argc, char *argv[])
             Fx = fx + repulsion_force * cos(angle);
             Fy = fy + repulsion_force * sin(angle);
 
-            mvprintw(21, 21, "repulsion_force = %f\n", repulsion_force);
-            mvprintw(23, 23, "angle = %f\n", angle);
+            mvprintw(20, 2, "repulsion_force = %f\n", repulsion_force);
+            mvprintw(21, 2, "angle = %f\n", angle);
+            refresh();
         }
         else
         {
@@ -405,58 +401,56 @@ int main(int argc, char *argv[])
             perror("read target");
             continue;
         }
-        else
+        int closest_target_index = -1;
+        double min_distance_t = DBL_MAX;
+
+        // Find the closest target
+        for (int i = 0; i < 9; ++i)
         {
-            int closest_target_index = -1;
-            double min_distance = DBL_MAX;
-
-            // Find the closest target
-            for (int i = 0; i < 9; ++i)
+            if (world.target[i].is_active && world.target[i].is_visible) // Check if the target is active
             {
-                if (world.target[i].is_active && world.target[i].is_visible) // Check if the target is active
-                {
-                    double dx = world.drone.x - world.target[i].x;
-                    double dy = world.drone.y - world.target[i].y;
-                    double distance = sqrt(dx * dx + dy * dy); // Use absolute value to get the distance
+                double dx = world.drone.x - world.target[i].x;
+                double dy = world.drone.y - world.target[i].y;
+                double distance = sqrt(dx * dx + dy * dy); // Use absolute value to get the distance
 
-                    if (distance < min_distance)
-                    {
-                        min_distance = distance;
-                        closest_target_index = i;
-                    }
+                if (distance < min_distance_t)
+                {
+                    min_distance_t = distance;
+                    closest_target_index = i;
                 }
             }
+        }
 
-            // Now calculate the distance from the closest target
-            if (world.target[closest_target_index].is_active && world.target[closest_target_index].is_visible) // Check if the closest target is active
+        // Now calculate the distance from the closest target
+        if (world.target[closest_target_index].is_active && world.target[closest_target_index].is_visible) // Check if the closest target is active
+        {
+            
+            double dx = world.drone.x - world.target[closest_target_index].x;
+            double dy = world.drone.y - world.target[closest_target_index].y;
+            double distance_target = sqrt(dx * dx + dy * dy);
+
+            if (distance_target < 4) // Check if the target is within the circle of radius 2
             {
-                refresh();
-                double dx = world.drone.x - world.target[closest_target_index].x;
-                double dy = world.drone.y - world.target[closest_target_index].y;
-                double distance_target = sqrt(dx * dx + dy * dy);
+                double attractive_force = -TARGET_ATTRACTION_CONSTANT * (distance_target);
+                double angleA = atan2(dy, dx); // Calculate the angle
 
-                if (distance_target < 4) // Check if the target is within the circle of radius 2
-                {
-                    double attractive_force = -TARGET_ATTRACTION_CONSTANT * (distance_target);
-                    double angleA = atan2(dy, dx); // Calculate the angle
-                    mvprintw(22, 22, "angleA = %f\n", angleA);
+                // Apply the repulsion force in the opposite direction of fx
+                fx = fx + attractive_force * cos(angleA);
+                fy = fy + attractive_force * sin(angleA);
 
-                    // Apply the repulsion force in the opposite direction of fx
-                    fx = fx + attractive_force * cos(angleA);
-                    fy = fy + attractive_force * sin(angleA);
-
-                    printf("attractive_force = %f\n", attractive_force);
-                }
-                else
-                {
-                    fx = Fx;
-                    fy = Fy;
-                }
-                mvprintw(19, 19, "distance target = %f\n", distance_target);
-                mvprintw(24, 24, "world.target[%d].x = %d\n", closest_target_index, world.target[closest_target_index].x); // Corrected here
-                mvprintw(29, 29, "world.target[%d].y = %d\n", closest_target_index, world.target[closest_target_index].y); // Corrected here
+                mvprintw(20, 25, "attractive_force = %f\n", attractive_force);
+                mvprintw(21, 25, "angleA = %f\n", angleA);
                 refresh();
             }
+            else
+            {
+                fx = Fx;
+                fy = Fy;
+            }
+            mvprintw(29, 25, "distance target = %f\n", distance_target);
+            // mvprintw(24, 24, "world.target[%d].x = %d\n", closest_target_index, world.target[closest_target_index].x); // Corrected here
+            // mvprintw(29, 29, "world.target[%d].y = %d\n", closest_target_index, world.target[closest_target_index].y); // Corrected here
+            refresh();
         }
 
         int bytesRead = read(pipedi[PIPE_READ], &command, sizeof(char));
