@@ -68,7 +68,7 @@ int pipets[2];
 int pipesw[2];
 int pipews[2];
 int pipesd_t[2];
-// int pipesd_s[2];
+int pipeis[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 
     struct Drone drone;
     int process_num;
-    if (argc == 20)
+    if (argc == 22)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesd[PIPE_READ]);
@@ -144,8 +144,9 @@ int main(int argc, char *argv[])
         sscanf(argv[17], "%d", &pipews[PIPE_WRITE]);
         sscanf(argv[18], "%d", &pipesd_t[PIPE_READ]);
         sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
-        // sscanf(argv[20], "%d", &pipesd_s[PIPE_READ]);
-        // sscanf(argv[21], "%d", &pipesd_s[PIPE_WRITE]);
+        sscanf(argv[20], "%d", &pipeis[PIPE_READ]);
+        sscanf(argv[21], "%d", &pipeis[PIPE_WRITE]);
+
     }
     else
     {
@@ -171,8 +172,7 @@ int main(int argc, char *argv[])
     printf("pipews[PIPE_WRITE]: %d\n", pipews[PIPE_WRITE]);
     printf("pipesd_t[PIPE_READ]: %d\n", pipesd_t[PIPE_READ]);
     printf("pipesd_t[PIPE_WRITE]: %d\n", pipesd_t[PIPE_WRITE]);
-    // printf("pipesd_s[PIPE_READ]: %d\n", pipesd_s[PIPE_READ]);
-    // printf("pipesd_s[PIPE_WRITE]: %d\n", pipesd_s[PIPE_WRITE]);
+    printf("pipeis[PIPE_READ]: %d\n", pipeis[PIPE_READ]);
 
     // Publish your pid
     process_id = getpid();
@@ -219,14 +219,19 @@ int main(int argc, char *argv[])
     process_name = process_names[process_num]; // added to logfile for readability
 
     struct World world;
+    char command;
     while (1)
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
         read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+        read(pipeis[PIPE_READ], &command, sizeof(command));
+        write(pipeis[PIPE_WRITE], &command, sizeof(command));
+        printf("command: %c\n", command);
+        command = '0';
         printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
-        
+
         for (int i = 0; i < 9; i++)
         {
             if (world.target[i].is_active == true)

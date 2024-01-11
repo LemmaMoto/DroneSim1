@@ -56,7 +56,7 @@ struct Screen
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[20]; 
+    struct Obstacle obstacle[20];
     struct Screen screen;
     struct Target target[9];
 };
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
                 }
 
                 // If the drone is in the same position as the active target, make the target inactive and invisible
-                if (world.drone.x == world.target[i].x && world.drone.y == world.target[i].y && current_targets[i].is_active)
+                if ((int)world.drone.x == (int)world.target[i].x && (int)world.drone.y == (int)world.target[i].y && current_targets[i].is_active)
                 {
                     current_targets[i].is_active = false;
                     current_targets[i].is_visible = false;

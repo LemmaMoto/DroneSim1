@@ -16,8 +16,9 @@
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-#define OBSTACLE_REPULSION_CONSTANT 100.0
-#define TARGET_ATTRACTION_CONSTANT 1000
+#define OBSTACLE_REPULSION_CONSTANT 1000.0
+#define TARGET_ATTRACTION_CONSTANT 500
+#define INPUT_FORCE 1000.0
 
 #define T 0.01
 
@@ -269,6 +270,7 @@ int main(int argc, char *argv[])
     double dx = 0;
     double dy = 0;
     float distance_board = 0;
+
     while (1)
     {
         fx = 0;
@@ -377,17 +379,17 @@ int main(int argc, char *argv[])
         }
         mvprintw(28, 25, "distance = %f\n", distance);
         refresh();
+        double repulsion_force = 0;
+        double angle = 0;
         if (distance < 4) // Check if the obstacle is within the circle of radius 2
         {
-            double repulsion_force = OBSTACLE_REPULSION_CONSTANT * ((1 / distance) - (1 / 4)) * (1 / (distance * distance));
-            double angle = atan2(dy, dx); // Calculate the angle
+            repulsion_force = OBSTACLE_REPULSION_CONSTANT * ((1 / distance) - (1 / 4)) * (1 / (distance * distance));
+            angle = atan2(dy, dx); // Calculate the angle
 
             // Apply the repulsion force in the opposite direction of fx
             Fx = fx + repulsion_force * cos(angle);
             Fy = fy + repulsion_force * sin(angle);
 
-            mvprintw(20, 2, "repulsion_force = %f\n", repulsion_force);
-            mvprintw(21, 2, "angle = %f\n", angle);
             refresh();
         }
         else
@@ -395,7 +397,12 @@ int main(int argc, char *argv[])
             Fx = fx;
             Fy = fy;
         }
-
+        if (repulsion_force != 0)
+        {
+            mvprintw(20, 25, "repulsion_force = %f\n", repulsion_force);
+            mvprintw(21, 25, "angle = %f\n", angle);
+            refresh();
+        }
         if (read(pipesd_t[PIPE_READ], &world.target, sizeof(world.target)) == -1)
         {
             perror("read target");
@@ -419,27 +426,32 @@ int main(int argc, char *argv[])
                     closest_target_index = i;
                 }
             }
+            mvprintw(0 + i, 40, "world.target[%d].x = %d\n", i, world.target[i].x);
+            mvprintw(0 + i + 9, 40, "world.target[%d].y = %d\n", i, world.target[i].y);
+            // mvprintw(25+i+9, 25, "world.target[%d].is_active = %d\n", i, world.target[i].is_active);
+            // mvprintw(26+i+9, 25, "world.target[%d].is_visible = %d\n", i, world.target[closest_target_index].is_visible);
         }
-
+        double attractive_force = 0;
+        double angleA = 0;
         // Now calculate the distance from the closest target
         if (world.target[closest_target_index].is_active && world.target[closest_target_index].is_visible) // Check if the closest target is active
         {
-            
+
             double dx = world.drone.x - world.target[closest_target_index].x;
             double dy = world.drone.y - world.target[closest_target_index].y;
             double distance_target = sqrt(dx * dx + dy * dy);
 
-            if (distance_target < 4) // Check if the target is within the circle of radius 2
+            if (distance_target < 4 && distance_target > 1) // Check if the target is within the circle of radius 2
             {
-                double attractive_force = -TARGET_ATTRACTION_CONSTANT * (distance_target);
-                double angleA = atan2(dy, dx); // Calculate the angle
+                attractive_force = -TARGET_ATTRACTION_CONSTANT * (distance_target);
+                angleA = atan2(dy, dx); // Calculate the angle
 
                 // Apply the repulsion force in the opposite direction of fx
                 fx = fx + attractive_force * cos(angleA);
                 fy = fy + attractive_force * sin(angleA);
 
-                mvprintw(20, 25, "attractive_force = %f\n", attractive_force);
-                mvprintw(21, 25, "angleA = %f\n", angleA);
+                min_distance_t = DBL_MAX;
+                closest_target_index = closest_target_index + 1;
                 refresh();
             }
             else
@@ -447,7 +459,15 @@ int main(int argc, char *argv[])
                 fx = Fx;
                 fy = Fy;
             }
+            if (attractive_force != 0)
+            {
+                mvprintw(20, 25, "attractive_force = %f\n", attractive_force);
+                mvprintw(21, 25, "angleA = %f\n", angleA);
+                refresh();
+            }
             mvprintw(29, 25, "distance target = %f\n", distance_target);
+            mvprintw(22, 25, "closest_target_index = %d\n", closest_target_index);
+
             // mvprintw(24, 24, "world.target[%d].x = %d\n", closest_target_index, world.target[closest_target_index].x); // Corrected here
             // mvprintw(29, 29, "world.target[%d].y = %d\n", closest_target_index, world.target[closest_target_index].y); // Corrected here
             refresh();
@@ -459,36 +479,36 @@ int main(int argc, char *argv[])
             switch (command)
             {
             case 'x':
-                fy += 100.0; // forza verso USx
-                fx -= 100.0;
+                fy += INPUT_FORCE; // forza verso USx
+                fx -= INPUT_FORCE;
                 break;
             case 'c':
-                fy += 100.0; // forza verso U
+                fy += INPUT_FORCE; // forza verso U
                 break;
             case 'v':
-                fy += 100.0; // forza verso UDx
-                fx += 100.0;
+                fy += INPUT_FORCE; // forza verso UDx
+                fx += INPUT_FORCE;
                 break;
             case 's':
-                fx -= 100.0; // forza verso Sx
+                fx -= INPUT_FORCE; // forza verso Sx
                 break;
             case 'd':
                 fy = 0; // annulla forza
                 fx = 0;
                 break;
             case 'f':
-                fx += 100.0; // forza verso Dx
+                fx += INPUT_FORCE; // forza verso Dx
                 break;
             case 'w':
-                fy -= 100.0; // forza verso DSx
-                fx -= 100.0;
+                fy -= INPUT_FORCE; // forza verso DSx
+                fx -= INPUT_FORCE;
                 break;
             case 'e':
-                fy -= 100.0; // forza verso D
+                fy -= INPUT_FORCE; // forza verso D
                 break;
             case 'r':
-                fy -= 100.0; // forza verso DDx
-                fx += 100.0;
+                fy -= INPUT_FORCE; // forza verso DDx
+                fx += INPUT_FORCE;
                 break;
             case 'b':
                 fx = 0; // annulla forza
@@ -526,7 +546,8 @@ int main(int argc, char *argv[])
         {
             perror("read input:");
         }
-        clear();
+        // clear();
+        refresh();
 
         // Update velocity and position
         double ax = (fx / M) - (K * vx);
