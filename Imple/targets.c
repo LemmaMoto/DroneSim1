@@ -11,11 +11,20 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define TARGET_ATTRACTION_CONSTANT 1.0
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define PORT 8080
+
+struct sockaddr_in address;
+int sock = 0;
+struct sockaddr_in serv_addr;
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -202,6 +211,29 @@ int main(int argc, char *argv[])
     printf("NUM_TARGETS = %d\n", NUM_TARGETS);
     printf("refresh_time_targets = %d\n", refresh_time_targets);
 
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return -1;
+    }
+
+    memset(&serv_addr, '0', sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    // Convert IPv4 and IPv6 addresses from text to binary form
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0)
+    {
+        printf("\nInvalid address/ Address not supported \n");
+        return -1;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("\nConnection Failed \n");
+        return -1;
+    }
+
     struct World world;
     int current_num_targets = NUM_TARGETS;
     struct Target current_targets[current_num_targets];
@@ -288,8 +320,9 @@ int main(int argc, char *argv[])
             }
 
             first--;
-            write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
-            fsync(pipets[PIPE_WRITE]);
+            // write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
+            // fsync(pipets[PIPE_WRITE]);
+            write(sock, &world.target, sizeof(world.target));
         }
     }
     return 0;

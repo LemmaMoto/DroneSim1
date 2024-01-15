@@ -94,8 +94,12 @@ int update_window_text(WINDOW **windows)
             elapsed = get_elapsed_time_s(read_time, prev_ts[i]);
             if (elapsed > PROCESS_TIMEOUT_S)
             {
-                // wattron(windows[i], COLOR_PAIR(1))
+                wattron(windows[i], COLOR_PAIR(1));
                 return -1;
+            }
+            else if (elapsed > PROCESS_TIMEOUT_S / 4)
+            {
+                wattron(windows[i], COLOR_PAIR(2));
             }
             else
             {
