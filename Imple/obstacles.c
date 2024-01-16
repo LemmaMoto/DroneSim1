@@ -11,20 +11,11 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 #define OBSTACLE_REPULSION_CONSTANT 1.0
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-
-#define PORT 8081
-
-struct sockaddr_in address;
-int sock = 0;
-struct sockaddr_in serv_addr;
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -216,30 +207,6 @@ int main(int argc, char *argv[])
     printf("refresh_time_obstacles = %d\n", refresh_time_obstacles);
     // struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
     // struct Screen screen;
-
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("\n Socket creation error \n");
-        return -1;
-    }
-
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    // Convert IPv4 and IPv6 addresses from text to binary form
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0)
-    {
-        printf("\nInvalid address/ Address not supported \n");
-        return -1;
-    }
-
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        printf("\nConnection Failed \n");
-        return -1;
-    }
-
     struct World world;
 
     // Create a new window
@@ -252,10 +219,9 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-
-        if (recv(sock, &world, sizeof(world), 0) == -1)
+        if (read(pipeso[PIPE_READ], &world, sizeof(world)) == -1)
         {
-            perror("recv");
+            perror("read");
             continue;
         }
         else
@@ -313,11 +279,8 @@ int main(int argc, char *argv[])
             // generare ostacoli randomici
             printf("tot_borders: %d\n", tot_borders);
             printf("i: %d\n", i);
-
-            // write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-            // fsync(pipeos[PIPE_WRITE]);
-
-            write(sock, &world.obstacle, sizeof(world.obstacle));
+            write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+            fsync(pipeos[PIPE_WRITE]);
         }
     }
 
