@@ -11,6 +11,9 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define OBSTACLE_REPULSION_CONSTANT 1.0
 
@@ -81,8 +84,40 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
     }
 }
 
+int start_socket_communication()
+{
+    int sockfd;
+    struct sockaddr_in serv_addr;
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+    {
+        perror("ERROR opening socket");
+        exit(1);
+    }
+
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(49900); // the port number should be the same as the server's
+
+    if (inet_pton(AF_INET, "127.0.0.1", &(serv_addr.sin_addr)) <= 0)
+    {
+        perror("ERROR on inet_pton");
+        exit(1);
+    }
+
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        perror("ERROR connecting");
+        exit(1);
+    }
+
+    return sockfd;
+}
 int main(int argc, char *argv[])
 {
+    int sockfd = start_socket_communication();
+
     // Define a signal set
     sigset_t set;
 
@@ -219,9 +254,9 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        if (read(pipeso[PIPE_READ], &world, sizeof(world)) == -1)
+        if (recv(sockfd, &world, sizeof(world), 0) == -1)
         {
-            perror("read");
+            perror("recv");
             continue;
         }
         else
@@ -279,8 +314,14 @@ int main(int argc, char *argv[])
             // generare ostacoli randomici
             printf("tot_borders: %d\n", tot_borders);
             printf("i: %d\n", i);
-            write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-            fsync(pipeos[PIPE_WRITE]);
+            // write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+            // fsync(pipeos[PIPE_WRITE]);
+
+            if (send(sockfd, &world.obstacle, sizeof(world.obstacle), 0) == -1)
+            {
+                perror("ERROR sending obstacles");
+                continue;
+            }
         }
     }
 

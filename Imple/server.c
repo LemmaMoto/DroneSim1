@@ -8,10 +8,13 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h> 
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <stdbool.h>
-
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -90,6 +93,55 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
+    int sockfd, newsockfd, portno;
+    socklen_t clilen;
+    struct sockaddr_in serv_addr, cli_addr;
+
+    // Create a socket
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+    {
+        perror("ERROR opening socket");
+        exit(1);
+    }
+
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    portno = 49900; // choose a port number
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(portno);
+
+    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+    {
+        perror("ERROR on binding");
+        exit(1);
+    }
+
+    if (listen(sockfd, 5) < 0)
+    {
+        perror("ERROR on listen");
+        exit(1);
+    }
+
+    fd_set readfds;
+    int max_sd, sd;
+    int client_socket[2] = {0}; // 2 clients: targets and obstacles
+
+    // Accept connections from the clients
+    for (int i = 0; i < 2; i++)
+    {
+        clilen = sizeof(cli_addr);
+        newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+        if (newsockfd < 0)
+        {
+            perror("ERROR on accept");
+            exit(1);
+        }
+        printf("New connection , socket fd is %d , ip is : %s , port : %d\n", newsockfd, inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
+
+        client_socket[i] = newsockfd;
+    }
+
     // Define a signal set
     sigset_t set;
 
@@ -146,7 +198,6 @@ int main(int argc, char *argv[])
         sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
         sscanf(argv[20], "%d", &pipeis[PIPE_READ]);
         sscanf(argv[21], "%d", &pipeis[PIPE_WRITE]);
-
     }
     else
     {
@@ -222,9 +273,60 @@ int main(int argc, char *argv[])
     char command;
     while (1)
     {
+        // Clear the socket set
+        FD_ZERO(&readfds);
+
+        // Add master socket to set
+        FD_SET(sockfd, &readfds);
+        max_sd = sockfd;
+
+        // Add child sockets to set
+        for (int i = 0; i < 2; i++)
+        {
+            // Socket descriptor
+            sd = client_socket[i];
+
+            // If valid socket descriptor then add to read list
+            if (sd > 0)
+                FD_SET(sd, &readfds);
+
+            // Highest file descriptor number, need it for the select function
+            if (sd > max_sd)
+                max_sd = sd;
+        }
+
+        // Wait for an activity on one of the sockets, timeout is NULL, so wait indefinitely
+        int activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+
+        if ((activity < 0) && (errno != EINTR))
+        {
+            printf("select error");
+        }
+
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
-        read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
+
+        // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
+        // recv(newsockfd, &world.obstacle, sizeof(world.obstacle), 0);
+
+        for (int i = 0; i < 2; i++)
+        {
+            sd = client_socket[i];
+
+            if (FD_ISSET(sd, &readfds))
+            {
+                // Check if it was for closing, and also read the incoming message
+                if (i == 0) // targets
+                {
+                    recv(sd, &world.target, sizeof(world.target), 0);
+                }
+                else if (i == 1) // obstacles
+                {
+                    recv(sd, &world.obstacle, sizeof(world.obstacle), 0);
+                }
+            }
+        }
+
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
         read(pipeis[PIPE_READ], &command, sizeof(command));
         write(pipeis[PIPE_WRITE], &command, sizeof(command));
@@ -258,13 +360,29 @@ int main(int argc, char *argv[])
         // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
         // fsync(pipesd_s[PIPE_WRITE]);
 
-        write(pipeso[PIPE_WRITE], &world, sizeof(world));
-        fsync(pipeso[PIPE_WRITE]);
+        // write(pipeso[PIPE_WRITE], &world, sizeof(world));
+        // fsync(pipeso[PIPE_WRITE]);
 
-        write(pipest[PIPE_WRITE], &world, sizeof(world));
-        fsync(pipest[PIPE_WRITE]);
+        if (send(client_socket[0], &world.target, sizeof(world.target), 0) < 0)
+        {
+            perror("ERROR sending to targets");
+            exit(1);
+        }
+
+        // Send data to the obstacles process
+        if (send(client_socket[1], &world.obstacle, sizeof(world.obstacle), 0) < 0)
+        {
+            perror("ERROR sending to obstacles");
+            exit(1);
+        }
+
+        // write(pipest[PIPE_WRITE], &world, sizeof(world));
+        // fsync(pipest[PIPE_WRITE]);
+
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
     }
+    close(newsockfd);
+    close(sockfd);
 
     return 0;
 }
