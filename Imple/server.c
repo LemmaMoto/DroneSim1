@@ -11,28 +11,16 @@
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <stdbool.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-
-#define PORT1 8080
-#define PORT2 8081
 
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
 struct timeval prev_t;
 char logfile_name[256] = LOG_FILE_NAME;
-
-int server_fd1, new_socket1;
-int server_fd2, new_socket2;
-struct sockaddr_in address1, address2;
-int opt = 1;
-int addrlen1 = sizeof(address1);
-int addrlen2 = sizeof(address2);
 
 struct Drone
 {
@@ -158,6 +146,7 @@ int main(int argc, char *argv[])
         sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
         sscanf(argv[20], "%d", &pipeis[PIPE_READ]);
         sscanf(argv[21], "%d", &pipeis[PIPE_WRITE]);
+
     }
     else
     {
@@ -223,74 +212,6 @@ int main(int argc, char *argv[])
     printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
 
-    // Creazione del file descriptor della socket 1
-    if ((server_fd1 = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Forzare l'associazione della socket 1 alla porta
-    if (setsockopt(server_fd1, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
-    {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-    address1.sin_family = AF_INET;
-    address1.sin_addr.s_addr = INADDR_ANY;
-    address1.sin_port = htons(PORT1);
-
-    // Forzare l'associazione della socket 1 alla porta
-    if (bind(server_fd1, (struct sockaddr *)&address1, sizeof(address1)) < 0)
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd1, 3) < 0)
-    {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-    if ((new_socket1 = accept(server_fd1, (struct sockaddr *)&address1, (socklen_t *)&addrlen1)) < 0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-
-    // Creazione del file descriptor della socket 2
-    if ((server_fd2 = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Forzare l'associazione della socket 2 alla porta
-    if (setsockopt(server_fd2, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
-    {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-    address2.sin_family = AF_INET;
-    address2.sin_addr.s_addr = INADDR_ANY;
-    address2.sin_port = htons(PORT2);
-
-    // Forzare l'associazione della socket 2 alla porta
-    if (bind(server_fd2, (struct sockaddr *)&address2, sizeof(address2)) < 0)
-    {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd2, 3) < 0)
-    {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-    if ((new_socket2 = accept(server_fd2, (struct sockaddr *)&address2, (socklen_t *)&addrlen2)) < 0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-
     // Read how long to sleep process for
     int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;
     int sleep_duration = sleep_durations[process_num];
@@ -303,14 +224,10 @@ int main(int argc, char *argv[])
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
-        // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+        read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
+        read(pipets[PIPE_READ], &world.target, sizeof(world.target));
         read(pipeis[PIPE_READ], &command, sizeof(command));
         write(pipeis[PIPE_WRITE], &command, sizeof(command));
-
-        recv(new_socket1, &world.target, sizeof(world.target), 0);
-        recv(new_socket2, &world.obstacle, sizeof(world.obstacle), 0);
-
         printf("command: %c\n", command);
         command = '0';
         printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
@@ -341,16 +258,11 @@ int main(int argc, char *argv[])
         // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
         // fsync(pipesd_s[PIPE_WRITE]);
 
-        // write(pipeso[PIPE_WRITE], &world, sizeof(world));
-        // fsync(pipeso[PIPE_WRITE]);
+        write(pipeso[PIPE_WRITE], &world, sizeof(world));
+        fsync(pipeso[PIPE_WRITE]);
 
-        send(new_socket2, &world, sizeof(world), 0);
-
-        // write(pipest[PIPE_WRITE], &world, sizeof(world));
-        // fsync(pipest[PIPE_WRITE]);
-
-        send(new_socket1, &world, sizeof(world), 0);
-        
+        write(pipest[PIPE_WRITE], &world, sizeof(world));
+        fsync(pipest[PIPE_WRITE]);
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
     }
 
