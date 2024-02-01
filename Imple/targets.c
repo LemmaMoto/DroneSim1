@@ -255,77 +255,86 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        if (recv(clientSocket, &world, sizeof(world), 0) == -1)
+        scanf("%s", &buffer[0]);
+        send(clientSocket, buffer, strlen(buffer), 0);
+
+        if (strcmp(buffer, "STOP") == 0)
         {
-            perror("recv");
-            continue;
+            close(clientSocket);
+            printf("[-]Disconnected from server.\n");
+            exit(1);
         }
-        else
+
+        if (recv(clientSocket, buffer, 1024, 0) < 0)
         {
-            tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
-
-            if (tot_borders != border_prec)
-            {
-                first = 2;
-            }
-            border_prec = tot_borders;
-
-            time_t current_time = time(NULL);
-
-            for (int i = 0; i < current_num_targets; i++)
-            {
-                // If the target is visible, generate a random position for it
-                if (current_targets[i].is_visible && (current_time - last_spawn_time >= refresh_time_targets || first > 0))
-                {
-                    do
-                    {
-                        printf("ENTRATO NEL DO\n");
-                        current_targets[i].x = rand() % (world.screen.width - 4) + 2;
-                        current_targets[i].y = rand() % (world.screen.height - 4) + 2;
-                    } while (current_targets[i].x == world.drone.x && current_targets[i].y == world.drone.y);
-
-                    current_targets[i].symbol = '0' + i;
-
-                    // Copy the target to the world's targets
-                    world.target[i] = current_targets[i];
-                }
-
-                printf("drone.x: %d, drone.y: %d\n", world.drone.x, world.drone.y);
-                if (current_targets[i].is_active)
-                {
-                    printf("target.x: %d, target.y: %d\n", world.target[i].x, world.target[i].y);
-                }
-
-                // If the drone is in the same position as the active target, make the target inactive and invisible
-                if ((int)world.drone.x == (int)world.target[i].x && (int)world.drone.y == (int)world.target[i].y && current_targets[i].is_active)
-                {
-                    current_targets[i].is_active = false;
-                    current_targets[i].is_visible = false;
-
-                    // If there is a next target, make it active
-                    if (i + 1 < current_num_targets)
-                    {
-                        current_targets[i + 1].is_active = true;
-                    }
-                    world.target[i] = current_targets[i];
-                }
-            }
-
-            if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
-            {
-                last_spawn_time = current_time;
-            }
-
-            first--;
-            // write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
-            // fsync(pipets[PIPE_WRITE]);
-
-            if (send(clientSocket, &world.target, sizeof(world.target), 0) == -1)
-            {
-                perror("ERROR sending targets");
-                continue;
-            }
+            printf("[-]Error in receiving data.\n");
         }
+        // else
+        // {
+        //     tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+
+        //     if (tot_borders != border_prec)
+        //     {
+        //         first = 2;
+        //     }
+        //     border_prec = tot_borders;
+
+        //     time_t current_time = time(NULL);
+
+        //     for (int i = 0; i < current_num_targets; i++)
+        //     {
+        //         // If the target is visible, generate a random position for it
+        //         if (current_targets[i].is_visible && (current_time - last_spawn_time >= refresh_time_targets || first > 0))
+        //         {
+        //             do
+        //             {
+        //                 printf("ENTRATO NEL DO\n");
+        //                 current_targets[i].x = rand() % (world.screen.width - 4) + 2;
+        //                 current_targets[i].y = rand() % (world.screen.height - 4) + 2;
+        //             } while (current_targets[i].x == world.drone.x && current_targets[i].y == world.drone.y);
+
+        //             current_targets[i].symbol = '0' + i;
+
+        //             // Copy the target to the world's targets
+        //             world.target[i] = current_targets[i];
+        //         }
+
+        //         printf("drone.x: %d, drone.y: %d\n", world.drone.x, world.drone.y);
+        //         if (current_targets[i].is_active)
+        //         {
+        //             printf("target.x: %d, target.y: %d\n", world.target[i].x, world.target[i].y);
+        //         }
+
+        //         // If the drone is in the same position as the active target, make the target inactive and invisible
+        //         if ((int)world.drone.x == (int)world.target[i].x && (int)world.drone.y == (int)world.target[i].y && current_targets[i].is_active)
+        //         {
+        //             current_targets[i].is_active = false;
+        //             current_targets[i].is_visible = false;
+
+        //             // If there is a next target, make it active
+        //             if (i + 1 < current_num_targets)
+        //             {
+        //                 current_targets[i + 1].is_active = true;
+        //             }
+        //             world.target[i] = current_targets[i];
+        //         }
+        //     }
+
+        //     if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+        //     {
+        //         last_spawn_time = current_time;
+        //     }
+
+        //     first--;
+        //     // write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
+        //     // fsync(pipets[PIPE_WRITE]);
+
+        //     if (send(clientSocket, buffer, sizeof(buffer), 0) == -1)
+        //     {
+        //         perror("ERROR sending targets");
+        //         continue;
+        //     }
+        // }
     }
     close(clientSocket);
 

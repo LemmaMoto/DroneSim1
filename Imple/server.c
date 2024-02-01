@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
             while (1)
             {
                 recv(newSocket, buffer, 1024, 0);
-                if (strcmp(buffer, ":exit") == 0)
+                if (strcmp(buffer, "STOP") == 0)
                 {
                     printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
                     break;
@@ -290,38 +290,40 @@ int main(int argc, char *argv[])
                     printf("Client: %s\n", buffer);
                     send(newSocket, buffer, strlen(buffer), 0);
                     bzero(buffer, sizeof(buffer));
-                    read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
-                    read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
 
-                    read(pipets[PIPE_READ], &world.target, sizeof(world.target));
-                    read(pipeis[PIPE_READ], &command, sizeof(command));
-                    write(pipeis[PIPE_WRITE], &command, sizeof(command));
-                    printf("command: %c\n", command);
-                    command = '0';
-                    printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
+    
+                    // read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
+                    // read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
 
-                    for (int i = 0; i < 9; i++)
-                    {
-                        if (world.target[i].is_active == true)
-                        {
-                            printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
-                        }
-                    }
+                    // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+                    // read(pipeis[PIPE_READ], &command, sizeof(command));
+                    // write(pipeis[PIPE_WRITE], &command, sizeof(command));
+                    // printf("command: %c\n", command);
+                    // command = '0';
+                    // printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
 
-                    write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
-                    fsync(pipesw[PIPE_WRITE]);
+                    // for (int i = 0; i < 9; i++)
+                    // {
+                    //     if (world.target[i].is_active == true)
+                    //     {
+                    //         printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
+                    //     }
+                    // }
 
-                    write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-                    fsync(pipesw[PIPE_WRITE]);
+                    // write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+                    // fsync(pipesw[PIPE_WRITE]);
 
-                    write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
-                    fsync(pipesw[PIPE_WRITE]);
+                    // write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+                    // fsync(pipesw[PIPE_WRITE]);
 
-                    write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-                    fsync(pipesd[PIPE_WRITE]);
+                    // write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
+                    // fsync(pipesw[PIPE_WRITE]);
 
-                    write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
-                    fsync(pipesd_t[PIPE_WRITE]);
+                    // write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+                    // fsync(pipesd[PIPE_WRITE]);
+
+                    // write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+                    // fsync(pipesd_t[PIPE_WRITE]);
 
                     // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
                     // fsync(pipesd_s[PIPE_WRITE]);
