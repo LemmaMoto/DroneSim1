@@ -8,7 +8,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <time.h>
-#include <errno.h> 
+#include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <stdbool.h>
@@ -18,6 +18,8 @@
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define PORT 4444
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -93,55 +95,46 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
-    int sockfd, newsockfd, portno;
-    socklen_t clilen;
-    struct sockaddr_in serv_addr, cli_addr;
+    int sockfd, ret;
+    struct sockaddr_in serverAddr;
 
-    // Create a socket
+    int newSocket;
+    struct sockaddr_in newAddr;
+
+    socklen_t addr_size;
+
+    char buffer[1024];
+    pid_t childpid;
+
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
-        perror("ERROR opening socket");
+        printf("[-]Error in connection.\n");
         exit(1);
     }
+    printf("[+]Server Socket is created.\n");
 
-    bzero((char *)&serv_addr, sizeof(serv_addr));
-    portno = 49900; // choose a port number
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
+    memset(&serverAddr, '\0', sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+    ret = bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    if (ret < 0)
     {
-        perror("ERROR on binding");
+        printf("[-]Error in binding.\n");
         exit(1);
     }
+    printf("[+]Bind to port %d\n", 4444);
 
-    if (listen(sockfd, 5) < 0)
+    if (listen(sockfd, 10) == 0)
     {
-        perror("ERROR on listen");
-        exit(1);
+        printf("[+]Listening....\n");
     }
-
-    fd_set readfds;
-    int max_sd, sd;
-    int client_socket[2] = {0}; // 2 clients: targets and obstacles
-
-    // Accept connections from the clients
-    for (int i = 0; i < 2; i++)
+    else
     {
-        clilen = sizeof(cli_addr);
-        newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-        if (newsockfd < 0)
-        {
-            perror("ERROR on accept");
-            exit(1);
-        }
-        printf("New connection , socket fd is %d , ip is : %s , port : %d\n", newsockfd, inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
-
-        client_socket[i] = newsockfd;
+        printf("[-]Error in binding.\n");
     }
-
     // Define a signal set
     sigset_t set;
 
@@ -273,116 +266,90 @@ int main(int argc, char *argv[])
     char command;
     while (1)
     {
-        // Clear the socket set
-        FD_ZERO(&readfds);
-
-        // Add master socket to set
-        FD_SET(sockfd, &readfds);
-        max_sd = sockfd;
-
-        // Add child sockets to set
-        for (int i = 0; i < 2; i++)
+        newSocket = accept(sockfd, (struct sockaddr *)&newAddr, &addr_size);
+        if (newSocket < 0)
         {
-            // Socket descriptor
-            sd = client_socket[i];
-
-            // If valid socket descriptor then add to read list
-            if (sd > 0)
-                FD_SET(sd, &readfds);
-
-            // Highest file descriptor number, need it for the select function
-            if (sd > max_sd)
-                max_sd = sd;
+            exit(1);
         }
+        printf("Connection accepted from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
 
-        // Wait for an activity on one of the sockets, timeout is NULL, so wait indefinitely
-        int activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
-
-        if ((activity < 0) && (errno != EINTR))
+        if ((childpid = fork()) == 0)
         {
-            printf("select error");
-        }
+            close(sockfd);
 
-        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
-        read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
-
-        // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        // recv(newsockfd, &world.obstacle, sizeof(world.obstacle), 0);
-
-        for (int i = 0; i < 2; i++)
-        {
-            sd = client_socket[i];
-
-            if (FD_ISSET(sd, &readfds))
+            while (1)
             {
-                // Check if it was for closing, and also read the incoming message
-                if (i == 0) // targets
+                recv(newSocket, buffer, 1024, 0);
+                if (strcmp(buffer, ":exit") == 0)
                 {
-                    recv(sd, &world.target, sizeof(world.target), 0);
+                    printf("Disconnected from %s:%d\n", inet_ntoa(newAddr.sin_addr), ntohs(newAddr.sin_port));
+                    break;
                 }
-                else if (i == 1) // obstacles
+                else
                 {
-                    recv(sd, &world.obstacle, sizeof(world.obstacle), 0);
+                    printf("Client: %s\n", buffer);
+                    send(newSocket, buffer, strlen(buffer), 0);
+                    bzero(buffer, sizeof(buffer));
+                    read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
+                    read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
+
+                    read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+                    read(pipeis[PIPE_READ], &command, sizeof(command));
+                    write(pipeis[PIPE_WRITE], &command, sizeof(command));
+                    printf("command: %c\n", command);
+                    command = '0';
+                    printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
+
+                    for (int i = 0; i < 9; i++)
+                    {
+                        if (world.target[i].is_active == true)
+                        {
+                            printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
+                        }
+                    }
+
+                    write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+                    fsync(pipesw[PIPE_WRITE]);
+
+                    write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+                    fsync(pipesw[PIPE_WRITE]);
+
+                    write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
+                    fsync(pipesw[PIPE_WRITE]);
+
+                    write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+                    fsync(pipesd[PIPE_WRITE]);
+
+                    write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+                    fsync(pipesd_t[PIPE_WRITE]);
+
+                    // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
+                    // fsync(pipesd_s[PIPE_WRITE]);
+
+                    // write(pipeso[PIPE_WRITE], &world, sizeof(world));
+                    // fsync(pipeso[PIPE_WRITE]);
+
+                    // if (send(client_socket[0], &world.target, sizeof(world.target), 0) < 0)
+                    // {
+                    //     perror("ERROR sending to targets");
+                    //     exit(1);
+                    // }
+
+                    // Send data to the obstacles process
+                    // if (send(client_socket[1], &world.obstacle, sizeof(world.obstacle), 0) < 0)
+                    // {
+                    //     perror("ERROR sending to obstacles");
+                    //     exit(1);
+                    // }
+
+                    // write(pipest[PIPE_WRITE], &world, sizeof(world));
+                    // fsync(pipest[PIPE_WRITE]);
+
+                    printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
                 }
             }
         }
-
-        read(pipets[PIPE_READ], &world.target, sizeof(world.target));
-        read(pipeis[PIPE_READ], &command, sizeof(command));
-        write(pipeis[PIPE_WRITE], &command, sizeof(command));
-        printf("command: %c\n", command);
-        command = '0';
-        printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
-
-        for (int i = 0; i < 9; i++)
-        {
-            if (world.target[i].is_active == true)
-            {
-                printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
-            }
-        }
-
-        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
-        fsync(pipesw[PIPE_WRITE]);
-
-        write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        fsync(pipesw[PIPE_WRITE]);
-
-        write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
-        fsync(pipesw[PIPE_WRITE]);
-
-        write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        fsync(pipesd[PIPE_WRITE]);
-
-        write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
-        fsync(pipesd_t[PIPE_WRITE]);
-
-        // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
-        // fsync(pipesd_s[PIPE_WRITE]);
-
-        // write(pipeso[PIPE_WRITE], &world, sizeof(world));
-        // fsync(pipeso[PIPE_WRITE]);
-
-        if (send(client_socket[0], &world.target, sizeof(world.target), 0) < 0)
-        {
-            perror("ERROR sending to targets");
-            exit(1);
-        }
-
-        // Send data to the obstacles process
-        if (send(client_socket[1], &world.obstacle, sizeof(world.obstacle), 0) < 0)
-        {
-            perror("ERROR sending to obstacles");
-            exit(1);
-        }
-
-        // write(pipest[PIPE_WRITE], &world, sizeof(world));
-        // fsync(pipest[PIPE_WRITE]);
-
-        printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
     }
-    close(newsockfd);
-    close(sockfd);
-
+    close(newSocket);
     return 0;
 }

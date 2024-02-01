@@ -20,6 +20,8 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
+#define PORT 4444
+
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
@@ -87,31 +89,30 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
-    int sockfd;
-    struct sockaddr_in serv_addr;
+    int clientSocket, ret;
+    struct sockaddr_in serverAddr;
+    char buffer[1024];
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket < 0)
     {
-        perror("ERROR opening socket");
+        printf("[-]Error in connection.\n");
         exit(1);
     }
+    printf("[+]Client Socket is created.\n");
 
-    bzero((char *)&serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(49900); // choose a port number
+    memset(&serverAddr, '\0', sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) // replace with your server IP address
+    ret = connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    if (ret < 0)
     {
-        perror("ERROR on inet_pton");
+        printf("[-]Error in connection.\n");
         exit(1);
     }
-
-    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        perror("ERROR on connect");
-        exit(1);
-    }
+    printf("[+]Connected to Server.\n");
     // Define a signal set
     sigset_t set;
 
@@ -254,7 +255,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        if (recv(sockfd, &world, sizeof(world), 0) == -1)
+        if (recv(clientSocket, &world, sizeof(world), 0) == -1)
         {
             perror("recv");
             continue;
@@ -319,14 +320,14 @@ int main(int argc, char *argv[])
             // write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
             // fsync(pipets[PIPE_WRITE]);
 
-            if (send(sockfd, &world.target, sizeof(world.target), 0) == -1)
+            if (send(clientSocket, &world.target, sizeof(world.target), 0) == -1)
             {
                 perror("ERROR sending targets");
                 continue;
             }
         }
     }
-    close(sockfd);
+    close(clientSocket);
 
     return 0;
 }

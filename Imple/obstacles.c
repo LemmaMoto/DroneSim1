@@ -20,6 +20,8 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
+#define PORT 4444
+
 pid_t watchdog_pid;
 pid_t process_id;
 char *process_name;
@@ -84,39 +86,32 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
     }
 }
 
-int start_socket_communication()
-{
-    int sockfd;
-    struct sockaddr_in serv_addr;
-
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-    {
-        perror("ERROR opening socket");
-        exit(1);
-    }
-
-    bzero((char *)&serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(49900); // the port number should be the same as the server's
-
-    if (inet_pton(AF_INET, "127.0.0.1", &(serv_addr.sin_addr)) <= 0)
-    {
-        perror("ERROR on inet_pton");
-        exit(1);
-    }
-
-    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        perror("ERROR connecting");
-        exit(1);
-    }
-
-    return sockfd;
-}
 int main(int argc, char *argv[])
 {
-    int sockfd = start_socket_communication();
+    int clientSocket, ret;
+    struct sockaddr_in serverAddr;
+    char buffer[1024];
+
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket < 0)
+    {
+        printf("[-]Error in connection.\n");
+        exit(1);
+    }
+    printf("[+]Client Socket is created.\n");
+
+    memset(&serverAddr, '\0', sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    ret = connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    if (ret < 0)
+    {
+        printf("[-]Error in connection.\n");
+        exit(1);
+    }
+    printf("[+]Connected to Server.\n");
 
     // Define a signal set
     sigset_t set;
@@ -254,7 +249,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        if (recv(sockfd, &world, sizeof(world), 0) == -1)
+        if (recv(clientSocket, &world, sizeof(world), 0) == -1)
         {
             perror("recv");
             continue;
@@ -317,7 +312,7 @@ int main(int argc, char *argv[])
             // write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
             // fsync(pipeos[PIPE_WRITE]);
 
-            if (send(sockfd, &world.obstacle, sizeof(world.obstacle), 0) == -1)
+            if (send(clientSocket, &world.obstacle, sizeof(world.obstacle), 0) == -1)
             {
                 perror("ERROR sending obstacles");
                 continue;
