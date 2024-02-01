@@ -11,11 +11,16 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
 #define TARGET_ATTRACTION_CONSTANT 1.0
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define PORT 4444
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -114,6 +119,31 @@ int main(int argc, char *argv[])
         perror("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
+
+    int clientSocket, ret;
+    struct sockaddr_in serverAddr;
+    char buffer[1024];
+
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket < 0)
+    {
+        printf("[-]Error in connection.\n");
+        exit(1);
+    }
+    printf("[+]Client Socket is created.\n");
+
+    memset(&serverAddr, '\0', sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(PORT);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    ret = connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    if (ret < 0)
+    {
+        printf("[-]Error in connection.\n");
+        exit(1);
+    }
+    printf("[+]Connected to Server.\n");
     int process_num;
     if (argc == 6)
     {
@@ -223,74 +253,93 @@ int main(int argc, char *argv[])
             current_targets[i].is_visible = true;
         }
     }
-
     while (1)
     {
-        if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
+        printf("Client: \t");
+        scanf("%s", &buffer[0]);
+        send(clientSocket, buffer, strlen(buffer), 0);
+        sleep(4);
+
+        if (strcmp(buffer, "STOP") == 0)
         {
-            perror("read");
-            continue;
+            close(clientSocket);
+            printf("[-]Disconnected from server.\n");
+            exit(1);
+        }
+
+        if (recv(clientSocket, buffer, 1024, 0) < 0)
+        {
+            printf("[-]Error in receiving data.\n");
         }
         else
         {
-            tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
-
-            if (tot_borders != border_prec)
-            {
-                first = 2;
-            }
-            border_prec = tot_borders;
-
-            time_t current_time = time(NULL);
-
-            for (int i = 0; i < current_num_targets; i++)
-            {
-                // If the target is visible, generate a random position for it
-                if (current_targets[i].is_visible && (current_time - last_spawn_time >= refresh_time_targets || first > 0))
-                {
-                    do
-                    {
-                        printf("ENTRATO NEL DO\n");
-                        current_targets[i].x = rand() % (world.screen.width - 4) + 2;
-                        current_targets[i].y = rand() % (world.screen.height - 4) + 2;
-                    } while (current_targets[i].x == world.drone.x && current_targets[i].y == world.drone.y);
-
-                    current_targets[i].symbol = '0' + i;
-
-                    // Copy the target to the world's targets
-                    world.target[i] = current_targets[i];
-                }
-
-                printf("drone.x: %d, drone.y: %d\n", world.drone.x, world.drone.y);
-                if (current_targets[i].is_active)
-                {
-                    printf("target.x: %d, target.y: %d\n", world.target[i].x, world.target[i].y);
-                }
-
-                // If the drone is in the same position as the active target, make the target inactive and invisible
-                if ((int)world.drone.x == (int)world.target[i].x && (int)world.drone.y == (int)world.target[i].y && current_targets[i].is_active)
-                {
-                    current_targets[i].is_active = false;
-                    current_targets[i].is_visible = false;
-
-                    // If there is a next target, make it active
-                    if (i + 1 < current_num_targets)
-                    {
-                        current_targets[i + 1].is_active = true;
-                    }
-                    world.target[i] = current_targets[i];
-                }
-            }
-
-            if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
-            {
-                last_spawn_time = current_time;
-            }
-
-            first--;
-            write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
-            fsync(pipets[PIPE_WRITE]);
+            printf("Server: \t%s\n", buffer);
         }
+        // if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
+        // {
+        //     perror("read");
+        //     continue;
+        // }
+        // else
+        // {
+        //     tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+
+        //     if (tot_borders != border_prec)
+        //     {
+        //         first = 2;
+        //     }
+        //     border_prec = tot_borders;
+
+        //     time_t current_time = time(NULL);
+
+        //     for (int i = 0; i < current_num_targets; i++)
+        //     {
+        //         // If the target is visible, generate a random position for it
+        //         if (current_targets[i].is_visible && (current_time - last_spawn_time >= refresh_time_targets || first > 0))
+        //         {
+        //             do
+        //             {
+        //                 printf("ENTRATO NEL DO\n");
+        //                 current_targets[i].x = rand() % (world.screen.width - 4) + 2;
+        //                 current_targets[i].y = rand() % (world.screen.height - 4) + 2;
+        //             } while (current_targets[i].x == world.drone.x && current_targets[i].y == world.drone.y);
+
+        //             current_targets[i].symbol = '0' + i;
+
+        //             // Copy the target to the world's targets
+        //             world.target[i] = current_targets[i];
+        //         }
+
+        //         printf("drone.x: %d, drone.y: %d\n", world.drone.x, world.drone.y);
+        //         if (current_targets[i].is_active)
+        //         {
+        //             printf("target.x: %d, target.y: %d\n", world.target[i].x, world.target[i].y);
+        //         }
+
+        //         // If the drone is in the same position as the active target, make the target inactive and invisible
+        //         if ((int)world.drone.x == (int)world.target[i].x && (int)world.drone.y == (int)world.target[i].y && current_targets[i].is_active)
+        //         {
+        //             current_targets[i].is_active = false;
+        //             current_targets[i].is_visible = false;
+
+        //             // If there is a next target, make it active
+        //             if (i + 1 < current_num_targets)
+        //             {
+        //                 current_targets[i + 1].is_active = true;
+        //             }
+        //             world.target[i] = current_targets[i];
+        //         }
+        //     }
+
+        //     if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+        //     {
+        //         last_spawn_time = current_time;
+        //     }
+
+        //     first--;
+        //     write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
+        //     fsync(pipets[PIPE_WRITE]);
+        // }
     }
     return 0;
 }
