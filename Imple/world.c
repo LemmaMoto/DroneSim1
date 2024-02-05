@@ -200,7 +200,11 @@ int main(int argc, char *argv[])
     int height, width;
     while (1)
     {
-        clear();
+        getmaxyx(win, height, width);
+        world.screen.height = height;
+        world.screen.width = width;
+        mvprintw(3, 3, "Screen: height: %d, width: %d", world.screen.height, world.screen.width);
+        // clear();
 
         // Read data from the pipe
         if (read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone)) == -1)
@@ -219,10 +223,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        getmaxyx(win, height, width);
-        world.screen.height = height;
-        world.screen.width = width;
-        clear();
+        // clear();
 
         // Print the target symbols at their positions if they're within the window dimensions
         for (int i = 0; i < 9; i++)
@@ -264,7 +265,7 @@ int main(int argc, char *argv[])
         {
             fsync(pipews[PIPE_WRITE]) == -1;
         }
-        
+
         if (write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen)) == -1)
         {
             perror("write screen");

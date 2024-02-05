@@ -77,7 +77,7 @@ int pipeis[2];
 void error(char *msg)
 {
     perror(msg);
-    exit(1);
+    // exit(1);
 }
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -245,78 +245,96 @@ int main(int argc, char *argv[])
         error("ERROR on binding");
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
+    char buffer_screen1[1024];
+    // char buffer_screen2[1024];
     while (1)
     {
+        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
+        read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
+
+        sprintf(buffer_screen1, "%d", world.screen.height);
+        // buffer_screen2 = world.screen.width;
+        printf("buffer_screen1: %s\n", buffer_screen1);
+
+        // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
+        // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+
+        read(pipeis[PIPE_READ], &command, sizeof(command));
+        write(pipeis[PIPE_WRITE], &command, sizeof(command));
+        printf("command: %c\n", command);
+        command = '0';
+        printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
+
+        for (int i = 0; i < 9; i++)
+        {
+            if (world.target[i].is_active == true)
+            {
+                printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
+            }
+        }
+
+        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        fsync(pipesw[PIPE_WRITE]);
+
+        // write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        // fsync(pipesw[PIPE_WRITE]);
+
+        // write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
+        // fsync(pipesw[PIPE_WRITE]);
+
+        // write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        // fsync(pipesd[PIPE_WRITE]);
+
+        // write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+        // fsync(pipesd_t[PIPE_WRITE]);
+
+        // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        // fsync(pipesd_s[PIPE_WRITE]);
+
+        // write(pipeso[PIPE_WRITE], &world, sizeof(world));
+        // fsync(pipeso[PIPE_WRITE]);
+
+        // write(pipest[PIPE_WRITE], &world, sizeof(world));
+        // fsync(pipest[PIPE_WRITE]);
+
+        printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
         if (newsockfd < 0)
+        {
             error("ERROR on accept");
+        }
         pid = fork();
+        printf("pid: %d\n", pid);
         if (pid < 0)
+        {
             error("ERROR on fork");
+        }
         if (pid == 0)
         {
             close(sockfd);
             int n;
-            char buffer[256];
+            char buffer[1024];
 
             while (1)
             {
-                bzero(buffer, 256);
-                n = read(newsockfd, buffer, 255);
+                bzero(buffer, 1024);
+                sleep(1);
+                n = read(newsockfd, buffer, 1024);
                 if (n < 0)
-                    error("ERROR reading from socket");
-                printf("Here is the message: %s\n", buffer);
-                n = write(newsockfd, "I got your message", 18);
-                if (n < 0)
-                    error("ERROR writing to socket");
-
-                read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
-                read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
-
-                // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-                // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
-
-                read(pipeis[PIPE_READ], &command, sizeof(command));
-                write(pipeis[PIPE_WRITE], &command, sizeof(command));
-                printf("command: %c\n", command);
-                command = '0';
-                printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
-
-                for (int i = 0; i < 9; i++)
                 {
-                    if (world.target[i].is_active == true)
-                    {
-                        printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
-                    }
+                    // error("ERROR reading from socket");
                 }
-
-                write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
-                fsync(pipesw[PIPE_WRITE]);
-
-                write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-                fsync(pipesw[PIPE_WRITE]);
-
-                write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
-                fsync(pipesw[PIPE_WRITE]);
-
-                write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-                fsync(pipesd[PIPE_WRITE]);
-
-                write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
-                fsync(pipesd_t[PIPE_WRITE]);
-
-                // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
-                // fsync(pipesd_s[PIPE_WRITE]);
-
-                // write(pipeso[PIPE_WRITE], &world, sizeof(world));
-                // fsync(pipeso[PIPE_WRITE]);
-
-                // write(pipest[PIPE_WRITE], &world, sizeof(world));
-                // fsync(pipest[PIPE_WRITE]);
-
-                printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
+                if (n >= 0)
+                {
+                    printf("Here is the message: %s\n", buffer);
+                    n = write(newsockfd, buffer, sizeof(buffer));
+                }
+                if (n < 0)
+                {
+                    // error("ERROR writing to socket");
+                }
             }
-            exit(0);
+            // exit(0);
         }
         else
         {
