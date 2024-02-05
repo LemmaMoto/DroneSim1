@@ -14,13 +14,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <netdb.h>
 
 #define TARGET_ATTRACTION_CONSTANT 1.0
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define PORT 4444
+#define portno 4444
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -69,6 +70,12 @@ struct World
 int pipest[2];
 int pipets[2];
 
+void error(char *msg)
+{
+    perror(msg);
+    exit(0);
+}
+
 // logs time update to file
 void log_receipt(struct timeval tv)
 {
@@ -77,73 +84,56 @@ void log_receipt(struct timeval tv)
     fclose(lf_fp);
 }
 
-void watchdog_handler(int sig, siginfo_t *info, void *context)
-{
-    // printf("received signal \n");
-    if (info->si_pid == watchdog_pid)
-    {
-        gettimeofday(&prev_t, NULL);
-        log_receipt(prev_t);
-    }
-}
+// void watchdog_handler(int sig, siginfo_t *info, void *context)
+// {
+//     // printf("received signal \n");
+//     if (info->si_pid == watchdog_pid)
+//     {
+//         gettimeofday(&prev_t, NULL);
+//         log_receipt(prev_t);
+//     }
+// }
 
 int main(int argc, char *argv[])
 {
     // Define a signal set
-    sigset_t set;
+    // sigset_t set;
 
-    // Initialize the signal set to empty
-    sigemptyset(&set);
+    // // Initialize the signal set to empty
+    // sigemptyset(&set);
 
-    // Add SIGUSR1 to the set
-    sigaddset(&set, SIGUSR1);
+    // // Add SIGUSR1 to the set
+    // sigaddset(&set, SIGUSR1);
 
-    // Block SIGUSR1
-    if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
-    {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
-        return -1;
-    }
-    // Set up sigaction for receiving signals from the watchdog process
-    struct sigaction p_action;
-    p_action.sa_flags = SA_SIGINFO;
-    p_action.sa_sigaction = watchdog_handler;
-    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
-    {
-        perror("sigaction"); // Print an error message if the signal can't be set up
-    }
+    // // Block SIGUSR1
+    // if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
+    // {
+    //     perror("sigprocmask"); // Print an error message if the signal can't be blocked
+    //     return -1;
+    // }
+    // // Set up sigaction for receiving signals from the watchdog process
+    // struct sigaction p_action;
+    // p_action.sa_flags = SA_SIGINFO;
+    // p_action.sa_sigaction = watchdog_handler;
+    // if (sigaction(SIGUSR1, &p_action, NULL) < 0)
+    // {
+    //     perror("sigaction"); // Print an error message if the signal can't be set up
+    // }
 
-    // Unblock SIGUSR1
-    if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
-    {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
-        return -1;
-    }
+    // // Unblock SIGUSR1
+    // if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
+    // {
+    //     perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+    //     return -1;
+    // }
 
-    int clientSocket, ret;
-    struct sockaddr_in serverAddr;
-    char buffer[1024];
+    int sockfd, n;
 
-    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (clientSocket < 0)
-    {
-        printf("[-]Error in connection.\n");
-        exit(1);
-    }
-    printf("[+]Client Socket is created.\n");
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
 
-    memset(&serverAddr, '\0', sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT);
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    char buffer[256];
 
-    ret = connect(clientSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-    if (ret < 0)
-    {
-        printf("[-]Error in connection.\n");
-        exit(1);
-    }
-    printf("[+]Connected to Server.\n");
     int process_num;
     if (argc == 6)
     {
@@ -162,40 +152,40 @@ int main(int argc, char *argv[])
     // Publish your pid
     process_id = getpid();
 
-    char *fnames[NUM_PROCESSES] = PID_FILE_SP;
+    // char *fnames[NUM_PROCESSES] = PID_FILE_SP;
 
-    FILE *pid_fp = fopen(fnames[process_num], "w");
-    fprintf(pid_fp, "%d", process_id);
-    fclose(pid_fp);
+    // FILE *pid_fp = fopen(fnames[process_num], "w");
+    // fprintf(pid_fp, "%d", process_id);
+    // fclose(pid_fp);
 
-    printf("Published pid %d \n", process_id);
+    // printf("Published pid %d \n", process_id);
 
-    // Read watchdog pid
-    FILE *watchdog_fp = NULL;
-    struct stat sbuf;
+    // // Read watchdog pid
+    // FILE *watchdog_fp = NULL;
+    // struct stat sbuf;
 
-    /* call stat, fill stat buffer, validate success */
-    if (stat(PID_FILE_PW, &sbuf) == -1)
-    {
-        perror("error-stat");
-        return -1;
-    }
-    // waits until the file has data
-    while (sbuf.st_size <= 0)
-    {
-        if (stat(PID_FILE_PW, &sbuf) == -1)
-        {
-            perror("error-stat");
-            return -1;
-        }
-        usleep(50000);
-    }
+    // /* call stat, fill stat buffer, validate success */
+    // if (stat(PID_FILE_PW, &sbuf) == -1)
+    // {
+    //     perror("error-stat");
+    //     return -1;
+    // }
+    // // waits until the file has data
+    // while (sbuf.st_size <= 0)
+    // {
+    //     if (stat(PID_FILE_PW, &sbuf) == -1)
+    //     {
+    //         perror("error-stat");
+    //         return -1;
+    //     }
+    //     usleep(50000);
+    // }
 
-    watchdog_fp = fopen(PID_FILE_PW, "r");
+    // watchdog_fp = fopen(PID_FILE_PW, "r");
 
-    fscanf(watchdog_fp, "%d", &watchdog_pid);
-    printf("watchdog pid %d \n", watchdog_pid);
-    fclose(watchdog_fp);
+    // fscanf(watchdog_fp, "%d", &watchdog_pid);
+    // printf("watchdog pid %d \n", watchdog_pid);
+    // fclose(watchdog_fp);
 
     // Read how long to sleep process for
     int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;
@@ -253,28 +243,36 @@ int main(int argc, char *argv[])
             current_targets[i].is_visible = true;
         }
     }
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        error("ERROR opening socket");
+    server = gethostbyname(argv[1]);
+    if (server == NULL)
+    {
+        fprintf(stderr, "ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        error("ERROR connecting");
     while (1)
     {
-        printf("Client: \t");
-        scanf("%s", &buffer[0]);
-        send(clientSocket, buffer, strlen(buffer), 0);
-        sleep(4);
+        printf("Please enter the message: ");
+        bzero(buffer, 256);
+        fgets(buffer, 255, stdin);
+        n = write(sockfd, buffer, strlen(buffer));
+        if (n < 0)
+            error("ERROR writing to socket");
+        bzero(buffer, 256);
+        n = read(sockfd, buffer, 255);
+        if (n < 0)
+            error("ERROR reading from socket");
+        printf("%s\n", buffer);
 
-        if (strcmp(buffer, "STOP") == 0)
-        {
-            close(clientSocket);
-            printf("[-]Disconnected from server.\n");
-            exit(1);
-        }
-
-        if (recv(clientSocket, buffer, 1024, 0) < 0)
-        {
-            printf("[-]Error in receiving data.\n");
-        }
-        else
-        {
-            printf("Server: \t%s\n", buffer);
-        }
         // if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
         // {
         //     perror("read");

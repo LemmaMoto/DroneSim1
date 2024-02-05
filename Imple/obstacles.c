@@ -11,11 +11,17 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #define OBSTACLE_REPULSION_CONSTANT 1.0
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define portno 4444
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -63,6 +69,12 @@ struct World
 int pipeso[2];
 int pipeos[2];
 
+void error(char *msg)
+{
+    perror(msg);
+    exit(0);
+}
+
 // logs time update to file
 void log_receipt(struct timeval tv)
 {
@@ -71,48 +83,55 @@ void log_receipt(struct timeval tv)
     fclose(lf_fp);
 }
 
-void watchdog_handler(int sig, siginfo_t *info, void *context)
-{
-    // printf("received signal \n");
-    if (info->si_pid == watchdog_pid)
-    {
-        gettimeofday(&prev_t, NULL);
-        log_receipt(prev_t);
-    }
-}
+// void watchdog_handler(int sig, siginfo_t *info, void *context)
+// {
+//     // printf("received signal \n");
+//     if (info->si_pid == watchdog_pid)
+//     {
+//         gettimeofday(&prev_t, NULL);
+//         log_receipt(prev_t);
+//     }
+// }
 
 int main(int argc, char *argv[])
 {
     // Define a signal set
-    sigset_t set;
+    // sigset_t set;
 
-    // Initialize the signal set to empty
-    sigemptyset(&set);
+    // // Initialize the signal set to empty
+    // sigemptyset(&set);
 
-    // Add SIGUSR1 to the set
-    sigaddset(&set, SIGUSR1);
+    // // Add SIGUSR1 to the set
+    // sigaddset(&set, SIGUSR1);
 
-    // Block SIGUSR1
-    if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
-    {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
-        return -1;
-    }
-    // Set up sigaction for receiving signals from the watchdog process
-    struct sigaction p_action;
-    p_action.sa_flags = SA_SIGINFO;
-    p_action.sa_sigaction = watchdog_handler;
-    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
-    {
-        perror("sigaction"); // Print an error message if the signal can't be set up
-    }
+    // // Block SIGUSR1
+    // if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
+    // {
+    //     perror("sigprocmask"); // Print an error message if the signal can't be blocked
+    //     return -1;
+    // }
+    // // Set up sigaction for receiving signals from the watchdog process
+    // struct sigaction p_action;
+    // p_action.sa_flags = SA_SIGINFO;
+    // p_action.sa_sigaction = watchdog_handler;
+    // if (sigaction(SIGUSR1, &p_action, NULL) < 0)
+    // {
+    //     perror("sigaction"); // Print an error message if the signal can't be set up
+    // }
 
-    // Unblock SIGUSR1
-    if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
-    {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
-        return -1;
-    }
+    // // Unblock SIGUSR1
+    // if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
+    // {
+    //     perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+    //     return -1;
+    // }
+
+    int sockfd, n;
+
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+
+    char buffer[256];
 
     int process_num;
     if (argc == 6)
@@ -134,40 +153,40 @@ int main(int argc, char *argv[])
     // Publish your pid
     process_id = getpid();
 
-    char *fnames[NUM_PROCESSES] = PID_FILE_SP;
+    // char *fnames[NUM_PROCESSES] = PID_FILE_SP;
 
-    FILE *pid_fp = fopen(fnames[process_num], "w");
-    fprintf(pid_fp, "%d", process_id);
-    fclose(pid_fp);
+    // FILE *pid_fp = fopen(fnames[process_num], "w");
+    // fprintf(pid_fp, "%d", process_id);
+    // fclose(pid_fp);
 
-    printf("Published pid %d \n", process_id);
+    // printf("Published pid %d \n", process_id);
 
-    // Read watchdog pid
-    FILE *watchdog_fp = NULL;
-    struct stat sbuf;
+    // // Read watchdog pid
+    // FILE *watchdog_fp = NULL;
+    // struct stat sbuf;
 
-    /* call stat, fill stat buffer, validate success */
-    if (stat(PID_FILE_PW, &sbuf) == -1)
-    {
-        perror("error-stat");
-        return -1;
-    }
-    // waits until the file has data
-    while (sbuf.st_size <= 0)
-    {
-        if (stat(PID_FILE_PW, &sbuf) == -1)
-        {
-            perror("error-stat");
-            return -1;
-        }
-        usleep(50000);
-    }
+    // /* call stat, fill stat buffer, validate success */
+    // if (stat(PID_FILE_PW, &sbuf) == -1)
+    // {
+    //     perror("error-stat");
+    //     return -1;
+    // }
+    // // waits until the file has data
+    // while (sbuf.st_size <= 0)
+    // {
+    //     if (stat(PID_FILE_PW, &sbuf) == -1)
+    //     {
+    //         perror("error-stat");
+    //         return -1;
+    //     }
+    //     usleep(50000);
+    // }
 
-    watchdog_fp = fopen(PID_FILE_PW, "r");
+    // watchdog_fp = fopen(PID_FILE_PW, "r");
 
-    fscanf(watchdog_fp, "%d", &watchdog_pid);
-    printf("watchdog pid %d \n", watchdog_pid);
-    fclose(watchdog_fp);
+    // fscanf(watchdog_fp, "%d", &watchdog_pid);
+    // printf("watchdog pid %d \n", watchdog_pid);
+    // fclose(watchdog_fp);
 
     // Read how long to sleep process for
     int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;
@@ -217,71 +236,97 @@ int main(int argc, char *argv[])
     int border_prec = 0;
     int current_num_targets = 9;
 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        error("ERROR opening socket");
+    server = gethostbyname(argv[1]);
+    if (server == NULL)
+    {
+        fprintf(stderr, "ERROR, no such host\n");
+        exit(0);
+    }
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+    serv_addr.sin_port = htons(portno);
+    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        error("ERROR connecting");
     while (1)
     {
-        if (read(pipeso[PIPE_READ], &world, sizeof(world)) == -1)
-        {
-            perror("read");
-            continue;
-        }
-        else
-        {
+        printf("Please enter the message: ");
+        bzero(buffer, 256);
+        fgets(buffer, 255, stdin);
+        n = write(sockfd, buffer, strlen(buffer));
+        if (n < 0)
+            error("ERROR writing to socket");
+        bzero(buffer, 256);
+        n = read(sockfd, buffer, 255);
+        if (n < 0)
+            error("ERROR reading from socket");
+        printf("%s\n", buffer);
+        // if (read(pipeso[PIPE_READ], &world, sizeof(world)) == -1)
+        // {
+        //     perror("read");
+        //     continue;
+        // }
+        // else
+        // {
 
-            // printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
+        //     // printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
 
-            // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
+        //     // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
 
-            tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+        //     tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
 
-            if (tot_borders != border_prec)
-            {
-                first = 2;
-            }
-            border_prec = tot_borders;
+        //     if (tot_borders != border_prec)
+        //     {
+        //         first = 2;
+        //     }
+        //     border_prec = tot_borders;
 
-            int i = 0;
+        //     int i = 0;
 
-            // generare ostacoli randomici
-            time_t current_time = time(NULL);
-            if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
-            {
-                for (; i < NUM_OBSTACLES; i++)
-                {
-                    int isSamePosition;
-                    do
-                    {
-                        isSamePosition = 0;
-                        world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
-                        world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+        //     // generare ostacoli randomici
+        //     time_t current_time = time(NULL);
+        //     if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
+        //     {
+        //         for (; i < NUM_OBSTACLES; i++)
+        //         {
+        //             int isSamePosition;
+        //             do
+        //             {
+        //                 isSamePosition = 0;
+        //                 world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+        //                 world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
 
-                        // Check if the obstacle is in the same position as the drone
-                        if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
-                        {
-                            isSamePosition = 1;
-                        }
+        //                 // Check if the obstacle is in the same position as the drone
+        //                 if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
+        //                 {
+        //                     isSamePosition = 1;
+        //                 }
 
-                        // Check if the obstacle is in the same position as any of the targets
-                        for (int j = 0; j < current_num_targets; j++)
-                        {
-                            if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
-                            {
-                                isSamePosition = 1;
-                                break;
-                            }
-                        }
-                    } while (isSamePosition);
+        //                 // Check if the obstacle is in the same position as any of the targets
+        //                 for (int j = 0; j < current_num_targets; j++)
+        //                 {
+        //                     if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
+        //                     {
+        //                         isSamePosition = 1;
+        //                         break;
+        //                     }
+        //                 }
+        //             } while (isSamePosition);
 
-                    world.obstacle[i].symbol = '#';
-                }
-                last_spawn_time = current_time;
-            }
-            first--;
-            // generare ostacoli randomici
-            printf("tot_borders: %d\n", tot_borders);
-            printf("i: %d\n", i);
-            write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-            fsync(pipeos[PIPE_WRITE]);
-        }
+        //             world.obstacle[i].symbol = '#';
+        //         }
+        //         last_spawn_time = current_time;
+        //     }
+        //     first--;
+        //     // generare ostacoli randomici
+        //     printf("tot_borders: %d\n", tot_borders);
+        //     printf("i: %d\n", i);
+        //     write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        //     fsync(pipeos[PIPE_WRITE]);
+        // }
     }
 
     // passare gli ostacoli al drone via pipe

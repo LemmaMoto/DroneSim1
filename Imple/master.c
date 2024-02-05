@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 
     if (child_process4 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./obstacles", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
+        char *arg_list[] = {"konsole", "-e", "./obstacles localhost", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
         execvp("konsole", arg_list);
         perror("execvp failed for obstacles");
         return 0;
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
 
     if (child_process5 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./targets", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
+        char *arg_list[] = {"konsole", "-e", "./targets localhost", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
         execvp("konsole", arg_list);
         perror("execvp failed for targets");
         return 0;
