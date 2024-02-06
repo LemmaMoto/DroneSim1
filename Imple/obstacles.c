@@ -297,66 +297,83 @@ int main(int argc, char *argv[])
         {
             world.screen.height = height;
             world.screen.width = width;
+
+            tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+
+            char obs_pos[1024];
+            char str[64];
+            sprintf(str, "%d", NUM_OBSTACLES);
+            strcpy(&obs_pos[2], str);
+            obs_pos[0] = 'O';
+            obs_pos[1] = '[';
+            obs_pos[3] = ']';
+            char obstacle_x[8], obstacle_y[8];
+            if (tot_borders != border_prec)
+            {
+                first = 2;
+            }
+            border_prec = tot_borders;
+
+            int i = 0;
+
+            // generare ostacoli randomici
+            time_t current_time = time(NULL);
+            if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
+            {
+                for (; i < NUM_OBSTACLES; i++)
+                {
+                    int isSamePosition;
+                    do
+                    {
+                        isSamePosition = 0;
+                        world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+                        world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+
+                        // Check if the obstacle is in the same position as the drone
+                        if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
+                        {
+                            isSamePosition = 1;
+                        }
+
+                        // Check if the obstacle is in the same position as any of the targets
+                        for (int j = 0; j < current_num_targets; j++)
+                        {
+                            if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
+                            {
+                                isSamePosition = 1;
+                                sprintf(obstacle_x, "%.3f", (float)world.obstacle[i].x);
+                                sprintf(obstacle_y, "%.3f", (float)world.obstacle[i].y);
+                                strcat(obs_pos, obstacle_x);
+                                strcat(obs_pos, ",");
+                                strcat(obs_pos, obstacle_y);
+                                if (j < current_num_targets - 1)
+                                {
+                                    strcat(obs_pos, "|");
+                                }
+                                break;
+                            }
+                        }
+                    } while (isSamePosition);
+
+                    world.obstacle[i].symbol = '#';
+                }
+                last_spawn_time = current_time;
+                printf("obs_pos: %s\n", obs_pos);
+            }
+            first--;
+            // generare ostacoli randomici
+            printf("tot_borders: %d\n", tot_borders);
+            printf("i: %d\n", i);
         }
         else
         {
             printf("0 height and width\n");
             // exit(EXIT_FAILURE);
         }
-
         printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
         printf("buffer echo : %s", buffer_echo);
 
         // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
-
-        tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
-
-        if (tot_borders != border_prec)
-        {
-            first = 2;
-        }
-        border_prec = tot_borders;
-
-        int i = 0;
-
-        // generare ostacoli randomici
-        time_t current_time = time(NULL);
-        if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
-        {
-            for (; i < NUM_OBSTACLES; i++)
-            {
-                int isSamePosition;
-                do
-                {
-                    isSamePosition = 0;
-                    world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
-                    world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
-
-                    // Check if the obstacle is in the same position as the drone
-                    if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
-                    {
-                        isSamePosition = 1;
-                    }
-
-                    // Check if the obstacle is in the same position as any of the targets
-                    for (int j = 0; j < current_num_targets; j++)
-                    {
-                        if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
-                        {
-                            isSamePosition = 1;
-                            break;
-                        }
-                    }
-                } while (isSamePosition);
-
-                world.obstacle[i].symbol = '#';
-            }
-            last_spawn_time = current_time;
-        }
-        first--;
-        // generare ostacoli randomici
-        printf("tot_borders: %d\n", tot_borders);
-        printf("i: %d\n", i);
     }
 
     // passare gli ostacoli al drone via pipe
