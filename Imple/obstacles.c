@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
-    char buffer[256];
+    char buffer[1024];
 
     int process_num;
     if (argc == 6)
@@ -253,10 +253,13 @@ int main(int argc, char *argv[])
     {
         error("ERROR connecting");
     }
+    char buffer_echo[1024];
     printf("Sending OI");
-    bzero(buffer, 256);
+    bzero(buffer, 1024);
     strcpy(buffer, "OI");
+    strcpy(buffer_echo, buffer);
     n = write(sockfd, buffer, strlen(buffer));
+
     while (1)
     {
         sleep(1);
@@ -264,76 +267,96 @@ int main(int argc, char *argv[])
         {
             // error("ERROR writing to socket");
         }
-        bzero(buffer, 256);
-        n = read(sockfd, buffer, 255);
+        bzero(buffer, 1024);
+        n = read(sockfd, buffer, 1024);
         if (n < 0)
         {
             // error("ERROR reading from socket");
         }
-        printf("%s\n", buffer);
-        // if (read(pipeso[PIPE_READ], &world, sizeof(world)) == -1)
-        // {
-        //     perror("read");
-        //     continue;
-        // }
-        // else
-        // {
 
-        //     // printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
+        printf("\nECHO %s", buffer);
+        if (strcmp(buffer, buffer_echo) == 0)
+        {
+            printf("\nEcho OK");
+        }
+        // n = write(sockfd, buffer, sizeof(buffer));
 
-        //     // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
+        char height_str[8];
+        char width_str[8];
+        float height, width;
 
-        //     tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+        strncpy(height_str, buffer, 7);
+        height_str[8] = '\0'; // Null-terminate the string
+        height = atof(height_str);
 
-        //     if (tot_borders != border_prec)
-        //     {
-        //         first = 2;
-        //     }
-        //     border_prec = tot_borders;
+        strncpy(width_str, buffer + 7, 7);
+        width_str[8] = '\0'; // Null-terminate the string
+        width = atof(width_str);
 
-        //     int i = 0;
+        if (height > 0 && width > 0)
+        {
+            world.screen.height = height;
+            world.screen.width = width;
+        }
+        else
+        {
+            printf("0 height and width\n");
+            // exit(EXIT_FAILURE);
+        }
 
-        //     // generare ostacoli randomici
-        //     time_t current_time = time(NULL);
-        //     if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
-        //     {
-        //         for (; i < NUM_OBSTACLES; i++)
-        //         {
-        //             int isSamePosition;
-        //             do
-        //             {
-        //                 isSamePosition = 0;
-        //                 world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
-        //                 world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+        printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
+        printf("buffer echo : %s", buffer_echo);
 
-        //                 // Check if the obstacle is in the same position as the drone
-        //                 if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
-        //                 {
-        //                     isSamePosition = 1;
-        //                 }
+        // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
 
-        //                 // Check if the obstacle is in the same position as any of the targets
-        //                 for (int j = 0; j < current_num_targets; j++)
-        //                 {
-        //                     if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
-        //                     {
-        //                         isSamePosition = 1;
-        //                         break;
-        //                     }
-        //                 }
-        //             } while (isSamePosition);
+        tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
 
-        //             world.obstacle[i].symbol = '#';
-        //         }
-        //         last_spawn_time = current_time;
-        //     }
-        //     first--;
-        //     // generare ostacoli randomici
-        //     printf("tot_borders: %d\n", tot_borders);
-        //     printf("i: %d\n", i);
-        //     write(pipeos[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        //     fsync(pipeos[PIPE_WRITE]);
-        // }
+        if (tot_borders != border_prec)
+        {
+            first = 2;
+        }
+        border_prec = tot_borders;
+
+        int i = 0;
+
+        // generare ostacoli randomici
+        time_t current_time = time(NULL);
+        if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
+        {
+            for (; i < NUM_OBSTACLES; i++)
+            {
+                int isSamePosition;
+                do
+                {
+                    isSamePosition = 0;
+                    world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+                    world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+
+                    // Check if the obstacle is in the same position as the drone
+                    if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
+                    {
+                        isSamePosition = 1;
+                    }
+
+                    // Check if the obstacle is in the same position as any of the targets
+                    for (int j = 0; j < current_num_targets; j++)
+                    {
+                        if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
+                        {
+                            isSamePosition = 1;
+                            break;
+                        }
+                    }
+                } while (isSamePosition);
+
+                world.obstacle[i].symbol = '#';
+            }
+            last_spawn_time = current_time;
+        }
+        first--;
+        // generare ostacoli randomici
+        printf("tot_borders: %d\n", tot_borders);
+        printf("i: %d\n", i);
     }
 
     // passare gli ostacoli al drone via pipe

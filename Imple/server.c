@@ -245,16 +245,21 @@ int main(int argc, char *argv[])
         error("ERROR on binding");
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
-    char buffer_screen1[1024];
-    // char buffer_screen2[1024];
+    char buffer_screen1[512];
+    char buffer_screen2[512];
+    char merged_buffer[1024];
     while (1)
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
 
-        sprintf(buffer_screen1, "%d", world.screen.height);
-        // buffer_screen2 = world.screen.width;
-        printf("buffer_screen1: %s\n", buffer_screen1);
+        merged_buffer[0] = '\0';
+        sprintf(buffer_screen1, "%.3f", (double)world.screen.height);
+        sprintf(buffer_screen2, "%.3f", (double)world.screen.width);
+        strcat(merged_buffer, buffer_screen1);
+        strcat(merged_buffer, ",");
+        strcat(merged_buffer, buffer_screen2);
+        printf("merged_buffer: %s\n", merged_buffer);
 
         // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
@@ -276,17 +281,17 @@ int main(int argc, char *argv[])
         write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
         fsync(pipesw[PIPE_WRITE]);
 
-        // write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        // fsync(pipesw[PIPE_WRITE]);
+        write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        fsync(pipesw[PIPE_WRITE]);
 
-        // write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
-        // fsync(pipesw[PIPE_WRITE]);
+        write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
+        fsync(pipesw[PIPE_WRITE]);
 
-        // write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        // fsync(pipesd[PIPE_WRITE]);
+        write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        fsync(pipesd[PIPE_WRITE]);
 
-        // write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
-        // fsync(pipesd_t[PIPE_WRITE]);
+        write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+        fsync(pipesd_t[PIPE_WRITE]);
 
         // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
         // fsync(pipesd_s[PIPE_WRITE]);
@@ -326,13 +331,65 @@ int main(int argc, char *argv[])
                 }
                 if (n >= 0)
                 {
-                    printf("Here is the message: %s\n", buffer);
-                    n = write(newsockfd, buffer, sizeof(buffer));
+                    switch (buffer[0])
+                    {
+                    case 'O':
+                        if (buffer[1] == 'I')
+                        {
+                            printf("Here is the message: %s\n", buffer);
+                        }
+                        else
+                        {
+                            int num_obstacles = buffer[3];
+                            for (int i = 0; i < num_obstacles; i++)
+                            {
+                                char sub_buffer_x[7];                          // Buffer for the substring
+                                char sub_buffer_y[7];                          // Buffer for the substring
+                                strncpy(sub_buffer_x, &buffer[4 + i * 16], 6); // Copy 6 characters starting at index 5
+                                sub_buffer_x[6] = '\0';                        // Null-terminate the substring
+
+                                strncpy(sub_buffer_y, &buffer[12 + i * 16], 6); // Copy 6 characters starting at index 13
+                                sub_buffer_y[6] = '\0';                         // Null-terminate the substring
+
+                                world.obstacle[i].x = atof(sub_buffer_x);
+                                world.obstacle[i].y = atof(sub_buffer_y);
+                            }
+                        }
+                        break;
+                    case 'T':
+                        if (buffer[1] == 'I')
+                        {
+                            printf("Here is the message: %s\n", buffer);
+                        }
+                        else
+                        {
+                            int num_targets = buffer[3];
+                            for (int i = 0; i < num_targets; i++)
+                            {
+                                char sub_buffer_x[7];                          // Buffer for the substring
+                                char sub_buffer_y[7];                          // Buffer for the substring
+                                strncpy(sub_buffer_x, &buffer[5 + i * 16], 6); // Copy 6 characters starting at index 5
+                                sub_buffer_x[6] = '\0';                        // Null-terminate the substring
+
+                                strncpy(sub_buffer_y, &buffer[13 + i * 16], 6); // Copy 6 characters starting at index 13
+                                sub_buffer_y[6] = '\0';                         // Null-terminate the substring
+
+                                world.target[i].x = atof(sub_buffer_x);
+                                world.target[i].y = atof(sub_buffer_y);
+                            }
+                        }
+                        break;
+                    default:
+
+                        break;
+                    }
+                    // n = write(newsockfd, buffer, sizeof(buffer));
                 }
                 if (n < 0)
                 {
                     // error("ERROR writing to socket");
                 }
+                n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
             }
             // exit(0);
         }
