@@ -240,9 +240,17 @@ int main(int argc, char *argv[])
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
-    if (bind(sockfd, (struct sockaddr *)&serv_addr,
-             sizeof(serv_addr)) < 0)
-        error("ERROR on binding");
+    int yes = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
+    {
+        perror("setsockopt");
+        // Handle error
+    }
+    while (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        perror("ERROR on binding");
+        sleep(1); // Wait for 1 second before trying again
+    }
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
     char buffer_screen1[512];
@@ -325,6 +333,7 @@ int main(int argc, char *argv[])
                 bzero(buffer, 1024);
                 sleep(1);
                 n = read(newsockfd, buffer, 1024);
+                printf("BUFFERRRRRR: %s\n", buffer);
                 if (n < 0)
                 {
                     // error("ERROR reading from socket");
@@ -337,22 +346,55 @@ int main(int argc, char *argv[])
                         if (buffer[1] == 'I')
                         {
                             printf("Here is the message: %s\n", buffer);
+                            n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
                         }
                         else
                         {
-                            int num_obstacles = buffer[3];
+                            int num_obstacles = buffer[2] - '0';
+                            int j = 4;
                             for (int i = 0; i < num_obstacles; i++)
                             {
-                                char sub_buffer_x[7];                          // Buffer for the substring
-                                char sub_buffer_y[7];                          // Buffer for the substring
-                                strncpy(sub_buffer_x, &buffer[4 + i * 16], 6); // Copy 6 characters starting at index 5
-                                sub_buffer_x[6] = '\0';                        // Null-terminate the substring
+                                bool is_x = true;
+                                char sub_buffer_x[7] = ""; // Buffer for the substring
+                                char sub_buffer_y[7] = ""; // Buffer for the substring
+                                int x_index = 0, y_index = 0;
 
-                                strncpy(sub_buffer_y, &buffer[12 + i * 16], 6); // Copy 6 characters starting at index 13
-                                sub_buffer_y[6] = '\0';                         // Null-terminate the substring
+                                for (; j < strlen(buffer); j++)
+                                {
+                                    if (buffer[j] == ',')
+                                    {
+                                        is_x = false;
+                                        sub_buffer_x[x_index] = '\0';
+                                        x_index = 0;
+                                    }
+                                    else if (buffer[j] == '|')
+                                    {
+                                        sub_buffer_y[y_index] = '\0';
+                                        world.obstacle[i].x = (int)atof(sub_buffer_x);
+                                        world.obstacle[i].y = (int)atof(sub_buffer_y);
+                                        printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y); 
+                                        j++;
+                                        break;
+                                    }
+                                    else if (is_x)
+                                    {
+                                        sub_buffer_x[x_index++] = buffer[j];
+                                    }
+                                    else
+                                    {
+                                        sub_buffer_y[y_index++] = buffer[j];
+                                    }
+                                }
 
-                                world.obstacle[i].x = atof(sub_buffer_x);
-                                world.obstacle[i].y = atof(sub_buffer_y);
+                                // If the y-coordinate of the last obstacle hasn't been processed yet, process it
+                                if (i == num_obstacles - 1 && y_index > 0)
+                                {
+                                    sub_buffer_y[y_index] = '\0';
+                                    world.obstacle[i].x = (int)atof(sub_buffer_x);
+                                    world.obstacle[i].y = (int)atof(sub_buffer_y);
+                                }
+
+                                printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
                             }
                         }
                         break;
@@ -380,16 +422,14 @@ int main(int argc, char *argv[])
                         }
                         break;
                     default:
-
+                        // n = write(newsockfd, buffer, sizeof(buffer)); doesn't work using this
                         break;
                     }
-                    // n = write(newsockfd, buffer, sizeof(buffer));
                 }
                 if (n < 0)
                 {
                     // error("ERROR writing to socket");
                 }
-                n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
             }
             // exit(0);
         }

@@ -95,6 +95,7 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
+    sleep(2);
     // Define a signal set
     sigset_t set;
 
@@ -249,9 +250,10 @@ int main(int argc, char *argv[])
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(portno);
-    if (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    while (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
-        error("ERROR connecting");
+        perror("ERROR connecting");
+        sleep(1); // Wait for 1 second before trying again
     }
     char buffer_echo[1024];
     printf("Sending OI");
@@ -292,6 +294,7 @@ int main(int argc, char *argv[])
         strncpy(width_str, buffer + 7, 7);
         width_str[8] = '\0'; // Null-terminate the string
         width = atof(width_str);
+        printf("height: %f, width: %f\n", height, width);
 
         if (height > 0 && width > 0)
         {
@@ -304,16 +307,27 @@ int main(int argc, char *argv[])
             char str[64];
             sprintf(str, "%d", NUM_OBSTACLES);
             strcpy(&obs_pos[2], str);
-            obs_pos[0] = 'O';
-            obs_pos[1] = '[';
-            obs_pos[3] = ']';
+            if (NUM_OBSTACLES > 9 && NUM_OBSTACLES < 100)
+            {
+                obs_pos[0] = 'O';
+                obs_pos[1] = '[';
+                obs_pos[2] = str[0];
+                obs_pos[3] = str[1];
+                obs_pos[4] = ']';
+            }
+            else if (NUM_OBSTACLES < 10)
+            {
+                obs_pos[0] = 'O';
+                obs_pos[1] = '[';
+                strcpy(&obs_pos[2], str);
+                obs_pos[3] = ']';
+            }
             char obstacle_x[8], obstacle_y[8];
             if (tot_borders != border_prec)
             {
                 first = 2;
             }
             border_prec = tot_borders;
-
             int i = 0;
 
             // generare ostacoli randomici
@@ -323,47 +337,49 @@ int main(int argc, char *argv[])
                 for (; i < NUM_OBSTACLES; i++)
                 {
                     int isSamePosition;
-                    do
+                    // do
+                    // {
+                    isSamePosition = 0;
+                    world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+                    world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+                    sprintf(obstacle_x, "%.3f", (float)world.obstacle[i].x);
+                    sprintf(obstacle_y, "%.3f", (float)world.obstacle[i].y);
+                    strcat(obs_pos, obstacle_x);
+                    strcat(obs_pos, ",");
+                    strcat(obs_pos, obstacle_y);
+                    if (i < NUM_OBSTACLES - 1)
                     {
-                        isSamePosition = 0;
-                        world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
-                        world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+                        strcat(obs_pos, "|");
+                    }
 
-                        // Check if the obstacle is in the same position as the drone
-                        if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
-                        {
-                            isSamePosition = 1;
-                        }
+                    // Check if the obstacle is in the same position as the drone
+                    //     if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
+                    //     {
+                    //         isSamePosition = 1;
+                    //     }
 
-                        // Check if the obstacle is in the same position as any of the targets
-                        for (int j = 0; j < current_num_targets; j++)
-                        {
-                            if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
-                            {
-                                isSamePosition = 1;
-                                sprintf(obstacle_x, "%.3f", (float)world.obstacle[i].x);
-                                sprintf(obstacle_y, "%.3f", (float)world.obstacle[i].y);
-                                strcat(obs_pos, obstacle_x);
-                                strcat(obs_pos, ",");
-                                strcat(obs_pos, obstacle_y);
-                                if (j < current_num_targets - 1)
-                                {
-                                    strcat(obs_pos, "|");
-                                }
-                                break;
-                            }
-                        }
-                    } while (isSamePosition);
+                    //     // Check if the obstacle is in the same position as any of the targets
+                    //     for (int j = 0; j < current_num_targets; j++)
+                    //     {
+                    //         if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
+                    //         {
+                    //             printf("DEBUGGGGGGGGGGGGGG\n");
+                    //             isSamePosition = 1;
+                    //             break;
+                    //         }
+                    //     }
+                    // } while (isSamePosition);
 
                     world.obstacle[i].symbol = '#';
                 }
                 last_spawn_time = current_time;
-                printf("obs_pos: %s\n", obs_pos);
             }
             first--;
             // generare ostacoli randomici
             printf("tot_borders: %d\n", tot_borders);
             printf("i: %d\n", i);
+            printf("obs_pos: %s\n", obs_pos);
+            n = write(sockfd, obs_pos, sizeof(obs_pos));
         }
         else
         {
