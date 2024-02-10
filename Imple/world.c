@@ -54,7 +54,7 @@ struct Target
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[20];
+    struct Obstacle obstacle[9];
     struct Screen screen;
     struct Target target[9];
 };

@@ -255,20 +255,40 @@ int main(int argc, char *argv[])
         perror("ERROR connecting");
         sleep(1); // Wait for 1 second before trying again
     }
+
     char buffer_echo[1024];
-    printf("Sending OI");
+    printf("Sending OI\n");
     bzero(buffer, 1024);
     strcpy(buffer, "OI");
-    strcpy(buffer_echo, buffer);
-    n = write(sockfd, buffer, strlen(buffer));
+    bool var = true;
+    // to keep sending the OI command until the server responds with the same string
+    while (var)
+    {
+        bzero(buffer_echo, 1024); // Clear the echo buffer before reading into it
+        int n = write(sockfd, buffer, strlen(buffer));
+        if (n < 0)
+        {
+            // perror("ERROR writing to socket");
+            
+        }
+        sleep(2);
+        int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo)-1);
+        if (n_r < 0)
+        {
+            // perror("ERROR reading from socket");
+            
+        }
+        printf("ECHOOOOOOOO: %s\n", buffer_echo);
+        printf("BUUUUUUFFEEERR: %s\n", buffer);
+        if (strcmp(buffer, buffer_echo) == 0)
+        {
+            var = false;
+        }
+    }
 
     while (1)
     {
         sleep(1);
-        if (n < 0)
-        {
-            // error("ERROR writing to socket");
-        }
         bzero(buffer, 1024);
         n = read(sockfd, buffer, 1024);
         if (n < 0)
@@ -284,7 +304,9 @@ int main(int argc, char *argv[])
         // n = write(sockfd, buffer, sizeof(buffer));
 
         char height_str[8];
+        height_str[0] = '\0';
         char width_str[8];
+        width_str[0] = '\0';
         float height, width;
 
         strncpy(height_str, buffer, 7);
@@ -296,7 +318,7 @@ int main(int argc, char *argv[])
         width = atof(width_str);
         printf("height: %f, width: %f\n", height, width);
 
-        if (height > 0 && width > 0)
+        if (height >= 1 && width >= 1)
         {
             world.screen.height = height;
             world.screen.width = width;
@@ -369,8 +391,6 @@ int main(int argc, char *argv[])
                     //         }
                     //     }
                     // } while (isSamePosition);
-
-                    world.obstacle[i].symbol = '#';
                 }
                 last_spawn_time = current_time;
             }
@@ -379,7 +399,7 @@ int main(int argc, char *argv[])
             printf("tot_borders: %d\n", tot_borders);
             printf("i: %d\n", i);
             printf("obs_pos: %s\n", obs_pos);
-            n = write(sockfd, obs_pos, sizeof(obs_pos));
+            n = write(sockfd, obs_pos, strlen(obs_pos));
         }
         else
         {

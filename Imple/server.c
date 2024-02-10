@@ -59,7 +59,7 @@ struct Target
 struct World
 {
     struct Drone drone;
-    struct Obstacle obstacle[20];
+    struct Obstacle obstacle[9];
     struct Screen screen;
     struct Target target[9];
 };
@@ -254,8 +254,11 @@ int main(int argc, char *argv[])
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
     char buffer_screen1[512];
+    buffer_screen1[0] = '\0';
     char buffer_screen2[512];
+    buffer_screen2[0] = '\0';
     char merged_buffer[1024];
+    merged_buffer[0] = '\0';
     while (1)
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
@@ -289,11 +292,11 @@ int main(int argc, char *argv[])
         write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
         fsync(pipesw[PIPE_WRITE]);
 
-        write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        fsync(pipesw[PIPE_WRITE]);
-
         write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
         fsync(pipesw[PIPE_WRITE]);
+
+        // write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        // fsync(pipesw[PIPE_WRITE]);
 
         write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesd[PIPE_WRITE]);
@@ -327,13 +330,13 @@ int main(int argc, char *argv[])
             close(sockfd);
             int n;
             char buffer[1024];
-
+            char buffer_check[1024];
             while (1)
             {
                 bzero(buffer, 1024);
                 sleep(1);
                 n = read(newsockfd, buffer, 1024);
-                printf("BUFFERRRRRR: %s\n", buffer);
+                printf("buffer: %s\n", buffer);
                 if (n < 0)
                 {
                     // error("ERROR reading from socket");
@@ -344,9 +347,8 @@ int main(int argc, char *argv[])
                     {
                     case 'O':
                         if (buffer[1] == 'I')
-                        {
-                            printf("Here is the message: %s\n", buffer);
-                            n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
+                        {   
+                            n = write(newsockfd, buffer, sizeof(buffer)); // Send the message back to the client echo
                         }
                         else
                         {
@@ -372,7 +374,7 @@ int main(int argc, char *argv[])
                                         sub_buffer_y[y_index] = '\0';
                                         world.obstacle[i].x = (int)atof(sub_buffer_x);
                                         world.obstacle[i].y = (int)atof(sub_buffer_y);
-                                        printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y); 
+                                        // printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
                                         j++;
                                         break;
                                     }
@@ -393,7 +395,7 @@ int main(int argc, char *argv[])
                                     world.obstacle[i].x = (int)atof(sub_buffer_x);
                                     world.obstacle[i].y = (int)atof(sub_buffer_y);
                                 }
-
+                                world.obstacle[i].symbol = '#';
                                 printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
                             }
                         }
@@ -422,9 +424,23 @@ int main(int argc, char *argv[])
                         }
                         break;
                     default:
-                        // n = write(newsockfd, buffer, sizeof(buffer)); doesn't work using this
+                        // if (strcmp(buffer, buffer_check) != 0)
+                        // {
+                        //     n = write(newsockfd, buffer, sizeof(buffer));
+                        // }
+                        // else if (strcmp(buffer, buffer_check) == 0)
+                        // {
+                        //     bzero(buffer, 1024);
+                        // }
                         break;
                     }
+                    for (int i = 0; i < 9; i++)
+                    {
+                        printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
+                        printf("symbol: %c\n", world.obstacle[i].symbol);
+                    }
+                    write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+                    fsync(pipesw[PIPE_WRITE]);
                 }
                 if (n < 0)
                 {
