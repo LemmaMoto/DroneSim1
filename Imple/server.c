@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -94,8 +95,19 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 }
 void error(char *msg)
 {
-    perror(msg);
-    // exit(0);
+    FILE *logFile = fopen("log/server/error_log_server.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
 }
 
 int main(int argc, char *argv[])
@@ -112,7 +124,7 @@ int main(int argc, char *argv[])
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
+        error("sigprocmask"); // Print an error message if the signal can't be blocked
         return -1;
     }
     // Set up sigaction for receiving signals from the watchdog process
@@ -121,13 +133,13 @@ int main(int argc, char *argv[])
     p_action.sa_sigaction = watchdog_handler;
     if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
-        perror("sigaction"); // Print an error message if the signal can't be set up
+        error("sigaction"); // Print an error message if the signal can't be set up
     }
 
     // Unblock SIGUSR1
     if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+        error("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
 
@@ -206,7 +218,7 @@ int main(int argc, char *argv[])
     /* call stat, fill stat buffer, validate success */
     if (stat(PID_FILE_PW, &sbuf) == -1)
     {
-        perror("error-stat");
+        error("error-stat");
         return -1;
     }
     // waits until the file has data
@@ -214,7 +226,7 @@ int main(int argc, char *argv[])
     {
         if (stat(PID_FILE_PW, &sbuf) == -1)
         {
-            perror("error-stat");
+            error("error-stat");
             return -1;
         }
         usleep(50000);
@@ -264,15 +276,25 @@ int main(int argc, char *argv[])
     if (newsockfd_targets < 0)
         error("ERROR on accept for targets");
     clilen = sizeof(cli_addr);
+
+    int n;
     while (1)
     {
-        read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
-        read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
+        n = read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
+        if (n < 0)
+            error("ERROR reading from pipews\n");
 
-        // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        read(newsockfd_obstacles, &world.obstacle, sizeof(world.obstacle));
+        n = read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
+        if (n < 0)
+            error("ERROR reading from pipeds\n");
 
-        read(newsockfd_targets, &world.target, sizeof(world.target));
+        n = read(newsockfd_obstacles, &world.obstacle, sizeof(world.obstacle));
+        if (n < 0)
+            error("ERROR reading from newsockfd_obstacles\n");
+
+        n = read(newsockfd_targets, &world.target, sizeof(world.target));
+        if (n < 0)
+            error("ERROR reading from newsockfd_targets\n");
 
         for (int i = 0; i < 20; i++)
         {
@@ -282,10 +304,12 @@ int main(int argc, char *argv[])
             }
         }
 
-        // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
-
-        read(pipeis[PIPE_READ], &command, sizeof(command));
-        write(pipeis[PIPE_WRITE], &command, sizeof(command));
+        n = read(pipeis[PIPE_READ], &command, sizeof(command));
+        if (n < 0)
+            error("ERROR reading from pipeis\n");
+        n = write(pipeis[PIPE_WRITE], &command, sizeof(command));
+        if (n < 0)
+            error("ERROR writing to pipeis\n");
         printf("command: %c\n", command);
         command = '0';
         printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
@@ -298,50 +322,39 @@ int main(int argc, char *argv[])
         //     }
         // }
 
-        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        n = write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        if (n < 0)
+            error("ERROR writing to pipesw\n");
         fsync(pipesw[PIPE_WRITE]);
 
-        write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        n = write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        if (n < 0)
+            error("ERROR writing to pipesw\n");
         fsync(pipesw[PIPE_WRITE]);
 
-        write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
+        n = write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
+        if (n < 0)
+            error("ERROR writing to pipesw\n");
         fsync(pipesw[PIPE_WRITE]);
 
-        write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        n = write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        if (n < 0)
+            error("ERROR writing to pipesd\n");
         fsync(pipesd[PIPE_WRITE]);
 
-        write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+        n = write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+        if (n < 0)
+            error("ERROR writing to pipesd_t\n");
         fsync(pipesd_t[PIPE_WRITE]);
 
-        // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
-        // fsync(pipesd_s[PIPE_WRITE]);
-
-        // write(pipeso[PIPE_WRITE], &world, sizeof(world));
-        // fsync(pipeso[PIPE_WRITE]);
-
-        // newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-        // if (newsockfd < 0)
-        // {
-        //     error("ERROR on accept");
-        // }
-        // pid = fork();
-        // printf("pid: %d\n", pid);
-        // if (pid < 0)
-        // {
-        //     error("ERROR on fork");
-        // }
-        // if (pid == 0)
-        // {
-        //     close(sockfd);
-        //     write(newsockfd, &world, sizeof(world)); // to use for the dimensions of the screen (by string)
-        // }
-        // printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
-
-        write(newsockfd_obstacles, &world, sizeof(world));
-        write(newsockfd_targets, &world, sizeof(world));
+        n = write(newsockfd_obstacles, &world, sizeof(world));
+        if (n < 0)
+            error("ERROR writing to newsockfd_obstacles\n");
+        n = write(newsockfd_targets, &world, sizeof(world));
+        if (n < 0)
+            error("ERROR writing to newsockfd_targets\n");
     }
-    // close(newsockfd);
-    // close(sockfd);
-
+    close(sockfd_obstacles);
+    close(sockfd_targets);
     return 0;
 }

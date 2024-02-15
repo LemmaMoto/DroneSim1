@@ -12,6 +12,7 @@
 #include <ncurses.h>
 #include <stdbool.h>
 #include <sys/ipc.h>
+#include <errno.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -80,6 +81,22 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
         log_receipt(prev_t);
     }
 }
+void error(char *msg)
+{
+    FILE *logFile = fopen("log/world/error_log_world.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -96,7 +113,7 @@ int main(int argc, char *argv[])
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
+        error("sigprocmask"); // Print an error message if the signal can't be blocked
         return -1;
     }
     // Set up sigaction for receiving signals from the watchdog process
@@ -105,13 +122,13 @@ int main(int argc, char *argv[])
     p_action.sa_sigaction = watchdog_handler;
     if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
-        perror("sigaction"); // Print an error message if the signal can't be set up
+        error("sigaction"); // Print an error message if the signal can't be set up
     }
 
     // Unblock SIGUSR1
     if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+        error("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
 
@@ -158,7 +175,7 @@ int main(int argc, char *argv[])
     /* call stat, fill stat buffer, validate success */
     if (stat(PID_FILE_PW, &sbuf) == -1)
     {
-        perror("error-stat");
+        error("error-stat");
         return -1;
     }
     // waits until the file has data
@@ -166,7 +183,7 @@ int main(int argc, char *argv[])
     {
         if (stat(PID_FILE_PW, &sbuf) == -1)
         {
-            perror("error-stat");
+            error("error-stat");
             return -1;
         }
         usleep(50000);
@@ -205,17 +222,17 @@ int main(int argc, char *argv[])
         // Read data from the pipe
         if (read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone)) == -1)
         {
-            perror("read drone");
+            error("read drone");
             continue;
         }
         if (read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle)) == -1)
         {
-            perror("read obstacle");
+            error("read obstacle");
             continue;
         }
         if (read(pipesw[PIPE_READ], &world.target, sizeof(world.target)) == -1)
         {
-            perror("read target");
+            error("read target");
             continue;
         }
 
@@ -257,17 +274,17 @@ int main(int argc, char *argv[])
         // Write the screen dimensions to the pipe
         if (write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen)) == -1)
         {
-            perror("write screen");
+            error("write screen");
             continue;
         }
         else
         {
             fsync(pipews[PIPE_WRITE]) == -1;
         }
-        
+
         if (write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen)) == -1)
         {
-            perror("write screen");
+            error("write screen");
             continue;
         }
         else

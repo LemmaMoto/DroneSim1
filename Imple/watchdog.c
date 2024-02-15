@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 
 pid_t sp_pids[NUM_PROCESSES];
 struct timeval prev_ts[NUM_PROCESSES];
@@ -16,6 +17,22 @@ char logfile_name[256] = LOG_FILE_NAME;
 int logfile_line = 0;                               // line to read from in the log file
 char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
 
+void error(char *msg)
+{
+    FILE *logFile = fopen("log/watchdog/error_log_watchdog.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
 void check_log_file()
 {
     FILE *file = fopen(logfile_name, "r");
@@ -115,7 +132,7 @@ void terminate_all_watched_processes()
     {
         if (kill(sp_pids[i], SIGKILL) < 0)
         {
-            perror("kill");
+            error("kill");
         }
     }
 }
@@ -140,7 +157,7 @@ int main(int argc, char *argv[])
         /* call stat, fill stat buffer, validate success */
         if (stat(fnames[i], &sbuf) == -1)
         {
-            perror("error-stat");
+            error("error-stat");
             return -1;
         }
 
@@ -148,7 +165,7 @@ int main(int argc, char *argv[])
         {
             if (stat(fnames[i], &sbuf) == -1)
             {
-                perror("error-stat");
+                error("error-stat");
                 return -1;
             }
             usleep(50000);
@@ -228,7 +245,7 @@ int main(int argc, char *argv[])
             {
                 if (kill(sp_pids[i], SIGUSR1) < 0)
                 {
-                    // perror("kill");  //This does weird things to the ncurses window if I leave it in
+                    // error("kill");  //This does weird things to the ncurses window if I leave it in
                 }
             }
             signal_count = 0;

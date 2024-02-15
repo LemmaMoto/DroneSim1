@@ -103,7 +103,22 @@ double compute_distance(float x1, float y1, float x2, float y2)
     float d = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
     return d;
 }
-
+void error(char *msg)
+{
+    FILE *logFile = fopen("log/drone/error_log_drone.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
 int main(int argc, char *argv[])
 {
     // Define a signal set
@@ -118,7 +133,7 @@ int main(int argc, char *argv[])
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
+        error("sigprocmask"); // Print an error message if the signal can't be blocked
         return -1;
     }
     // Set up sigaction for receiving signals from the watchdog process
@@ -127,13 +142,13 @@ int main(int argc, char *argv[])
     p_action.sa_sigaction = watchdog_handler;
     if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
-        perror("sigaction"); // Print an error message if the signal can't be set up
+        error("sigaction"); // Print an error message if the signal can't be set up
     }
 
     // Unblock SIGUSR1
     if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+        error("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
 
@@ -187,7 +202,7 @@ int main(int argc, char *argv[])
     /* call stat, fill stat buffer, validate success */
     if (stat(PID_FILE_PW, &sbuf) == -1)
     {
-        perror("error-stat");
+        error("error-stat");
         return -1;
     }
     // waits until the file has data
@@ -195,7 +210,7 @@ int main(int argc, char *argv[])
     {
         if (stat(PID_FILE_PW, &sbuf) == -1)
         {
-            perror("error-stat");
+            error("error-stat");
             return -1;
         }
         usleep(50000);
@@ -281,7 +296,7 @@ int main(int argc, char *argv[])
 
         if (read(pipesd_s[PIPE_READ], &world.screen, sizeof(world.screen)) == -1)
         {
-            perror("read screen");
+            error("read screen");
             continue;
         }
 
@@ -325,7 +340,7 @@ int main(int argc, char *argv[])
 
         if (read(pipesd[PIPE_READ], &world.obstacle, sizeof(world.obstacle)) == -1)
         {
-            perror("read obstacle");
+            error("read obstacle");
             continue;
         }
         int closest_obstacle_index = -1;
@@ -405,7 +420,7 @@ int main(int argc, char *argv[])
         }
         if (read(pipesd_t[PIPE_READ], &world.target, sizeof(world.target)) == -1)
         {
-            perror("read target");
+            error("read target");
             continue;
         }
         int closest_target_index = -1;
@@ -544,7 +559,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            perror("read input:");
+            error("read input:");
         }
         // clear();
         refresh();

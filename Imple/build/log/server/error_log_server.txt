@@ -1,0 +1,257 @@
+2024-02-15 17:30:06 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:30:07 - ERROR reading from newsockfd_obstacles
+: Interrupted system call
+2024-02-15 17:30:08 - ERROR reading from newsockfd_targets
+: Interrupted system call
+2024-02-15 17:30:09 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:10 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:12 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:13 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:14 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:15 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:16 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:18 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:19 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:20 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:21 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:30:22 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:31:28 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:31:30 - ERROR reading from newsockfd_obstacles
+: Interrupted system call
+2024-02-15 17:31:31 - ERROR reading from newsockfd_targets
+: Interrupted system call
+2024-02-15 17:31:32 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:31:33 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:31:34 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:31:36 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:31:37 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:31:38 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:31:39 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:15 - ERROR on accept for obstacles: Invalid argument
+2024-02-15 17:32:16 - ERROR on accept for targets: Invalid argument
+2024-02-15 17:32:17 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:32:17 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:32:17 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:32:18 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:18 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:32:18 - ERROR writing to newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:32:18 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:32:18 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:32:20 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:20 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:32:20 - ERROR writing to newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:32:20 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:32:20 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:32:29 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:32:30 - ERROR reading from newsockfd_obstacles
+: Interrupted system call
+2024-02-15 17:32:31 - ERROR reading from newsockfd_targets
+: Interrupted system call
+2024-02-15 17:32:32 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:34 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:35 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:36 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:37 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:38 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:40 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:41 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:42 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:43 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:44 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:46 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:47 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:48 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:49 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:50 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:52 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:53 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:54 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:32:55 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:21 - ERROR on binding for obstacles: Address already in use
+2024-02-15 17:33:26 - ERROR on accept for obstacles: Interrupted system call
+2024-02-15 17:33:27 - ERROR on accept for targets: Invalid argument
+2024-02-15 17:33:28 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:33:28 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:28 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:29 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:29 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:29 - ERROR writing to newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:29 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:29 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:30 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:30 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:30 - ERROR writing to newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:30 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:30 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:31 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:31 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:31 - ERROR writing to newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:31 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:31 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:32 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:32 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:32 - ERROR writing to newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:32 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:32 - ERROR reading from newsockfd_targets
+: Bad file descriptor
+2024-02-15 17:33:40 - ERROR on binding for obstacles: Address already in use
+2024-02-15 17:33:45 - ERROR on accept for obstacles: Interrupted system call
+2024-02-15 17:33:47 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:33:47 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:48 - ERROR reading from newsockfd_targets
+: Interrupted system call
+2024-02-15 17:33:49 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:49 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:49 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:50 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:50 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:50 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:51 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:51 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:51 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:53 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:33:53 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:53 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:33:54 - ERROR on binding for obstacles: Address already in use
+2024-02-15 17:34:00 - ERROR on accept for obstacles: Interrupted system call
+2024-02-15 17:34:01 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:34:01 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:02 - ERROR reading from newsockfd_targets
+: Interrupted system call
+2024-02-15 17:34:04 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:34:04 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:04 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:05 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:34:05 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:05 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:06 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:34:06 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:06 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:07 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:34:07 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:08 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:34:10 - ERROR reading from pipeds
+: Interrupted system call
+2024-02-15 17:34:10 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:11 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:34:11 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:12 - ERROR reading from pipews
+: Interrupted system call
+2024-02-15 17:34:13 - ERROR reading from pipeds
+: Interrupted system call
+2024-02-15 17:34:13 - ERROR reading from newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:14 - ERROR reading from pipeis
+: Interrupted system call
+2024-02-15 17:34:14 - ERROR writing to newsockfd_obstacles
+: Bad file descriptor
+2024-02-15 17:34:16 - ERROR reading from pipews
+: Interrupted system call

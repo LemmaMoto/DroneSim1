@@ -8,10 +8,28 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/wait.h>
+#include <errno.h>
 #include "include/constants.h"
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+void error(char *msg)
+{
+    FILE *logFile = fopen("log/master/error_log_master.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -31,7 +49,7 @@ int main(int argc, char *argv[])
     FILE *logfile = fopen(logfile_name, "w");
     if (logfile == NULL)
     {
-        perror("Error opening log file");
+        error("Error opening log file");
         return -1;
     }
 
@@ -39,7 +57,7 @@ int main(int argc, char *argv[])
     int pipesw[2];
     if (pipe(pipesw) == -1)
     {
-        perror("Error creating pipesw");
+        error("Error creating pipesw");
         return -1;
     }
     printf("Pipesw created successfully\n");
@@ -53,7 +71,7 @@ int main(int argc, char *argv[])
     int pipews[2];
     if (pipe(pipews) == -1)
     {
-        perror("Error creating pipews");
+        error("Error creating pipews");
         return -1;
     }
     printf("Pipews created successfully\n");
@@ -67,7 +85,7 @@ int main(int argc, char *argv[])
     int pipesd[2];
     if (pipe(pipesd) == -1)
     {
-        perror("Error creating pipesd");
+        error("Error creating pipesd");
         return -1;
     }
     printf("Pipesd created successfully\n");
@@ -81,7 +99,7 @@ int main(int argc, char *argv[])
     int pipeds[2];
     if (pipe(pipeds) == -1)
     {
-        perror("Error creating pipeds");
+        error("Error creating pipeds");
         return -1;
     }
     printf("Pipeds created successfully\n");
@@ -95,7 +113,7 @@ int main(int argc, char *argv[])
     int pipeso[2];
     if (pipe(pipeso) == -1)
     {
-        perror("Error creating pipeso");
+        error("Error creating pipeso");
         return -1;
     }
     printf("Pipeso created successfully\n");
@@ -109,7 +127,7 @@ int main(int argc, char *argv[])
     int pipeos[2];
     if (pipe(pipeos) == -1)
     {
-        perror("Error creating pipeos");
+        error("Error creating pipeos");
         return -1;
     }
     printf("Pipeos created successfully\n");
@@ -123,7 +141,7 @@ int main(int argc, char *argv[])
     int pipest[2];
     if (pipe(pipest) == -1)
     {
-        perror("Error creating pipest");
+        error("Error creating pipest");
         return -1;
     }
     printf("Pipest created successfully\n");
@@ -137,7 +155,7 @@ int main(int argc, char *argv[])
     int pipets[2];
     if (pipe(pipets) == -1)
     {
-        perror("Error creating pipets");
+        error("Error creating pipets");
         return -1;
     }
     printf("Pipets created successfully\n");
@@ -151,7 +169,7 @@ int main(int argc, char *argv[])
     int pipedi[2];
     if (pipe(pipedi) == -1)
     {
-        perror("Error creating pipedi");
+        error("Error creating pipedi");
         return -1;
     }
     printf("Pipedi created successfully\n");
@@ -165,7 +183,7 @@ int main(int argc, char *argv[])
     int pipesd_t[2];
     if (pipe(pipesd_t) == -1)
     {
-        perror("Error creating pipesd_t");
+        error("Error creating pipesd_t");
         return -1;
     }
     printf("Pipesd_t created successfully\n");
@@ -179,7 +197,7 @@ int main(int argc, char *argv[])
     int pipesd_s[2];
     if (pipe(pipesd_s) == -1)
     {
-        perror("Error creating pipesd_s");
+        error("Error creating pipesd_s");
         return -1;
     }
     printf("Pipesd_s created successfully\n");
@@ -193,7 +211,7 @@ int main(int argc, char *argv[])
     int pipeis[2];
     if (pipe(pipeis) == -1)
     {
-        perror("Error creating pipeis");
+        error("Error creating pipeis");
         return -1;
     }
     printf("Pipeis created successfully\n");
@@ -219,7 +237,7 @@ int main(int argc, char *argv[])
     child_watchdog = fork();
     if (child_watchdog < 0)
     {
-        perror("Fork");
+        error("Fork");
         return -1;
     }
     printf("Watchdog process created successfully with PID %d\n", child_watchdog);
@@ -228,7 +246,7 @@ int main(int argc, char *argv[])
     {
         char *arg_list[] = {"konsole", "-e", "./watchdog", NULL};
         execvp("konsole", arg_list);
-        perror("execvp failed for watchdog");
+        error("execvp failed for watchdog");
         return 0;
     }
     num_children += 1;
@@ -237,7 +255,7 @@ int main(int argc, char *argv[])
     child_process0 = fork();
     if (child_process0 < 0)
     {
-        perror("Fork");
+        error("Fork");
         return -1;
     }
     printf("Server process created successfully with PID %d\n", child_process0);
@@ -246,7 +264,7 @@ int main(int argc, char *argv[])
     {
         char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, pipe_read_is, pipe_write_di, NULL};
         execvp("konsole", arg_list);
-        perror("execvp failed for server");
+        error("execvp failed for server");
         return 0;
     }
     num_children += 1;
@@ -255,7 +273,7 @@ int main(int argc, char *argv[])
     child_process1 = fork();
     if (child_process1 < 0)
     {
-        perror("Fork");
+        error("Fork");
         return -1;
     }
     printf("Drone process created successfully with PID %d\n", child_process1);
@@ -264,7 +282,7 @@ int main(int argc, char *argv[])
     {
         char *arg_list[] = {"konsole", "-e", "./drone", "1", pipe_read_di, pipe_write_di, pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_sd_t, pipe_write_sd_t, pipe_read_sd_s, pipe_write_sd_s, NULL};
         execvp("konsole", arg_list);
-        perror("execvp failed for drone");
+        error("execvp failed for drone");
         return 0;
     }
     num_children += 1;
@@ -272,7 +290,7 @@ int main(int argc, char *argv[])
     child_process2 = fork();
     if (child_process2 < 0)
     {
-        perror("Fork");
+        error("Fork");
         return -1;
     }
     printf("Input process created successfully with PID %d\n", child_process2);
@@ -281,7 +299,7 @@ int main(int argc, char *argv[])
     {
         char *arg_list[] = {"konsole", "-e", "./input", "2", pipe_read_is, pipe_write_is, NULL};
         execvp("konsole", arg_list);
-        perror("execvp failed for input");
+        error("execvp failed for input");
         return 0;
     }
     num_children += 1;
@@ -289,7 +307,7 @@ int main(int argc, char *argv[])
     child_process3 = fork();
     if (child_process3 < 0)
     {
-        perror("Fork");
+        error("Fork");
         return -1;
     }
     printf("World process created successfully with PID %d\n", child_process3);
@@ -298,7 +316,7 @@ int main(int argc, char *argv[])
     {
         char *arg_list[] = {"konsole", "-e", "./world", "3", pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_s, pipe_write_sd_s, NULL};
         execvp("konsole", arg_list);
-        perror("execvp failed for world");
+        error("execvp failed for world");
         return 0;
     }
     num_children += 1;
@@ -306,7 +324,7 @@ int main(int argc, char *argv[])
     child_process4 = fork();
     if (child_process4 < 0)
     {
-        perror("Fork");
+        error("Fork");
         return -1;
     }
     printf("Obstacles process created successfully with PID %d\n", child_process4);
@@ -315,7 +333,7 @@ int main(int argc, char *argv[])
     {
         char *arg_list[] = {"konsole", "-e", "./obstacles", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
         execvp("konsole", arg_list);
-        perror("execvp failed for obstacles");
+        error("execvp failed for obstacles");
         return 0;
     }
     num_children += 1;
@@ -323,7 +341,7 @@ int main(int argc, char *argv[])
     child_process5 = fork();
     if (child_process5 < 0)
     {
-        perror("Fork");
+        error("Fork");
         return -1;
     }
     printf("Targets process created successfully with PID %d\n", child_process5);
@@ -332,7 +350,7 @@ int main(int argc, char *argv[])
     {
         char *arg_list[] = {"konsole", "-e", "./targets", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
         execvp("konsole", arg_list);
-        perror("execvp failed for targets");
+        error("execvp failed for targets");
         return 0;
     }
     num_children += 1;
