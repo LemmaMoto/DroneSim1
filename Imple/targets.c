@@ -11,11 +11,17 @@
 #include <errno.h>
 #include "include/constants.h"
 #include <sys/ipc.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #define TARGET_ATTRACTION_CONSTANT 1.0
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define portno 50001
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -81,6 +87,11 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
         log_receipt(prev_t);
     }
 }
+void error(char *msg)
+{
+    perror(msg);
+    // exit(0);
+}
 
 int main(int argc, char *argv[])
 {
@@ -115,6 +126,12 @@ int main(int argc, char *argv[])
         return -1;
     }
     int process_num;
+    int sockfd, n;
+
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+
+    char buffer[256];
     if (argc == 6)
     {
         sscanf(argv[1], "%d", &process_num);
@@ -224,9 +241,28 @@ int main(int argc, char *argv[])
         }
     }
 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        error("ERROR opening socket");
+    server = gethostbyname("localhost");
+    if (server == NULL)
+    {
+        fprintf(stderr, "ERROR, no such host\n");
+        // exit(0);
+    }
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+    serv_addr.sin_port = htons(portno);
+    while (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        perror("ERROR connecting");
+        sleep(1); // Wait for 1 second before trying again
+    }
+
     while (1)
     {
-        if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
+        if (read(sockfd, &world, sizeof(world)) == -1)
         {
             perror("read");
             continue;
@@ -288,8 +324,7 @@ int main(int argc, char *argv[])
             }
 
             first--;
-            write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
-            fsync(pipets[PIPE_WRITE]);
+            write(sockfd, &world.target, sizeof(world.target));
         }
     }
     return 0;

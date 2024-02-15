@@ -252,11 +252,6 @@ int main(int argc, char *argv[])
     }
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
-    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-    if (newsockfd < 0)
-    {
-        perror("ERROR on accept");
-    }
     while (1)
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
@@ -264,6 +259,7 @@ int main(int argc, char *argv[])
 
         // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
         read(newsockfd, &world.obstacle, sizeof(world.obstacle));
+        read(newsockfd, &world.target, sizeof(world.target));  
 
         for (int i = 0; i < 20; i++)
         {
@@ -273,7 +269,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+        // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+
         read(pipeis[PIPE_READ], &command, sizeof(command));
         write(pipeis[PIPE_WRITE], &command, sizeof(command));
         printf("command: %c\n", command);
@@ -308,11 +305,23 @@ int main(int argc, char *argv[])
 
         // write(pipeso[PIPE_WRITE], &world, sizeof(world));
         // fsync(pipeso[PIPE_WRITE]);
-
-        write(newsockfd, &world, sizeof(world));
-
-        write(pipest[PIPE_WRITE], &world, sizeof(world));
-        fsync(pipest[PIPE_WRITE]);
+        newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+        if (newsockfd < 0)
+        {
+            error("ERROR on accept");
+        }
+        pid = fork();
+        printf("pid: %d\n", pid);
+        if (pid < 0)
+        {
+            error("ERROR on fork");
+        }
+        if (pid == 0)
+        {
+            close(sockfd);
+            write(newsockfd, &world, sizeof(world)); // to use for the dimensions of the screen (by string)
+            
+        }
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
     }
     close(newsockfd);
