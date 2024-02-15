@@ -327,16 +327,19 @@ int main(int argc, char *argv[])
         }
         if (pid == 0)
         {
-            close(sockfd);
+            // close(sockfd);
             int n;
             char buffer[1024];
             char buffer_check[1024];
+            char buffer2[1024];
             while (1)
             {
                 bzero(buffer, 1024);
                 sleep(1);
                 n = read(newsockfd, buffer, 1024);
+                // int n2 = read(newsockfd, buffer2, 1024);
                 printf("buffer: %s\n", buffer);
+                // printf("buffer2: %s\n", buffer2);
                 if (n < 0)
                 {
                     // error("ERROR reading from socket");
@@ -451,7 +454,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            close(newsockfd);
+            // close(newsockfd);
         }
     }
 

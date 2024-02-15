@@ -258,31 +258,33 @@ int main(int argc, char *argv[])
 
     char buffer_echo[1024];
     printf("Sending OI\n");
-    bzero(buffer, 1024);
-    strcpy(buffer, "OI");
     bool var = true;
     // to keep sending the OI command until the server responds with the same string
     while (var)
     {
-        bzero(buffer_echo, 1024); // Clear the echo buffer before reading into it
-        int n = write(sockfd, buffer, strlen(buffer));
+        bzero(buffer, 1024);
+        strcpy(buffer, "OI");
+        n = write(sockfd, buffer, strlen(buffer));
         if (n < 0)
         {
             // perror("ERROR writing to socket");
-            
         }
-        sleep(2);
-        int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo)-1);
+        sleep(1);                 // PROVARE AD AUMENTARE LO SLEEP
+        bzero(buffer_echo, 1024); // Clear the echo buffer before reading into it
+        int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo) - 1);
         if (n_r < 0)
         {
-            // perror("ERROR reading from socket");
-            
+            perror("ERROR reading from socket");
+        }
+        else if (n_r == 0)
+        {
+            perror("STRANO ERRORE");
         }
         printf("ECHOOOOOOOO: %s\n", buffer_echo);
         printf("BUUUUUUFFEEERR: %s\n", buffer);
         if (strcmp(buffer, buffer_echo) == 0)
         {
-            var = false;
+            printf("UGUALI");
         }
     }
 
