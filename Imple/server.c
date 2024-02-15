@@ -109,7 +109,43 @@ void error(char *msg)
         perror("ERROR opening log file");
     }
 }
+int stringToObstacles(char *str, struct Obstacle *obstacles)
+{
+    // Skip the 'O[' at the start of the string and get the number of obstacles
+    int num_obstacles;
+    sscanf(str, "O[%d]", &num_obstacles);
 
+    // Find the start of the obstacle data
+    char *obstacleData = strchr(str, ']');
+    if (obstacleData != NULL)
+    {
+        // Skip the ']'
+        obstacleData++;
+
+        // Parse each obstacle
+        for (int i = 0; i < num_obstacles; i++)
+        {
+            // Parse the obstacle's coordinates
+            sscanf(obstacleData, "%d,%d", &obstacles[i].x, &obstacles[i].y);
+            printf("obstacle %d x: %d, y: %d\n", i, obstacles[i].x, obstacles[i].y);
+
+            // Find the start of the next obstacle
+            obstacleData = strchr(obstacleData, '|');
+            if (obstacleData != NULL)
+            {
+                // Skip the '|'
+                obstacleData++;
+            }
+            else
+            {
+                // No more obstacles
+                break;
+            }
+        }
+    }
+
+    return num_obstacles;
+}
 int main(int argc, char *argv[])
 {
     // Define a signal set
@@ -278,6 +314,8 @@ int main(int argc, char *argv[])
     clilen = sizeof(cli_addr);
 
     int n;
+    char buffer[1024];
+    int num_obstacles = 20;
     while (1)
     {
         n = read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
@@ -288,9 +326,24 @@ int main(int argc, char *argv[])
         if (n < 0)
             error("ERROR reading from pipeds\n");
 
-        n = read(newsockfd_obstacles, &world.obstacle, sizeof(world.obstacle));
+        sleep(1);
+        n = read(newsockfd_obstacles, buffer, sizeof(buffer));
         if (n < 0)
             error("ERROR reading from newsockfd_obstacles\n");
+
+        // printf("buffer: %s\n", buffer);
+
+        struct Obstacle obstacles[20];
+        // num_obstacles = stringToObstacles(buffer, obstacles);
+        if (num_obstacles <= 0)
+        {
+            error("ERROR parsing obstacle string");
+            continue;
+        }
+        for (int i = 0; i < num_obstacles; i++)
+        {
+            world.obstacle[i] = obstacles[i];
+        }
 
         n = read(newsockfd_targets, &world.target, sizeof(world.target));
         if (n < 0)

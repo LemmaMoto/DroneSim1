@@ -102,6 +102,38 @@ void error(char *msg)
         perror("ERROR opening log file");
     }
 }
+char *obstaclesToString(struct Obstacle *obstacles, int num_obstacles)
+{
+    // Allocate memory for the string
+    char *str = malloc(1024 * sizeof(char));
+    if (str == NULL)
+    {
+        error("ERROR allocating memory for string");
+    }
+
+    // Start the string with 'O' and the number of obstacles
+    sprintf(str, "O[%d]", num_obstacles);
+
+    // Add each obstacle to the string
+    for (int i = 0; i < num_obstacles; i++)
+    {
+        char obstacleStr[1024];
+
+        // Format the obstacle's coordinates as a string
+        sprintf(obstacleStr, "%.3f,%.3f", (float)obstacles[i].x, (float)obstacles[i].y);
+
+        // Add the obstacle string to the main string
+        // If this is not the first obstacle, add a '|' before the obstacle string
+        if (i > 0)
+        {
+            strcat(str, "|");
+        }
+        strcat(str, obstacleStr);
+    }
+
+    return str;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -287,8 +319,7 @@ int main(int argc, char *argv[])
             int i = 0;
 
             // generare ostacoli randomici
-            time_t current_time = time(NULL);
-            if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
+            if ((time(NULL) - last_spawn_time >= refresh_time_obstacles) || first > 0)
             {
                 for (; i < NUM_OBSTACLES; i++)
                 {
@@ -319,18 +350,20 @@ int main(int argc, char *argv[])
                     world.obstacle[i].symbol = '#';
                     printf("x: %d, y: %d\n", world.obstacle[i].x, world.obstacle[i].y);
                 }
-                last_spawn_time = current_time;
+                last_spawn_time = time(NULL);
+                first--;
+                char *obstaclesStr = obstaclesToString(world.obstacle, NUM_OBSTACLES);
+                printf("obstaclesStr: %s\n", obstaclesStr);
+                int n = write(sockfd, obstaclesStr, strlen(obstaclesStr));
+                if (n < 0)
+                {
+                    error("ERROR writing to socket");
+                }
+                free(obstaclesStr);
             }
-            first--;
             // generare ostacoli randomici
             printf("tot_borders: %d\n", tot_borders);
             printf("i: %d\n", i);
-
-            int n = write(sockfd, &world.obstacle, sizeof(world.obstacle));
-            if (n < 0)
-            {
-                error("ERROR writing to socket");
-            }
         }
     }
 
