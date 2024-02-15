@@ -11,10 +11,14 @@
 #include "include/constants.h"
 #include <sys/ipc.h>
 #include <stdbool.h>
-
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
+
+#define portno 50001
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -87,6 +91,11 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
         log_receipt(prev_t);
     }
 }
+void error(char *msg)
+{
+    perror(msg);
+    // exit(0);
+}
 
 int main(int argc, char *argv[])
 {
@@ -120,6 +129,8 @@ int main(int argc, char *argv[])
         perror("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
+    int sockfd, newsockfd, clilen, pid;
+    struct sockaddr_in serv_addr, cli_addr;
 
     struct Drone drone;
     int process_num;
@@ -146,7 +157,6 @@ int main(int argc, char *argv[])
         sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
         sscanf(argv[20], "%d", &pipeis[PIPE_READ]);
         sscanf(argv[21], "%d", &pipeis[PIPE_WRITE]);
-
     }
     else
     {
@@ -220,11 +230,49 @@ int main(int argc, char *argv[])
 
     struct World world;
     char command;
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        error("ERROR opening socket");
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    //  portno = atoi(argv[1]);
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(portno);
+    int yes = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
+    {
+        perror("setsockopt");
+        // Handle error
+    }
+    while (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        perror("ERROR on binding");
+        sleep(1); // Wait for 1 second before trying again
+    }
+    listen(sockfd, 5);
+    clilen = sizeof(cli_addr);
+    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+    if (newsockfd < 0)
+    {
+        perror("ERROR on accept");
+    }
     while (1)
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
-        read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
+
+        // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
+        read(newsockfd, &world.obstacle, sizeof(world.obstacle));
+
+        for (int i = 0; i < 20; i++)
+        {
+            if (world.obstacle[i].x != 0 && world.obstacle[i].y != 0)
+            {
+                printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
+            }
+        }
+
         read(pipets[PIPE_READ], &world.target, sizeof(world.target));
         read(pipeis[PIPE_READ], &command, sizeof(command));
         write(pipeis[PIPE_WRITE], &command, sizeof(command));
@@ -232,13 +280,13 @@ int main(int argc, char *argv[])
         command = '0';
         printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
 
-        for (int i = 0; i < 9; i++)
-        {
-            if (world.target[i].is_active == true)
-            {
-                printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
-            }
-        }
+        // for (int i = 0; i < 9; i++)
+        // {
+        //     if (world.target[i].is_active == true)
+        //     {
+        //         printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
+        //     }
+        // }
 
         write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
         fsync(pipesw[PIPE_WRITE]);
@@ -258,13 +306,16 @@ int main(int argc, char *argv[])
         // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
         // fsync(pipesd_s[PIPE_WRITE]);
 
-        write(pipeso[PIPE_WRITE], &world, sizeof(world));
-        fsync(pipeso[PIPE_WRITE]);
+        // write(pipeso[PIPE_WRITE], &world, sizeof(world));
+        // fsync(pipeso[PIPE_WRITE]);
+
+        write(newsockfd, &world, sizeof(world));
 
         write(pipest[PIPE_WRITE], &world, sizeof(world));
         fsync(pipest[PIPE_WRITE]);
         printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
     }
-
+    close(newsockfd);
+    close(sockfd);
     return 0;
 }

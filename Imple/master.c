@@ -250,6 +250,7 @@ int main(int argc, char *argv[])
         return 0;
     }
     num_children += 1;
+    sleep(3);
 
     child_process1 = fork();
     if (child_process1 < 0)
@@ -394,8 +395,6 @@ int main(int argc, char *argv[])
     printf("pipesd_t[0] = %d, pipesd_t[1] = %d\n", pipesd_t[PIPE_READ], pipesd_t[PIPE_WRITE]);
     printf("pipesd_s[0] = %d, pipesd_s[1] = %d\n", pipesd_s[PIPE_READ], pipesd_s[PIPE_WRITE]);
     printf("pipeis[0] = %d, pipeis[1] = %d\n", pipeis[PIPE_READ], pipeis[PIPE_WRITE]);
-    
-
 
     printf("Pipe closed successfully\n"); // Print a message indicating that the pipe has been closed successfully
 
