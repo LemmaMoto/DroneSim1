@@ -18,7 +18,8 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define portno 50001
+#define portno_obstacles 50001
+#define portno_targets 50002
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -129,7 +130,10 @@ int main(int argc, char *argv[])
         perror("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
-    int sockfd, newsockfd, clilen, pid;
+
+    int sockfd_obstacles, newsockfd_obstacles;
+    int sockfd_targets, newsockfd_targets;
+    int clilen, pid;
     struct sockaddr_in serv_addr, cli_addr;
 
     struct Drone drone;
@@ -231,26 +235,34 @@ int main(int argc, char *argv[])
     struct World world;
     char command;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-        error("ERROR opening socket");
+    sockfd_obstacles = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd_obstacles < 0)
+        error("ERROR opening socket for obstacles");
     bzero((char *)&serv_addr, sizeof(serv_addr));
-    //  portno = atoi(argv[1]);
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
-    int yes = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
-    {
-        perror("setsockopt");
-        // Handle error
-    }
-    while (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        perror("ERROR on binding");
-        sleep(1); // Wait for 1 second before trying again
-    }
-    listen(sockfd, 5);
+    serv_addr.sin_port = htons(portno_obstacles);
+    if (bind(sockfd_obstacles, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        error("ERROR on binding for obstacles");
+    listen(sockfd_obstacles, 5);
+    newsockfd_obstacles = accept(sockfd_obstacles, (struct sockaddr *)&cli_addr, &clilen);
+    if (newsockfd_obstacles < 0)
+        error("ERROR on accept for obstacles");
+
+    // Set up the socket for targets.c
+    sockfd_targets = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd_targets < 0)
+        error("ERROR opening socket for targets");
+    bzero((char *)&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(portno_targets);
+    if (bind(sockfd_targets, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        error("ERROR on binding for targets");
+    listen(sockfd_targets, 5);
+    newsockfd_targets = accept(sockfd_targets, (struct sockaddr *)&cli_addr, &clilen);
+    if (newsockfd_targets < 0)
+        error("ERROR on accept for targets");
     clilen = sizeof(cli_addr);
     while (1)
     {
@@ -258,8 +270,9 @@ int main(int argc, char *argv[])
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
 
         // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        read(newsockfd, &world.obstacle, sizeof(world.obstacle));
-        read(newsockfd, &world.target, sizeof(world.target));  
+        read(newsockfd_obstacles, &world.obstacle, sizeof(world.obstacle));
+
+        read(newsockfd_targets, &world.target, sizeof(world.target));
 
         for (int i = 0; i < 20; i++)
         {
@@ -305,26 +318,30 @@ int main(int argc, char *argv[])
 
         // write(pipeso[PIPE_WRITE], &world, sizeof(world));
         // fsync(pipeso[PIPE_WRITE]);
-        newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-        if (newsockfd < 0)
-        {
-            error("ERROR on accept");
-        }
-        pid = fork();
-        printf("pid: %d\n", pid);
-        if (pid < 0)
-        {
-            error("ERROR on fork");
-        }
-        if (pid == 0)
-        {
-            close(sockfd);
-            write(newsockfd, &world, sizeof(world)); // to use for the dimensions of the screen (by string)
-            
-        }
-        printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
+
+        // newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+        // if (newsockfd < 0)
+        // {
+        //     error("ERROR on accept");
+        // }
+        // pid = fork();
+        // printf("pid: %d\n", pid);
+        // if (pid < 0)
+        // {
+        //     error("ERROR on fork");
+        // }
+        // if (pid == 0)
+        // {
+        //     close(sockfd);
+        //     write(newsockfd, &world, sizeof(world)); // to use for the dimensions of the screen (by string)
+        // }
+        // printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
+
+        write(newsockfd_obstacles, &world, sizeof(world));
+        write(newsockfd_targets, &world, sizeof(world));
     }
-    close(newsockfd);
-    close(sockfd);
+    // close(newsockfd);
+    // close(sockfd);
+
     return 0;
 }

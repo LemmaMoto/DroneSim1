@@ -21,7 +21,7 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define portno 50001
+#define portno 50002
 
 pid_t watchdog_pid;
 pid_t process_id;

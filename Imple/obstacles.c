@@ -125,8 +125,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int sockfd, n;
-
+    int sockfd;
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
@@ -240,7 +239,7 @@ int main(int argc, char *argv[])
     if (server == NULL)
     {
         fprintf(stderr, "ERROR, no such host\n");
-        // exit(0);
+        exit(0);
     }
     bzero((char *)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
@@ -248,8 +247,8 @@ int main(int argc, char *argv[])
     serv_addr.sin_port = htons(portno);
     while (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
-        perror("ERROR connecting");
-        sleep(1); // Wait for 1 second before trying again
+        error("ERROR connecting");
+        sleep(1);
     }
 
     while (1)
