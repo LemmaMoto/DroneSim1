@@ -175,8 +175,8 @@ int stringToTargets(char *str, struct Target *targets)
             targets[i].x = (int)x;
             targets[i].y = (int)y;
             targets[i].symbol = 'T';
-            targets[i].is_active = true;
-            targets[i].is_visible = true;
+            // targets[i].is_active = true;
+            // targets[i].is_visible = true;
 
             // Find the start of the next target
             targetData = strchr(targetData, '|');
@@ -364,10 +364,19 @@ int main(int argc, char *argv[])
     clilen = sizeof(cli_addr);
 
     int n;
-    char buffer[1024];
-    char string[1024];
+    char buffer_ob[1024];
+    char buffer_t[1024];
+    char string_ob[1024];
+    char string_t[1024];
     // int num_obstacles = 20;
     struct Obstacle obstacles[20];
+    struct Target targets[9];
+    static struct Target persistent_targets[9];
+    for (int i = 0; i < 9; i++)
+    {
+        persistent_targets[i].is_active = true;
+        persistent_targets[i].is_visible = true;
+    }
     while (1)
     {
         n = read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
@@ -378,24 +387,24 @@ int main(int argc, char *argv[])
         if (n < 0)
             error("ERROR reading from pipeds\n");
 
-        n = read(newsockfd_obstacles, buffer, sizeof(buffer));
+        n = read(newsockfd_obstacles, buffer_ob, sizeof(buffer_ob));
         if (n < 0)
             error("ERROR reading from newsockfd_obstacles\n");
 
-        char *p = strstr(buffer, "|00|"); // Find "00" in the buffer
+        char *p = strstr(buffer_ob, "|00|"); // Find "00" in the buffer
         if (p != NULL)
         {
             *p = '\0'; // If found, replace it with '\0'
         }
 
-        if (buffer[0] == 'O')
+        if (buffer_ob[0] == 'O')
         {
-            strcpy(string, buffer);
+            strcpy(string_ob, buffer_ob);
         }
-        printf("string: %s\n", string);
+        printf("string: %s\n", string_ob);
 
         int num_obstacles = 0;
-        num_obstacles = stringToObstacles(string, obstacles);
+        num_obstacles = stringToObstacles(string_ob, obstacles);
         printf("num_obstacles: %d\n", num_obstacles);
         if (num_obstacles <= 0 || num_obstacles > 21)
         {
@@ -414,21 +423,21 @@ int main(int argc, char *argv[])
                 printf("world.obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
             }
         }
-        n = read(newsockfd_targets, buffer, sizeof(buffer));
+        n = read(newsockfd_targets, buffer_t, sizeof(buffer_t));
         if (n < 0)
             error("ERROR reading from newsockfd_targets\n");
-        char *p_t = strstr(buffer, "|00|"); // Find "00" in the buffer
+        char *p_t = strstr(buffer_t, "|00|"); // Find "00" in the buffer
         if (p_t != NULL)
         {
             *p_t = '\0'; // If found, replace it with '\0'
         }
-        if (buffer[0] == 'T')
+        if (buffer_t[0] == 'T')
         {
-            strcpy(string, buffer);
+            strcpy(string_t, buffer_t);
         }
-        printf("string: %s\n", string);
+        printf("string: %s\n", string_t);
         int num_targets = 0;
-        num_targets = stringToTargets(string, world.target);
+        num_targets = stringToTargets(string_t, targets);
         printf("num_targets: %d\n", num_targets);
         if (num_targets <= 0 || num_targets > 10)
         {
@@ -440,7 +449,27 @@ int main(int argc, char *argv[])
             printf("DEBUG: num_targets else: %d\n", num_targets);
             for (int i = 0; i < 9; i++)
             {
-                printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
+                printf("target %d x: %d, y: %d, is_active: %d\n", i, targets[i].x, targets[i].y, targets[i].is_active);
+                world.target[i].x = targets[i].x;
+                world.target[i].y = targets[i].y;
+                world.target[i].symbol = 'T';
+                world.target[i].is_active = true;
+                world.target[i].is_visible = true;
+                printf("world.target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
+            }
+
+            for (int i = 0; i < 9; i++)
+            {
+
+                if (world.drone.x == world.target[i].x && world.drone.y == world.target[i].y)
+                {
+                    // If it does, make the target inactive and invisible
+                    persistent_targets[i].is_active = false;
+                    persistent_targets[i].is_visible = false;
+                }
+
+                world.target[i].is_active = persistent_targets[i].is_active;
+                world.target[i].is_visible = persistent_targets[i].is_visible;
             }
         }
 
@@ -453,14 +482,6 @@ int main(int argc, char *argv[])
         printf("command: %c\n", command);
         command = '0';
         printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
-
-        // for (int i = 0; i < 9; i++)
-        // {
-        //     if (world.target[i].is_active == true)
-        //     {
-        //         printf("target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
-        //     }
-        // }
 
         n = write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
         if (n < 0)

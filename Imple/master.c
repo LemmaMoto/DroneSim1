@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
         return 0;
     }
     num_children += 1;
-    // sleep(3);
+    sleep(1);
 
     child_process1 = fork();
     if (child_process1 < 0)
