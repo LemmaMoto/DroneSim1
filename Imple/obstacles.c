@@ -125,12 +125,17 @@ char *obstaclesToString(struct Obstacle *obstacles, int num_obstacles)
         // Add the obstacle string to the main string
         strcat(str, obstacleStr);
     }
+    strcat(str, "\0");
 
     return str;
 }
 
 int main(int argc, char *argv[])
 {
+
+    char *obstaclesStr = malloc(1024 * sizeof(char));
+    free(obstaclesStr);
+
     // Define a signal set
     sigset_t set;
 
@@ -166,7 +171,6 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
-    char buffer[256];
     int process_num;
     if (argc == 6)
     {
@@ -346,7 +350,7 @@ int main(int argc, char *argv[])
                 }
                 last_spawn_time = time(NULL);
                 first--;
-                char *obstaclesStr = obstaclesToString(world.obstacle, NUM_OBSTACLES);
+                obstaclesStr = obstaclesToString(world.obstacle, NUM_OBSTACLES);
                 printf("obstaclesStr: %s\n", obstaclesStr);
 
                 int n = write(sockfd, obstaclesStr, strlen(obstaclesStr));

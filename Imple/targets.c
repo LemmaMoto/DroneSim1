@@ -104,8 +104,38 @@ void error(char *msg)
     }
 }
 
+char *targetsToString(struct Target *targets, int num_targets)
+{
+    // Allocate memory for the string
+    char *str = malloc(1024 * sizeof(char));
+    if (str == NULL)
+    {
+        error("ERROR allocating memory for string");
+    }
+
+    // Start the string with 'O' and the number of obstacles
+    sprintf(str, "T[%d]", num_targets);
+
+    // Add each obstacle to the string
+    for (int i = 0; i < num_targets; i++)
+    {
+        char targetStr[1024];
+
+        // Format the obstacle's coordinates as a string
+        sprintf(targetStr, "%.3f,%.3f|", (float)targets[i].x, (float)targets[i].y);
+
+        // Add the obstacle string to the main string
+        strcat(str, targetStr);
+    }
+    strcat(str, "\0");
+
+    return str;
+}
+
 int main(int argc, char *argv[])
 {
+    char *targetsStr = malloc(1024 * sizeof(char));
+    free(targetsStr);
     // Define a signal set
     sigset_t set;
 
@@ -335,7 +365,15 @@ int main(int argc, char *argv[])
             }
 
             first--;
-            write(sockfd, &world.target, sizeof(world.target));
+            targetsStr = targetsToString(world.target, NUM_TARGETS);
+            printf("targetsStr: %s\n", targetsStr);
+
+            int n = write(sockfd, targetsStr, strlen(targetsStr));
+            if (n < 0)
+            {
+                error("ERROR writing to socket");
+            }
+            free(targetsStr);
         }
     }
     return 0;
