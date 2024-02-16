@@ -120,20 +120,14 @@ char *obstaclesToString(struct Obstacle *obstacles, int num_obstacles)
         char obstacleStr[1024];
 
         // Format the obstacle's coordinates as a string
-        sprintf(obstacleStr, "%.3f,%.3f", (float)obstacles[i].x, (float)obstacles[i].y);
+        sprintf(obstacleStr, "%.3f,%.3f|", (float)obstacles[i].x, (float)obstacles[i].y);
 
         // Add the obstacle string to the main string
-        // If this is not the first obstacle, add a '|' before the obstacle string
-        if (i > 0)
-        {
-            strcat(str, "|");
-        }
         strcat(str, obstacleStr);
     }
 
     return str;
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -354,6 +348,7 @@ int main(int argc, char *argv[])
                 first--;
                 char *obstaclesStr = obstaclesToString(world.obstacle, NUM_OBSTACLES);
                 printf("obstaclesStr: %s\n", obstaclesStr);
+
                 int n = write(sockfd, obstaclesStr, strlen(obstaclesStr));
                 if (n < 0)
                 {
