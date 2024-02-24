@@ -77,15 +77,6 @@ void log_receipt(struct timeval tv)
     fclose(lf_fp);
 }
 
-void watchdog_handler(int sig, siginfo_t *info, void *context)
-{
-    // printf("received signal \n");
-    if (info->si_pid == watchdog_pid)
-    {
-        gettimeofday(&prev_t, NULL);
-        log_receipt(prev_t);
-    }
-}
 void error(char *msg)
 {
     FILE *logFile = fopen("log/obstacles/error_log_obstacles.txt", "a");
@@ -136,37 +127,6 @@ int main(int argc, char *argv[])
     char *obstaclesStr = malloc(1024 * sizeof(char));
     free(obstaclesStr);
 
-    // Define a signal set
-    sigset_t set;
-
-    // Initialize the signal set to empty
-    sigemptyset(&set);
-
-    // Add SIGUSR1 to the set
-    sigaddset(&set, SIGUSR1);
-
-    // Block SIGUSR1
-    if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
-    {
-        error("sigprocmask"); // Print an error message if the signal can't be blocked
-        return -1;
-    }
-    // Set up sigaction for receiving signals from the watchdog process
-    struct sigaction p_action;
-    p_action.sa_flags = SA_SIGINFO;
-    p_action.sa_sigaction = watchdog_handler;
-    if (sigaction(SIGUSR1, &p_action, NULL) < 0)
-    {
-        error("sigaction"); // Print an error message if the signal can't be set up
-    }
-
-    // Unblock SIGUSR1
-    if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
-    {
-        error("sigprocmask"); // Print an error message if the signal can't be unblocked
-        return -1;
-    }
-
     int sockfd;
     struct sockaddr_in serv_addr;
     struct hostent *server;
@@ -189,47 +149,6 @@ int main(int argc, char *argv[])
 
     // Publish your pid
     process_id = getpid();
-
-    char *fnames[NUM_PROCESSES] = PID_FILE_SP;
-
-    FILE *pid_fp = fopen(fnames[process_num], "w");
-    fprintf(pid_fp, "%d", process_id);
-    fclose(pid_fp);
-
-    printf("Published pid %d \n", process_id);
-
-    // Read watchdog pid
-    FILE *watchdog_fp = NULL;
-    struct stat sbuf;
-
-    /* call stat, fill stat buffer, validate success */
-    if (stat(PID_FILE_PW, &sbuf) == -1)
-    {
-        error("error-stat");
-        return -1;
-    }
-    // waits until the file has data
-    while (sbuf.st_size <= 0)
-    {
-        if (stat(PID_FILE_PW, &sbuf) == -1)
-        {
-            error("error-stat");
-            return -1;
-        }
-        usleep(50000);
-    }
-
-    watchdog_fp = fopen(PID_FILE_PW, "r");
-
-    fscanf(watchdog_fp, "%d", &watchdog_pid);
-    printf("watchdog pid %d \n", watchdog_pid);
-    fclose(watchdog_fp);
-
-    // Read how long to sleep process for
-    int sleep_durations[NUM_PROCESSES] = PROCESS_SLEEPS_US;
-    int sleep_duration = sleep_durations[process_num];
-    char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
-    process_name = process_names[process_num]; // added to logfile for readability
 
     // leggere da file file_para numero di ostacoli
     FILE *file = fopen("file_para.txt", "r");

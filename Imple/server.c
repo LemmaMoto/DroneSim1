@@ -433,53 +433,59 @@ int main(int argc, char *argv[])
         n = read(newsockfd_targets, buffer_t, sizeof(buffer_t));
         if (n < 0)
             error("ERROR reading from newsockfd_targets\n");
-        char *p_t = strstr(buffer_t, "|00|"); // Find "00" in the buffer
-        if (p_t != NULL)
+        if (buffer_t[1] == 'I')
         {
-            *p_t = '\0'; // If found, replace it with '\0'
-        }
-        if (buffer_t[0] == 'T')
-        {
-            strcpy(string_t, buffer_t);
-        }
-        printf("string: %s\n", string_t);
-        int num_targets = 0;
-        num_targets = stringToTargets(string_t, targets);
-        printf("num_targets: %d\n", num_targets);
-        if (num_targets <= 0 || num_targets > 10)
-        {
-            printf("DEBUG: num_targets: %d\n", num_targets);
-            error("ERROR parsing target string");
+            printf("buffer_t: %s\n", buffer_t); // should be TI
         }
         else
         {
-            printf("DEBUG: num_targets else: %d\n", num_targets);
-            for (int i = 0; i < 9; i++)
+            char *p_t = strstr(buffer_t, "|00|"); // Find "00" in the buffer
+            if (p_t != NULL)
             {
-                printf("target %d x: %d, y: %d, is_active: %d\n", i, targets[i].x, targets[i].y, targets[i].is_active);
-                world.target[i].x = targets[i].x;
-                world.target[i].y = targets[i].y;
-                world.target[i].symbol = 'T';
-                world.target[i].is_active = true;
-                world.target[i].is_visible = true;
-                printf("world.target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
+                *p_t = '\0'; // If found, replace it with '\0'
             }
-
-            for (int i = 0; i < 9; i++)
+            if (buffer_t[0] == 'T')
             {
-
-                if (world.drone.x == world.target[i].x && world.drone.y == world.target[i].y)
+                strcpy(string_t, buffer_t);
+            }
+            printf("string: %s\n", string_t);
+            int num_targets = 0;
+            num_targets = stringToTargets(string_t, targets);
+            printf("num_targets: %d\n", num_targets);
+            if (num_targets <= 0 || num_targets > 10)
+            {
+                printf("DEBUG: num_targets: %d\n", num_targets);
+                error("ERROR parsing target string");
+            }
+            else
+            {
+                printf("DEBUG: num_targets else: %d\n", num_targets);
+                for (int i = 0; i < 9; i++)
                 {
-                    // If it does, make the target inactive and invisible
-                    persistent_targets[i].is_active = false;
-                    persistent_targets[i].is_visible = false;
+                    printf("target %d x: %d, y: %d, is_active: %d\n", i, targets[i].x, targets[i].y, targets[i].is_active);
+                    world.target[i].x = targets[i].x;
+                    world.target[i].y = targets[i].y;
+                    world.target[i].symbol = 'T';
+                    world.target[i].is_active = true;
+                    world.target[i].is_visible = true;
+                    printf("world.target %d x: %d, y: %d, is_active: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].is_active);
                 }
 
-                world.target[i].is_active = persistent_targets[i].is_active;
-                world.target[i].is_visible = persistent_targets[i].is_visible;
+                for (int i = 0; i < 9; i++)
+                {
+
+                    if (world.drone.x == world.target[i].x && world.drone.y == world.target[i].y)
+                    {
+                        // If it does, make the target inactive and invisible
+                        persistent_targets[i].is_active = false;
+                        persistent_targets[i].is_visible = false;
+                    }
+
+                    world.target[i].is_active = persistent_targets[i].is_active;
+                    world.target[i].is_visible = persistent_targets[i].is_visible;
+                }
             }
         }
-
         n = read(pipeis[PIPE_READ], &command, sizeof(command));
         if (n < 0)
             error("ERROR reading from pipeis\n");
