@@ -391,36 +391,43 @@ int main(int argc, char *argv[])
         if (n < 0)
             error("ERROR reading from newsockfd_obstacles\n");
 
-        char *p = strstr(buffer_ob, "|00|"); // Find "00" in the buffer
-        if (p != NULL)
+        if (buffer_ob[1] == 'I')
         {
-            *p = '\0'; // If found, replace it with '\0'
-        }
-
-        if (buffer_ob[0] == 'O')
-        {
-            strcpy(string_ob, buffer_ob);
-        }
-        printf("string: %s\n", string_ob);
-
-        int num_obstacles = 0;
-        num_obstacles = stringToObstacles(string_ob, obstacles);
-        printf("num_obstacles: %d\n", num_obstacles);
-        if (num_obstacles <= 0 || num_obstacles > 21)
-        {
-            printf("DEBUG: num_obstacles: %d\n", num_obstacles);
-            error("ERROR parsing obstacle string");
+            printf("buffer_ob: %s\n", buffer_ob); // should be OI
         }
         else
         {
-            printf("DEBUG: num_obstacles else: %d\n", num_obstacles);
-            for (int i = 0; i < 20; i++)
+            char *p = strstr(buffer_ob, "|00|"); // Find "00" in the buffer
+            if (p != NULL)
             {
-                printf("obstacle %d x: %d, y: %d\n", i, obstacles[i].x, obstacles[i].y);
-                world.obstacle[i].x = obstacles[i].x;
-                world.obstacle[i].y = obstacles[i].y;
-                world.obstacle[i].symbol = '#';
-                printf("world.obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
+                *p = '\0'; // If found, replace it with '\0'
+            }
+
+            if (buffer_ob[0] == 'O')
+            {
+                strcpy(string_ob, buffer_ob);
+            }
+            printf("string: %s\n", string_ob);
+
+            int num_obstacles = 0;
+            num_obstacles = stringToObstacles(string_ob, obstacles);
+            printf("num_obstacles: %d\n", num_obstacles);
+            if (num_obstacles <= 0 || num_obstacles > 21)
+            {
+                printf("DEBUG: num_obstacles: %d\n", num_obstacles);
+                error("ERROR parsing obstacle string");
+            }
+            else
+            {
+                printf("DEBUG: num_obstacles else: %d\n", num_obstacles);
+                for (int i = 0; i < 20; i++)
+                {
+                    printf("obstacle %d x: %d, y: %d\n", i, obstacles[i].x, obstacles[i].y);
+                    world.obstacle[i].x = obstacles[i].x;
+                    world.obstacle[i].y = obstacles[i].y;
+                    world.obstacle[i].symbol = '#';
+                    printf("world.obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
+                }
             }
         }
         n = read(newsockfd_targets, buffer_t, sizeof(buffer_t));

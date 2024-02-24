@@ -1,38 +1,22 @@
-#include <ncurses.h>
-#include <string.h>
-#include <time.h>
-#include "include/constants.h"
-#include <signal.h>
 #include <fcntl.h>
+#include <ncurses.h>
+#include <signal.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
-#include <errno.h>
+#include "include/constants.h"
 
 pid_t sp_pids[NUM_PROCESSES];
 struct timeval prev_ts[NUM_PROCESSES];
-int process_data_recieved[NUM_PROCESSES] = {0, 0, 0, 0, 0, 0};
+int process_data_recieved[NUM_PROCESSES] = {0, 0, 0, 0};
 char logfile_name[256] = LOG_FILE_NAME;
 int logfile_line = 0;                               // line to read from in the log file
 char *process_names[NUM_PROCESSES] = PROCESS_NAMES; // Names to be displayed
 
-void error(char *msg)
-{
-    FILE *logFile = fopen("log/watchdog/error_log_watchdog.txt", "a");
-    if (logFile != NULL)
-    {
-        time_t now = time(NULL);
-        char timeStr[20]; // Buffer to hold the time string
-        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
-        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
-        fclose(logFile);
-    }
-    else
-    {
-        perror("ERROR opening log file");
-    }
-}
 void check_log_file()
 {
     FILE *file = fopen(logfile_name, "r");
@@ -43,7 +27,7 @@ void check_log_file()
     long seconds;
     long microseconds;
     int p_idx;
-
+    mvprintw(5, 1, "Checking log file\n");
     // skip all data until new lines
     while (i < logfile_line)
     {
@@ -54,6 +38,7 @@ void check_log_file()
     while (fgets(line, sizeof(line), file))
     {
         sscanf(line, "%d %ld %ld", &process_id, &seconds, &microseconds);
+        mvprintw(1, 1, "Process ID: %d, Seconds: %ld, Microseconds: %ld\n", process_id, seconds, microseconds);
 
         // Get index of process from its id
         p_idx = 0;
@@ -78,13 +63,9 @@ WINDOW *create_newwin(int height, int width, int starty, int startx)
     WINDOW *local_win;
     local_win = newwin(height, width, starty, startx);
     box(local_win, 0, 0);
-    /* 0, 0 gives default characters
-     * for the vertical and horizontal
-     * lines
-     */
+
     wrefresh(local_win);
-    /* Show that box
-     */
+
     return local_win;
 }
 
@@ -111,8 +92,12 @@ int update_window_text(WINDOW **windows)
             elapsed = get_elapsed_time_s(read_time, prev_ts[i]);
             if (elapsed > PROCESS_TIMEOUT_S)
             {
-                // wattron(windows[i], COLOR_PAIR(1))
+                wattron(windows[i], COLOR_PAIR(1));
                 return -1;
+            }
+            else if (elapsed > PROCESS_TIMEOUT_S / 4)
+            {
+                wattron(windows[i], COLOR_PAIR(2));
             }
             else
             {
@@ -132,7 +117,11 @@ void terminate_all_watched_processes()
     {
         if (kill(sp_pids[i], SIGKILL) < 0)
         {
-            error("kill");
+            perror("kill");
+        }
+        else
+        {
+            mvprintw(2, 1, "Killed process %d\n", i);
         }
     }
 }
@@ -141,7 +130,7 @@ int main(int argc, char *argv[])
 {
     // publish the watchdog pid
     pid_t watchdog_pid = getpid();
-
+    printf("Watchdog PID: %d\n", watchdog_pid);
     FILE *watchdog_fp = fopen(PID_FILE_PW, "w");
     fprintf(watchdog_fp, "%d", watchdog_pid);
     fclose(watchdog_fp);
@@ -157,7 +146,7 @@ int main(int argc, char *argv[])
         /* call stat, fill stat buffer, validate success */
         if (stat(fnames[i], &sbuf) == -1)
         {
-            error("error-stat");
+            perror("error-stat");
             return -1;
         }
 
@@ -165,7 +154,7 @@ int main(int argc, char *argv[])
         {
             if (stat(fnames[i], &sbuf) == -1)
             {
-                error("error-stat");
+                perror("error-stat");
                 return -1;
             }
             usleep(50000);
@@ -174,7 +163,7 @@ int main(int argc, char *argv[])
         pid_fp = fopen(fnames[i], "r");
 
         fscanf(pid_fp, "%d", &sp_pids[i]);
-
+        mvprintw(3, 1, "Process %d PID: %d\n", i, sp_pids[i]);
         fclose(pid_fp);
     }
 
@@ -243,10 +232,7 @@ int main(int argc, char *argv[])
             // Send new signal
             for (int i = 0; i < NUM_PROCESSES; i++)
             {
-                if (kill(sp_pids[i], SIGUSR1) < 0)
-                {
-                    // error("kill");  //This does weird things to the ncurses window if I leave it in
-                }
+                kill(sp_pids[i], SIGUSR1);
             }
             signal_count = 0;
         }

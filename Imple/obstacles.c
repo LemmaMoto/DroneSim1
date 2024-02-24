@@ -291,7 +291,12 @@ int main(int argc, char *argv[])
         error("ERROR connecting");
         sleep(1);
     }
-
+    char buffer[1024] = "OI";
+    int n = write(sockfd, buffer, strlen(buffer));
+    if (n < 0)
+    {
+        error("ERROR writing to socket");
+    }
     while (1)
     {
         if (read(sockfd, &world, sizeof(world)) == -1)
