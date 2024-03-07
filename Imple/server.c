@@ -14,11 +14,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <errno.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define portno 4444
+#define portno 50000
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -76,8 +77,19 @@ int pipeis[2];
 
 void error(char *msg)
 {
-    perror(msg);
-    // exit(1);
+    FILE *logFile = fopen("log/server/error_log_server.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
 }
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -111,7 +123,7 @@ int main(int argc, char *argv[])
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
+        error("sigprocmask"); // Print an error message if the signal can't be blocked
         return -1;
     }
     // Set up sigaction for receiving signals from the watchdog process
@@ -120,13 +132,13 @@ int main(int argc, char *argv[])
     p_action.sa_sigaction = watchdog_handler;
     if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
-        perror("sigaction"); // Print an error message if the signal can't be set up
+        error("sigaction"); // Print an error message if the signal can't be set up
     }
 
     // Unblock SIGUSR1
     if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+        error("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
 
@@ -203,7 +215,7 @@ int main(int argc, char *argv[])
     /* call stat, fill stat buffer, validate success */
     if (stat(PID_FILE_PW, &sbuf) == -1)
     {
-        perror("error-stat");
+        error("error-stat");
         return -1;
     }
     // waits until the file has data
@@ -211,7 +223,7 @@ int main(int argc, char *argv[])
     {
         if (stat(PID_FILE_PW, &sbuf) == -1)
         {
-            perror("error-stat");
+            error("error-stat");
             return -1;
         }
         usleep(50000);
@@ -243,12 +255,12 @@ int main(int argc, char *argv[])
     int yes = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
     {
-        perror("setsockopt");
+        error("setsockopt");
         // Handle error
     }
     while (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
-        perror("ERROR on binding");
+        error("ERROR on binding");
         sleep(1); // Wait for 1 second before trying again
     }
     listen(sockfd, 5);
@@ -334,9 +346,9 @@ int main(int argc, char *argv[])
             char buffer2[1024];
             while (1)
             {
-                bzero(buffer, 1024);
+                bzero(buffer, sizeof(buffer));
                 sleep(1);
-                n = read(newsockfd, buffer, 1024);
+                n = read(newsockfd, buffer, sizeof(buffer));
                 // int n2 = read(newsockfd, buffer2, 1024);
                 printf("buffer: %s\n", buffer);
                 // printf("buffer2: %s\n", buffer2);
@@ -350,8 +362,12 @@ int main(int argc, char *argv[])
                     {
                     case 'O':
                         if (buffer[1] == 'I')
-                        {   
+                        {
                             n = write(newsockfd, buffer, sizeof(buffer)); // Send the message back to the client echo
+                            printf("MERGED NUFFER DIM FINESTRA: %s\n", merged_buffer);
+                            sleep(1);
+                            n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
+                            
                         }
                         else
                         {
@@ -427,14 +443,14 @@ int main(int argc, char *argv[])
                         }
                         break;
                     default:
-                        // if (strcmp(buffer, buffer_check) != 0)
-                        // {
-                        //     n = write(newsockfd, buffer, sizeof(buffer));
-                        // }
-                        // else if (strcmp(buffer, buffer_check) == 0)
-                        // {
-                        //     bzero(buffer, 1024);
-                        // }
+                        if (strcmp(buffer, buffer_check) != 0)
+                        {
+                            n = write(newsockfd, buffer, sizeof(buffer));
+                        }
+                        else if (strcmp(buffer, buffer_check) == 0)
+                        {
+                            bzero(buffer, 1024);
+                        }
                         break;
                     }
                     for (int i = 0; i < 9; i++)

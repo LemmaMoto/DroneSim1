@@ -8,6 +8,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 
 pid_t sp_pids[NUM_PROCESSES];
 struct timeval prev_ts[NUM_PROCESSES];

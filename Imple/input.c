@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <errno.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -25,6 +26,22 @@ struct timeval prev_t;
 char logfile_name[256] = LOG_FILE_NAME;
 
 // Dichiarazioni delle variabili globali
+void error(char *msg)
+{
+    FILE *logFile = fopen("log/input/error_log_input.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
 int pipefd[2];
 
 pid_t drone_pid;
@@ -283,7 +300,7 @@ void ui_process()
             }
             else if (retwrite < 0)
             {
-                perror("write");
+                error("write");
                 mvprintw(0, 0, "Error writing to pipe\n");
 
                 continue;
@@ -307,7 +324,7 @@ void log_receipt(struct timeval tv)
     FILE *lf_fp = fopen(logfile_name, "a");
     if (lf_fp == NULL)
     {
-        perror("fopen");
+        error("fopen");
         return;
     }
     fprintf(lf_fp, "%d %ld %ld\n", process_id, tv.tv_sec, tv.tv_usec);
@@ -337,7 +354,7 @@ int main(int argc, char *argv[])
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
+        error("sigprocmask"); // Print an error message if the signal can't be blocked
         return -1;
     }
     // Set up sigaction for receiving signals from the watchdog process
@@ -346,13 +363,13 @@ int main(int argc, char *argv[])
     p_action.sa_sigaction = watchdog_handler;
     if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
-        perror("sigaction"); // Print an error message if the signal can't be set up
+        error("sigaction"); // Print an error message if the signal can't be set up
     }
 
     // Unblock SIGUSR1
     if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+        error("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
 
@@ -389,7 +406,7 @@ int main(int argc, char *argv[])
     /* call stat, fill stat buffer, validate success */
     if (stat(PID_FILE_PW, &sbuf) == -1)
     {
-        perror("error-stat");
+        error("error-stat");
         return -1;
     }
     // waits until the file has data
@@ -397,7 +414,7 @@ int main(int argc, char *argv[])
     {
         if (stat(PID_FILE_PW, &sbuf) == -1)
         {
-            perror("error-stat");
+            error("error-stat");
             return -1;
         }
         usleep(50000);

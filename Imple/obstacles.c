@@ -21,7 +21,24 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define portno 4444
+#define portno 50000
+
+void error(char *msg)
+{
+    FILE *logFile = fopen("log/obstacles/error_log_obstacles.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[20]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -69,12 +86,6 @@ struct World
 int pipeso[2];
 int pipeos[2];
 
-void error(char *msg)
-{
-    perror(msg);
-    // exit(0);
-}
-
 // logs time update to file
 void log_receipt(struct timeval tv)
 {
@@ -108,7 +119,7 @@ int main(int argc, char *argv[])
     // Block SIGUSR1
     if (sigprocmask(SIG_BLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be blocked
+        error("sigprocmask"); // Print an error message if the signal can't be blocked
         return -1;
     }
     // Set up sigaction for receiving signals from the watchdog process
@@ -117,13 +128,13 @@ int main(int argc, char *argv[])
     p_action.sa_sigaction = watchdog_handler;
     if (sigaction(SIGUSR1, &p_action, NULL) < 0)
     {
-        perror("sigaction"); // Print an error message if the signal can't be set up
+        error("sigaction"); // Print an error message if the signal can't be set up
     }
 
     // Unblock SIGUSR1
     if (sigprocmask(SIG_UNBLOCK, &set, NULL) < 0)
     {
-        perror("sigprocmask"); // Print an error message if the signal can't be unblocked
+        error("sigprocmask"); // Print an error message if the signal can't be unblocked
         return -1;
     }
 
@@ -169,7 +180,7 @@ int main(int argc, char *argv[])
     /* call stat, fill stat buffer, validate success */
     if (stat(PID_FILE_PW, &sbuf) == -1)
     {
-        perror("error-stat");
+        error("error-stat");
         return -1;
     }
     // waits until the file has data
@@ -177,7 +188,7 @@ int main(int argc, char *argv[])
     {
         if (stat(PID_FILE_PW, &sbuf) == -1)
         {
-            perror("error-stat");
+            error("error-stat");
             return -1;
         }
         usleep(50000);
@@ -199,7 +210,7 @@ int main(int argc, char *argv[])
     FILE *file = fopen("file_para.txt", "r");
     if (file == NULL)
     {
-        perror("Unable to open file");
+        error("Unable to open file");
         exit(EXIT_FAILURE);
     }
 
@@ -252,7 +263,7 @@ int main(int argc, char *argv[])
     serv_addr.sin_port = htons(portno);
     while (connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
-        perror("ERROR connecting");
+        error("ERROR connecting");
         sleep(1); // Wait for 1 second before trying again
     }
 
@@ -262,40 +273,41 @@ int main(int argc, char *argv[])
     // to keep sending the OI command until the server responds with the same string
     while (var)
     {
-        bzero(buffer, 1024);
+        bzero(buffer, sizeof(buffer));
         strcpy(buffer, "OI");
-        n = write(sockfd, buffer, strlen(buffer));
+        n = write(sockfd, buffer, sizeof(buffer));
         if (n < 0)
         {
-            // perror("ERROR writing to socket");
+            // error("ERROR writing to socket");
         }
-        sleep(1);                 // PROVARE AD AUMENTARE LO SLEEP
-        bzero(buffer_echo, 1024); // Clear the echo buffer before reading into it
+        sleep(1);                                // PROVARE AD AUMENTARE LO SLEEP
+        bzero(buffer_echo, sizeof(buffer_echo)); // Clear the echo buffer before reading into it
         int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo) - 1);
         if (n_r < 0)
         {
-            perror("ERROR reading from socket");
+            error("ERROR reading from socket");
         }
         else if (n_r == 0)
         {
-            perror("STRANO ERRORE");
+            error("STRANO ERRORE");
         }
         printf("ECHOOOOOOOO: %s\n", buffer_echo);
         printf("BUUUUUUFFEEERR: %s\n", buffer);
         if (strcmp(buffer, buffer_echo) == 0)
         {
             printf("UGUALI");
+            var = false;
         }
     }
 
     while (1)
     {
         sleep(1);
-        bzero(buffer, 1024);
-        n = read(sockfd, buffer, 1024);
+        bzero(buffer, sizeof(buffer));
+        n = read(sockfd, buffer, sizeof(buffer));
         if (n < 0)
         {
-            // error("ERROR reading from socket");
+            error("ERROR reading from socket");
         }
 
         printf("\nECHO %s", buffer);
@@ -303,7 +315,7 @@ int main(int argc, char *argv[])
         {
             printf("\nEcho OK");
         }
-        // n = write(sockfd, buffer, sizeof(buffer));
+        printf("STRINGA CHE ARRIVA PER DEBUG: %s\n", buffer);
 
         char height_str[8];
         height_str[0] = '\0';
