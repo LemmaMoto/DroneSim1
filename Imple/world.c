@@ -259,6 +259,7 @@ int main(int argc, char *argv[])
         {
             if (world.obstacle[i].y < height && world.obstacle[i].x < width)
             {
+                error("Obstacles");
                 attron(COLOR_PAIR(3));
                 mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol);
                 attroff(COLOR_PAIR(3));
@@ -267,6 +268,7 @@ int main(int argc, char *argv[])
 
         if (world.drone.y < height && world.drone.x < width)
         {
+            error("Drone");
             attron(COLOR_PAIR(world.drone.color_pair));
             mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol);
             attroff(COLOR_PAIR(world.drone.color_pair));
@@ -295,7 +297,7 @@ int main(int argc, char *argv[])
             fsync(pipesd_s[PIPE_WRITE]) == -1;
         }
 
-        refresh(); // Refresh the screen to show the changes
+        // refresh(); // Refresh the screen to show the changes
     }
     endwin();
     return 0;

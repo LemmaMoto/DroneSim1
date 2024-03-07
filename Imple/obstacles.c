@@ -300,6 +300,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    bool is_window_initialized = false;
+
     while (1)
     {
         sleep(1);
@@ -331,19 +333,21 @@ int main(int argc, char *argv[])
         width_str[8] = '\0'; // Null-terminate the string
         width = atof(width_str);
         printf("height: %f, width: %f\n", height, width);
+       
+        
 
-        if (height >= 1 && width >= 1)
+        if (height >= 1 && width >= 1 && !is_window_initialized)
         {
+            is_window_initialized = true;
             world.screen.height = height;
             world.screen.width = width;
-
             tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
 
             char obs_pos[1024];
             char str[64];
             sprintf(str, "%d", NUM_OBSTACLES);
             strcpy(&obs_pos[2], str);
-            if (NUM_OBSTACLES > 9 && NUM_OBSTACLES < 100)
+              if (NUM_OBSTACLES > 9 && NUM_OBSTACLES < 100)
             {
                 obs_pos[0] = 'O';
                 obs_pos[1] = '[';
@@ -370,6 +374,8 @@ int main(int argc, char *argv[])
             time_t current_time = time(NULL);
             if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
             {
+
+                printf("Obstacle generation\n");
                 for (; i < NUM_OBSTACLES; i++)
                 {
                     int isSamePosition;
@@ -409,6 +415,7 @@ int main(int argc, char *argv[])
                 last_spawn_time = current_time;
             }
             first--;
+            var = true;
             // generare ostacoli randomici
             printf("tot_borders: %d\n", tot_borders);
             printf("i: %d\n", i);

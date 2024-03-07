@@ -271,6 +271,7 @@ int main(int argc, char *argv[])
     buffer_screen2[0] = '\0';
     char merged_buffer[1024];
     merged_buffer[0] = '\0';
+    char finestra[1024] = "38.000,151.000";
     while (1)
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
@@ -364,9 +365,9 @@ int main(int argc, char *argv[])
                         if (buffer[1] == 'I')
                         {
                             n = write(newsockfd, buffer, sizeof(buffer)); // Send the message back to the client echo
-                            printf("MERGED NUFFER DIM FINESTRA: %s\n", merged_buffer);
+                            printf("MERGED NUFFER DIM FINESTRA: %s\n", finestra);
                             sleep(1);
-                            n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
+                            n = write(newsockfd, finestra, sizeof(finestra));
                             
                         }
                         else
