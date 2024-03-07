@@ -1,0 +1,15 @@
+q: QUIT THE GAME
+
+The 'W' represents the Drone. Increase the thrust in the corresponding direction by pressing one of the surrounding buttons:
+
+W : Up Left   
+E : Up        
+R : Up Right  
+S : Left      
+F : Right     
+X : Down Left 
+C : Down      
+V : Down Right
+
+To select a different game mode, enter:
+ <"ip address"> <"port number">

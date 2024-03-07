@@ -1,0 +1,9 @@
+11:00:00 =>	SOCKET SERVER created with pid 9283 
+11:00:00 =>	== socket_server : fd listening, success
+
+11:00:01 =>	== server : Local IP: 0.0.0.0
+
+11:00:01 =>	== server : Local Port: 50000
+
+11:00:01 =>	server activated
+

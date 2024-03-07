@@ -1,0 +1,67 @@
+11:00:01 =>	WATCHDOG is create with pid 9304 
+11:00:01 =>	WATCHDOG received pid from master: 9291
+11:00:01 =>	WATCHDOG received pid from master: 9296
+11:00:01 =>	WATCHDOG received pid from master: 9301
+11:00:01 =>	WATCHDOG received pid from master: 9302
+11:00:01 =>	WATCHDOG received pid from master: 9303
+11:00:01 =>	WATCHDOG received pid from master: 9283
+11:00:01 =>	
+
+11:00:01 =>	WATCHDOG received pid from process: 9294
+11:00:01 =>	WATCHDOG received pid from process: 9299
+11:00:01 =>	WATCHDOG received pid from process: 9301
+11:00:01 =>	WATCHDOG received pid from process: 9302
+11:00:01 =>	WATCHDOG received pid from process: 9303
+11:00:01 =>	WATCHDOG received pid from process: 9283
+11:00:01 =>	WATCHDOG is ready to work
+11:00:01 =>	SERVER, pid 9294, received signal from wd pid: 9304 
+11:00:01 =>	WATCHDOG received signal from 9294 
+11:00:01 =>	WATCHDOG: Process 9294 is alive 
+11:00:02 =>	INPUT, pid: 9299, received signal from wd pid: 9304 
+11:00:02 =>	WATCHDOG received signal from 9299 
+11:00:03 =>	WATCHDOG: Process 9299 is alive 
+11:00:04 =>	DRONE, pid: 9301, received signal from wd pid: 9304 
+11:00:04 =>	WATCHDOG received signal from 9301 
+11:00:04 =>	WATCHDOG: Process 9301 is alive 
+11:00:05 =>	TARGET: pid 9302, received signal from wd pid: 9304 
+11:00:05 =>	WATCHDOG received signal from 9302 
+11:00:05 =>	WATCHDOG: Process 9302 is alive 
+11:00:06 =>	WATCHDOG received signal from 9303 
+11:00:06 =>	OBSTACLE: pid 9303, received signal from wd pid: 9304 
+11:00:06 =>	WATCHDOG: Process 9303 is alive 
+11:00:07 =>	SOCKET SERVER: pid 9283, received signal from wd pid: 9304 
+11:00:07 =>	WATCHDOG received signal from 9283 
+11:00:07 =>	WATCHDOG: Process 9283 is alive 
+11:00:08 =>	SERVER, pid 9294, received signal from wd pid: 9304 
+11:00:08 =>	WATCHDOG received signal from 9294 
+11:00:08 =>	WATCHDOG: Process 9294 is alive 
+11:00:09 =>	INPUT, pid: 9299, received signal from wd pid: 9304 
+11:00:09 =>	WATCHDOG received signal from 9299 
+11:00:09 =>	WATCHDOG: Process 9299 is alive 
+11:00:11 =>	DRONE, pid: 9301, received signal from wd pid: 9304 
+11:00:11 =>	WATCHDOG received signal from 9301 
+11:00:12 =>	WATCHDOG: Process 9301 is alive 
+11:00:12 =>	Process 0 is termined with status 0
+
+11:00:13 =>	TARGET: pid 9302, received signal from wd pid: 9304 
+11:00:13 =>	WATCHDOG received signal from 9302 
+11:00:14 =>	WATCHDOG: Process 9302 is alive 
+11:00:15 =>	OBSTACLE: pid 9303, received signal from wd pid: 9304 
+11:00:15 =>	WATCHDOG received signal from 9303 
+11:00:15 =>	WATCHDOG: Process 9303 is alive 
+11:00:16 =>	SOCKET SERVER: pid 9283, received signal from wd pid: 9304 
+11:00:16 =>	WATCHDOG received signal from 9283 
+11:00:16 =>	WATCHDOG: Process 9283 is alive 
+11:00:17 =>	==> WARNING ==> wd: No such process: 9294 
+11:00:18 =>	==> WARNING ==> wd: No such process: 9294
+11:00:18 =>	==> WARNING ==> wd: No such process: 9291
+11:00:18 =>	 * WATCHDOG: process 9299 is closed by wd 
+11:00:18 =>	WATCHDOG: process 9296 is closed by wd 
+11:00:18 =>	 * WATCHDOG: process 9301 is closed by wd 
+11:00:18 =>	WATCHDOG: process 9301 is closed by wd 
+11:00:18 =>	 * WATCHDOG: process 9302 is closed by wd 
+11:00:18 =>	WATCHDOG: process 9302 is closed by wd 
+11:00:18 =>	 * WATCHDOG: process 9303 is closed by wd 
+11:00:18 =>	WATCHDOG: process 9303 is closed by wd 
+11:00:18 =>	 * WATCHDOG: process 9283 is closed by wd 
+11:00:18 =>	WATCHDOG: process 9283 is closed by wd 
