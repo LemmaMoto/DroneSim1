@@ -21,4 +21,7 @@
 
 #define LOG_FILE_NAME "./log/watchdog/watchdog.txt"
 
+//Window size
+#define window_size "38.000,151.000"
+
 #endif // !CONSTANTS_H

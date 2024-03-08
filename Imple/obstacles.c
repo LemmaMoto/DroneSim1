@@ -228,6 +228,18 @@ int main(int argc, char *argv[])
             var = false;
         }
     }
+    bzero(buffer, sizeof(buffer));
+    while (buffer[0] == '\0')
+    {
+        n = read(sockfd, buffer, sizeof(buffer));
+        printf("LEGGENDO DIM FINESTRA \n");
+        printf("DIMENSIONE FINESTRA: %s\n", buffer);
+        if (n < 0)
+        {
+            error("ERROR reading from socket");
+        }
+        n = write(sockfd, buffer, sizeof(buffer));
+    }
 
     while (1)
     {

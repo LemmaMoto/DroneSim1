@@ -271,17 +271,21 @@ int main(int argc, char *argv[])
     buffer_screen2[0] = '\0';
     char merged_buffer[1024];
     merged_buffer[0] = '\0';
+    char buffer_echo[1024];
     while (1)
     {
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
 
-        merged_buffer[0] = '\0';
-        sprintf(buffer_screen1, "%.3f", (double)world.screen.height);
-        sprintf(buffer_screen2, "%.3f", (double)world.screen.width);
-        strcat(merged_buffer, buffer_screen1);
-        strcat(merged_buffer, ",");
-        strcat(merged_buffer, buffer_screen2);
+        // merged_buffer[0] = '\0';
+        // sprintf(buffer_screen1, "%.3f", (double)world.screen.height);
+        // sprintf(buffer_screen2, "%.3f", (double)world.screen.width);
+        // strcat(merged_buffer, buffer_screen1);
+        // strcat(merged_buffer, ",");
+        // strcat(merged_buffer, buffer_screen2);
+        // printf("merged_buffer: %s\n", merged_buffer);
+
+        strcpy(merged_buffer, window_size);
         printf("merged_buffer: %s\n", merged_buffer);
 
         // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
@@ -291,8 +295,6 @@ int main(int argc, char *argv[])
         write(pipeis[PIPE_WRITE], &command, sizeof(command));
         printf("command: %c\n", command);
         command = '0';
-        printf("screen height: %d, screen width: %d\n", world.screen.height, world.screen.width);
-
         for (int i = 0; i < 9; i++)
         {
             if (world.target[i].is_active == true)
@@ -364,10 +366,32 @@ int main(int argc, char *argv[])
                         if (buffer[1] == 'I')
                         {
                             n = write(newsockfd, buffer, sizeof(buffer)); // Send the message back to the client echo
-                            printf("MERGED NUFFER DIM FINESTRA: %s\n", merged_buffer);
+                            if (n < 0)
+                            {
+                                error("ERROR writing to socket");
+                            }
+                            printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
                             sleep(1);
-                            n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
-                            
+                            bool var = true;
+                            strcpy(buffer_echo, merged_buffer);
+                            while (var)
+                            {
+                                n = write(newsockfd, merged_buffer, sizeof(merged_buffer));
+                                if (n < 0)
+                                {
+                                    error("ERROR writing to socket");
+                                }
+                                n = read(newsockfd, buffer, sizeof(buffer));
+                                if (n < 0)
+                                {
+                                    error("ERROR reading from socket");
+                                }
+                                if (strcmp(buffer, buffer_echo) == 0)
+                                {
+                                    printf("DIMENSIONI FINESTRA CORRETTE\n");
+                                    var = false;
+                                }
+                            }
                         }
                         else
                         {
