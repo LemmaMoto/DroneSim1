@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -92,6 +93,30 @@ void error(char *msg)
         perror("ERROR opening log file");
     }
 }
+void Printf(char *format, ...)
+{
+    FILE *logFile = fopen("log/server/log_server.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[64]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - ", timeStr);
+
+        va_list args;
+        va_start(args, format);
+        vfprintf(logFile, format, args);
+        va_end(args);
+
+        fprintf(logFile, "\n");
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
+
 // logs time update to file
 void log_receipt(struct timeval tv)
 {
@@ -102,7 +127,7 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    printf("received signal \n");
+    // Printf("received signal \n");
     if (info->si_pid == watchdog_pid)
     {
         gettimeofday(&prev_t, NULL);
@@ -176,29 +201,29 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf("wrong args\n");
+        // Printf("wrong args\n");
         return -1;
     }
-    printf("process_num: %d\n", process_num);
-    printf("pipesd[PIPE_READ]: %d\n", pipesd[PIPE_READ]);
-    printf("pipesd[PIPE_WRITE]: %d\n", pipesd[PIPE_WRITE]);
-    printf("pipeds[PIPE_READ]: %d\n", pipeds[PIPE_READ]);
-    printf("pipeds[PIPE_WRITE]: %d\n", pipeds[PIPE_WRITE]);
-    printf("pipeso[PIPE_READ]: %d\n", pipeso[PIPE_READ]);
-    printf("pipeso[PIPE_WRITE]: %d\n", pipeso[PIPE_WRITE]);
-    printf("pipeos[PIPE_READ]: %d\n", pipeos[PIPE_READ]);
-    printf("pipeos[PIPE_WRITE]: %d\n", pipeos[PIPE_WRITE]);
-    printf("pipest[PIPE_READ]: %d\n", pipest[PIPE_READ]);
-    printf("pipest[PIPE_WRITE]: %d\n", pipest[PIPE_WRITE]);
-    printf("pipets[PIPE_READ]: %d\n", pipets[PIPE_READ]);
-    printf("pipets[PIPE_WRITE]: %d\n", pipets[PIPE_WRITE]);
-    printf("pipesw[PIPE_READ]: %d\n", pipesw[PIPE_READ]);
-    printf("pipesw[PIPE_WRITE]: %d\n", pipesw[PIPE_WRITE]);
-    printf("pipews[PIPE_READ]: %d\n", pipews[PIPE_READ]);
-    printf("pipews[PIPE_WRITE]: %d\n", pipews[PIPE_WRITE]);
-    printf("pipesd_t[PIPE_READ]: %d\n", pipesd_t[PIPE_READ]);
-    printf("pipesd_t[PIPE_WRITE]: %d\n", pipesd_t[PIPE_WRITE]);
-    printf("pipeis[PIPE_READ]: %d\n", pipeis[PIPE_READ]);
+    // Printf("process_num: %d\n", process_num);
+    // Printf("pipesd[PIPE_READ]: %d\n", pipesd[PIPE_READ]);
+    // Printf("pipesd[PIPE_WRITE]: %d\n", pipesd[PIPE_WRITE]);
+    // Printf("pipeds[PIPE_READ]: %d\n", pipeds[PIPE_READ]);
+    // Printf("pipeds[PIPE_WRITE]: %d\n", pipeds[PIPE_WRITE]);
+    // Printf("pipeso[PIPE_READ]: %d\n", pipeso[PIPE_READ]);
+    // Printf("pipeso[PIPE_WRITE]: %d\n", pipeso[PIPE_WRITE]);
+    // Printf("pipeos[PIPE_READ]: %d\n", pipeos[PIPE_READ]);
+    // Printf("pipeos[PIPE_WRITE]: %d\n", pipeos[PIPE_WRITE]);
+    // Printf("pipest[PIPE_READ]: %d\n", pipest[PIPE_READ]);
+    // Printf("pipest[PIPE_WRITE]: %d\n", pipest[PIPE_WRITE]);
+    // Printf("pipets[PIPE_READ]: %d\n", pipets[PIPE_READ]);
+    // Printf("pipets[PIPE_WRITE]: %d\n", pipets[PIPE_WRITE]);
+    // Printf("pipesw[PIPE_READ]: %d\n", pipesw[PIPE_READ]);
+    // Printf("pipesw[PIPE_WRITE]: %d\n", pipesw[PIPE_WRITE]);
+    // Printf("pipews[PIPE_READ]: %d\n", pipews[PIPE_READ]);
+    // Printf("pipews[PIPE_WRITE]: %d\n", pipews[PIPE_WRITE]);
+    // Printf("pipesd_t[PIPE_READ]: %d\n", pipesd_t[PIPE_READ]);
+    // Printf("pipesd_t[PIPE_WRITE]: %d\n", pipesd_t[PIPE_WRITE]);
+    // Printf("pipeis[PIPE_READ]: %d\n", pipeis[PIPE_READ]);
 
     // Publish your pid
     process_id = getpid();
@@ -209,7 +234,7 @@ int main(int argc, char *argv[])
     fprintf(pid_fp, "%d", process_id);
     fclose(pid_fp);
 
-    printf("Published pid %d \n", process_id);
+    // Printf("Published pid %d \n", process_id);
 
     // Read watchdog pid
     FILE *watchdog_fp = NULL;
@@ -235,7 +260,7 @@ int main(int argc, char *argv[])
     watchdog_fp = fopen(PID_FILE_PW, "r");
 
     fscanf(watchdog_fp, "%d", &watchdog_pid);
-    printf("watchdog pid %d \n", watchdog_pid);
+    // Printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
 
     // Read how long to sleep process for
@@ -244,7 +269,7 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
-    struct World world;
+    struct World world = {0};
     char command;
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -268,6 +293,7 @@ int main(int argc, char *argv[])
     }
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
+
     char buffer_screen1[512];
     buffer_screen1[0] = '\0';
     char buffer_screen2[512];
@@ -288,30 +314,36 @@ int main(int argc, char *argv[])
         // strcat(merged_buffer, buffer_screen1);
         // strcat(merged_buffer, ",");
         // strcat(merged_buffer, buffer_screen2);
-        // printf("merged_buffer: %s\n", merged_buffer);
+        // //printf("merged_buffer: %s\n", merged_buffer);
 
         strcpy(merged_buffer, window_size);
-        printf("merged_buffer: %s\n", merged_buffer);
-
-        // read(pipeos[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        // read(pipets[PIPE_READ], &world.target, sizeof(world.target));
+        // Printf("merged_buffer: %s\n", merged_buffer);
 
         read(pipeis[PIPE_READ], &command, sizeof(command));
+        write(pipeis[PIPE_WRITE], &command, sizeof(command));
+        // Printf("command: %c\n", command);
+        command = '0';
 
-        // write(pipeso[PIPE_WRITE], &world, sizeof(world));
-        // fsync(pipeso[PIPE_WRITE]);
+        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        fsync(pipesw[PIPE_WRITE]);
 
-        // write(pipest[PIPE_WRITE], &world, sizeof(world));
-        // fsync(pipest[PIPE_WRITE]);
+        write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+        fsync(pipesd[PIPE_WRITE]);
 
-        printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
+        write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
+        fsync(pipesd_t[PIPE_WRITE]);
+
+        write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        fsync(pipesd_s[PIPE_WRITE]);
+
+        // Printf("x: %d, y: %d\n", world.drone.x, world.drone.y);
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
         if (newsockfd < 0)
         {
             error("ERROR on accept");
         }
         pid = fork();
-        printf("pid: %d\n", pid);
+        // Printf("pid: %d\n", pid);
         if (pid < 0)
         {
             error("ERROR on fork");
@@ -333,7 +365,7 @@ int main(int argc, char *argv[])
                     error("ERROR reading from socket");
                     exit_while = false;
                 }
-                printf("buffer: %s\n", buffer);
+                // Printf("buffer: %s\n", buffer);
                 if (n >= 0)
                 {
                     switch (buffer[0])
@@ -346,7 +378,7 @@ int main(int argc, char *argv[])
                             {
                                 error("ERROR writing to socket");
                             }
-                            printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
+                            // Printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
                             sleep(1);
                             bool var = true;
                             strcpy(buffer_echo, merged_buffer);
@@ -364,7 +396,7 @@ int main(int argc, char *argv[])
                                 }
                                 if (strcmp(buffer, buffer_echo) == 0)
                                 {
-                                    printf("DIMENSIONI FINESTRA OBSTACLE CORRETTE\n");
+                                    // Printf("DIMENSIONI FINESTRA OBSTACLE CORRETTE\n");
                                     var = false;
                                 }
                             }
@@ -400,7 +432,7 @@ int main(int argc, char *argv[])
                                         sub_buffer_y[y_index] = '\0';
                                         world.obstacle[i].x = (int)atof(sub_buffer_x);
                                         world.obstacle[i].y = (int)atof(sub_buffer_y);
-                                        // printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
+                                        // //printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
                                         j++;
                                         break;
                                     }
@@ -415,17 +447,17 @@ int main(int argc, char *argv[])
                                 }
 
                                 // If the y-coordinate of the last obstacle hasn't been processed yet, process it
-                                if (i == num_obstacles - 1 && y_index > 0)
+                                if (i == num_obstacles && y_index > 0)
                                 {
                                     sub_buffer_y[y_index] = '\0';
                                     world.obstacle[i].x = (int)atof(sub_buffer_x);
                                     world.obstacle[i].y = (int)atof(sub_buffer_y);
                                 }
                                 world.obstacle[i].symbol = '#';
-                                printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
+                                // Printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
+                                write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+                                fsync(pipesw[PIPE_WRITE]);
                             }
-                            write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-                            fsync(pipesw[PIPE_WRITE]);
                         }
                         break;
                     case 'T':
@@ -436,7 +468,7 @@ int main(int argc, char *argv[])
                             {
                                 error("ERROR writing to socket");
                             }
-                            printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
+                            // Printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
                             sleep(1);
                             bool var = true;
                             strcpy(buffer_echo, merged_buffer);
@@ -454,7 +486,7 @@ int main(int argc, char *argv[])
                                 }
                                 if (strcmp(buffer, buffer_echo) == 0)
                                 {
-                                    printf("DIMENSIONI FINESTRA TARGET CORRETTE\n");
+                                    // Printf("DIMENSIONI FINESTRA TARGET CORRETTE\n");
                                     var = false;
                                 }
                             }
@@ -468,7 +500,7 @@ int main(int argc, char *argv[])
                             }
                             int num_targets;
                             sscanf(buffer, "T[%d]", &num_targets);
-                            printf("NUMERO TARGETS: %d\n\n \n \n", num_targets);
+                            // Printf("NUMERO TARGETS: %d\n\n \n \n", num_targets);
                             int j = 4;
                             for (int i = 0; i < num_targets; i++)
                             {
@@ -490,7 +522,7 @@ int main(int argc, char *argv[])
                                         sub_buffer_y[y_index] = '\0';
                                         world.target[i].x = (int)atof(sub_buffer_x);
                                         world.target[i].y = (int)atof(sub_buffer_y);
-                                        // printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
+                                        // Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
                                         j++;
                                         break;
                                     }
@@ -505,7 +537,7 @@ int main(int argc, char *argv[])
                                 }
 
                                 // If the y-coordinate of the last obstacle hasn't been processed yet, process it
-                                if (i == num_targets - 1 && y_index > 0)
+                                if (i == num_targets && y_index > 0)
                                 {
                                     sub_buffer_y[y_index] = '\0';
                                     world.target[i].x = (int)atof(sub_buffer_x);
@@ -514,46 +546,23 @@ int main(int argc, char *argv[])
                                 world.target[i].symbol = 'T';
                                 world.target[i].is_active = true;
                                 world.target[i].is_visible = true;
-                                printf("target %d x: %d, y: %d\n", i, world.target[i].x, world.target[i].y);
+                                Printf("target %d x: %d, y: %d\n", i, world.target[i].x, world.target[i].y);
                             }
                             write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
                             fsync(pipesw[PIPE_WRITE]);
                         }
                         break;
                     default:
-                        printf("default\n");
+                        // Printf("default\n");
                         break;
                     }
                 }
             }
-            // exit(0);
         }
         else
         {
-            // close(newsockfd);
+            close(newsockfd);
         }
-
-        // write(pipeis[PIPE_WRITE], &command, sizeof(command));
-        // printf("command: %c\n", command);
-        // command = '0';
-
-        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
-        fsync(pipesw[PIPE_WRITE]);
-
-        write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
-        fsync(pipesw[PIPE_WRITE]);
-
-        // write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        // fsync(pipesw[PIPE_WRITE]);
-
-        write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-        fsync(pipesd[PIPE_WRITE]);
-
-        write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
-        fsync(pipesd_t[PIPE_WRITE]);
-
-        write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
-        fsync(pipesd_s[PIPE_WRITE]);
     }
 
     return 0;

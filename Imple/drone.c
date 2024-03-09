@@ -13,6 +13,7 @@
 #include <sys/ipc.h>
 #include <math.h>
 #include <float.h>
+#include <stdarg.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -97,6 +98,30 @@ void error(char *msg)
         perror("ERROR opening log file");
     }
 }
+void Printf(char *format, ...)
+{
+    FILE *logFile = fopen("log/drone/log_drone.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[64]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - ", timeStr);
+
+        va_list args;
+        va_start(args, format);
+        vfprintf(logFile, format, args);
+        va_end(args);
+
+        fprintf(logFile, "\n");
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
+
 // logs time update to file
 void log_receipt(struct timeval tv)
 {
@@ -170,15 +195,15 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf("wrong args\n");
+        Printf("wrong args\n");
         return -1;
     }
 
-    printf("pipedi[0] = %d, pipedi[1] = %d\n", pipedi[PIPE_READ], pipedi[PIPE_WRITE]);
-    printf("pipesd[0] = %d, pipesd[1] = %d\n", pipesd[PIPE_READ], pipesd[PIPE_WRITE]);
-    printf("pipeds[0] = %d, pipeds[1] = %d\n", pipeds[PIPE_READ], pipeds[PIPE_WRITE]);
-    printf("pipesd_t[0] = %d, pipesd_t[1] = %d\n", pipesd_t[PIPE_READ], pipesd_t[PIPE_WRITE]);
-    printf("pipesd_s[0] = %d, pipesd_s[1] = %d\n", pipesd_s[PIPE_READ], pipesd_s[PIPE_WRITE]);
+    Printf("pipedi[0] = %d, pipedi[1] = %d\n", pipedi[PIPE_READ], pipedi[PIPE_WRITE]);
+    Printf("pipesd[0] = %d, pipesd[1] = %d\n", pipesd[PIPE_READ], pipesd[PIPE_WRITE]);
+    Printf("pipeds[0] = %d, pipeds[1] = %d\n", pipeds[PIPE_READ], pipeds[PIPE_WRITE]);
+    Printf("pipesd_t[0] = %d, pipesd_t[1] = %d\n", pipesd_t[PIPE_READ], pipesd_t[PIPE_WRITE]);
+    Printf("pipesd_s[0] = %d, pipesd_s[1] = %d\n", pipesd_s[PIPE_READ], pipesd_s[PIPE_WRITE]);
 
     initscr();
     cbreak();
@@ -194,7 +219,7 @@ int main(int argc, char *argv[])
     fprintf(pid_fp, "%d", process_id);
     fclose(pid_fp);
 
-    printf("Published pid %d \n", process_id);
+    Printf("Published pid %d \n", process_id);
 
     // Read watchdog pid
     FILE *watchdog_fp = NULL;
@@ -220,7 +245,7 @@ int main(int argc, char *argv[])
     watchdog_fp = fopen(PID_FILE_PW, "r");
 
     fscanf(watchdog_fp, "%d", &watchdog_pid);
-    printf("watchdog pid %d \n", watchdog_pid);
+    Printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
 
     // Read how long to sleep process for
@@ -232,7 +257,7 @@ int main(int argc, char *argv[])
     FILE *file = fopen("file_para.txt", "r");
     if (file == NULL)
     {
-        printf("Could not open file_para.txt for reading\n");
+        Printf("Could not open file_para.txt for reading\n");
         return 1;
     }
     struct World world;
@@ -269,12 +294,12 @@ int main(int argc, char *argv[])
 
     fclose(file);
 
-    printf("drone.symbol = %c\n", world.drone.symbol);
-    printf("drone.color_paire = %hd\n", world.drone.color_pair);
-    printf("M = %f\n", M);
-    printf("K = %f\n", K);
-    printf("drone.x = %d\n", world.drone.x);
-    printf("drone.y = %d\n", world.drone.y);
+    Printf("drone.symbol = %c\n", world.drone.symbol);
+    Printf("drone.color_paire = %hd\n", world.drone.color_pair);
+    Printf("M = %f\n", M);
+    Printf("K = %f\n", K);
+    Printf("drone.x = %d\n", world.drone.x);
+    Printf("drone.y = %d\n", world.drone.y);
     write(pipeds[PIPE_WRITE], &world.drone, sizeof(world.drone));
     double fx, fy;
     double prev_x = world.drone.x, prev_y = world.drone.y;
@@ -555,7 +580,7 @@ int main(int argc, char *argv[])
         }
         else if (bytesRead == 0)
         {
-            printf("Nothing to read\n");
+            Printf("Nothing to read\n");
         }
         else
         {

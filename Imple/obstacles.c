@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <stdarg.h>
 
 #define OBSTACLE_REPULSION_CONSTANT 1.0
 
@@ -39,6 +40,30 @@ void error(char *msg)
         perror("ERROR opening log file");
     }
 }
+void Printf(char *format, ...)
+{
+    FILE *logFile = fopen("log/obstacles/log_obstacles.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[64]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - ", timeStr);
+
+        va_list args;
+        va_start(args, format);
+        vfprintf(logFile, format, args);
+        va_end(args);
+
+        fprintf(logFile, "\n");
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
+
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -96,7 +121,7 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    // printf("received signal \n");
+    // Printf("received signal \n");
     if (info->si_pid == watchdog_pid)
     {
         gettimeofday(&prev_t, NULL);
@@ -125,15 +150,15 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf("Error: wrong number of arguments\n");
+        Printf("Error: wrong number of arguments\n");
         exit(EXIT_FAILURE);
     }
 
-    printf("process num %d \n", process_num);
+    Printf("process num %d \n", process_num);
 
     // Publish your pid
     process_id = getpid();
-    printf("Published pid %d \n", process_id);
+    Printf("Published pid %d \n", process_id);
 
     // leggere da file file_para numero di ostacoli
     FILE *file = fopen("file_para.txt", "r");
@@ -163,8 +188,8 @@ int main(int argc, char *argv[])
 
     fclose(file);
 
-    printf("NUM_OBSTACLES = %d\n", NUM_OBSTACLES);
-    printf("refresh_time_obstacles = %d\n", refresh_time_obstacles);
+    Printf("NUM_OBSTACLES = %d\n", NUM_OBSTACLES);
+    Printf("refresh_time_obstacles = %d\n", refresh_time_obstacles);
     // struct Obstacle obstacles[NUM_OBSTACLES]; // Assume obstacles are initialized
     // struct Screen screen;
     struct World world;
@@ -197,7 +222,7 @@ int main(int argc, char *argv[])
     }
 
     char buffer_echo[1024];
-    printf("Sending OI\n");
+    Printf("Sending OI\n");
     bool var = true;
     // to keep sending the OI command until the server responds with the same string
     while (var)
@@ -220,11 +245,11 @@ int main(int argc, char *argv[])
         {
             error("STRANO ERRORE");
         }
-        printf("ECHOOOOOOOO: %s\n", buffer_echo);
-        printf("BUUUUUUFFEEERR: %s\n", buffer);
+        Printf("ECHOOOOOOOO: %s\n", buffer_echo);
+        Printf("BUUUUUUFFEEERR: %s\n", buffer);
         if (strcmp(buffer, buffer_echo) == 0)
         {
-            printf("UGUALI");
+            Printf("UGUALI");
             var = false;
         }
     }
@@ -232,8 +257,8 @@ int main(int argc, char *argv[])
     while (buffer[0] == '\0')
     {
         n = read(sockfd, buffer, sizeof(buffer));
-        printf("LEGGENDO DIM FINESTRA \n");
-        printf("DIMENSIONE FINESTRA: %s\n", buffer);
+        Printf("LEGGENDO DIM FINESTRA \n");
+        Printf("DIMENSIONE FINESTRA: %s\n", buffer);
         if (n < 0)
         {
             error("ERROR reading from socket");
@@ -254,7 +279,7 @@ int main(int argc, char *argv[])
     strncpy(width_str, buffer + 7, 7);
     width_str[8] = '\0'; // Null-terminate the string
     width = atof(width_str);
-    printf("height: %f, width: %f\n", height, width);
+    Printf("height: %f, width: %f\n", height, width);
 
     bool echo_ok = false;
     char buffer_echo_obs_pos[1024];
@@ -317,7 +342,7 @@ int main(int argc, char *argv[])
         first--;
         while (!echo_ok)
         {
-            printf("obs_pos: %s\n", obs_pos);
+            Printf("obs_pos: %s\n", obs_pos);
             n = write(sockfd, obs_pos, sizeof(obs_pos));
             if (n < 0)
             {
@@ -331,11 +356,11 @@ int main(int argc, char *argv[])
             if (strcmp(buffer_echo_obs_pos, obs_pos) == 0)
             {
                 echo_ok = true;
-                printf("OBSTACLE POSITION ECHO CORRETTO\n");
+                Printf("OBSTACLE POSITION ECHO CORRETTO\n");
             }   
             else 
             {
-                printf("OBSTACLE POSITION ECHO NON CORRETTO\n");
+                Printf("OBSTACLE POSITION ECHO NON CORRETTO\n");
             }
         }
 

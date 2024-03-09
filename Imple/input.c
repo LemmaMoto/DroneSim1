@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -42,6 +43,30 @@ void error(char *msg)
         perror("ERROR opening log file");
     }
 }
+void Printf(char *format, ...)
+{
+    FILE *logFile = fopen("log/input/log_input.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[64]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - ", timeStr);
+
+        va_list args;
+        va_start(args, format);
+        vfprintf(logFile, format, args);
+        va_end(args);
+
+        fprintf(logFile, "\n");
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
+
 int pipefd[2];
 
 pid_t drone_pid;
@@ -382,11 +407,11 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf("wrong args\n");
+        Printf("wrong args\n");
         return -1;
     }
 
-    printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
+    Printf("pipefd[0] = %d, pipefd[1] = %d\n", pipefd[PIPE_READ], pipefd[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -397,7 +422,7 @@ int main(int argc, char *argv[])
     fprintf(pid_fp, "%d", process_id);
     fclose(pid_fp);
 
-    printf("Published pid %d \n", process_id);
+    Printf("Published pid %d \n", process_id);
 
     // Read watchdog pid
     FILE *watchdog_fp = NULL;
@@ -423,7 +448,7 @@ int main(int argc, char *argv[])
     watchdog_fp = fopen(PID_FILE_PW, "r");
 
     fscanf(watchdog_fp, "%d", &watchdog_pid);
-    printf("watchdog pid %d \n", watchdog_pid);
+    Printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
 
     // Read how long to sleep process for

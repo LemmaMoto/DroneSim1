@@ -15,6 +15,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <stdarg.h>
 
 #define TARGET_ATTRACTION_CONSTANT 1.0
 
@@ -29,9 +30,33 @@ void error(char *msg)
     if (logFile != NULL)
     {
         time_t now = time(NULL);
-        char timeStr[20]; // Buffer to hold the time string
+        char timeStr[64]; // Buffer to hold the time string
         strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
         fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
+
+void Printf(char *format, ...)
+{
+    FILE *logFile = fopen("log/targets/error_log_targets.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[64]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - ", timeStr);
+
+        va_list args;
+        va_start(args, format);
+        vfprintf(logFile, format, args);
+        va_end(args);
+
+        fprintf(logFile, "\n");
         fclose(logFile);
     }
     else
@@ -125,13 +150,13 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf("Error: wrong number of arguments\n");
+        Printf("Error: wrong number of arguments\n");
         exit(EXIT_FAILURE);
     }
 
     // Publish your pid
     process_id = getpid();
-    printf("Published pid %d \n", process_id);
+    Printf("Published pid %d \n", process_id);
 
     FILE *file = fopen("file_para.txt", "r");
     if (file == NULL)
@@ -160,8 +185,8 @@ int main(int argc, char *argv[])
 
     fclose(file);
 
-    printf("NUM_TARGETS = %d\n", NUM_TARGETS);
-    printf("refresh_time_targets = %d\n", refresh_time_targets);
+    Printf("NUM_TARGETS = %d\n", NUM_TARGETS);
+    Printf("refresh_time_targets = %d\n", refresh_time_targets);
 
     struct World world;
     int current_num_targets = NUM_TARGETS;
@@ -204,7 +229,7 @@ int main(int argc, char *argv[])
         sleep(1); // Wait for 1 second before trying again
     }
     char buffer_echo[1024];
-    printf("Sending TI\n");
+    Printf("Sending TI\n");
     bool var = true;
     // to keep sending the OI command until the server responds with the same string
     while (var)
@@ -227,21 +252,21 @@ int main(int argc, char *argv[])
         {
             error("STRANO ERRORE");
         }
-        printf("ECHOOOOOOOO: %s\n", buffer_echo);
-        printf("BUUUUUUFFEEERR: %s\n", buffer);
+        Printf("ECHOOOOOOOO: %s\n", buffer_echo);
+        Printf("BUUUUUUFFEEERR: %s\n", buffer);
         if (strcmp(buffer, buffer_echo) == 0)
         {
-            printf("UGUALI");
+            Printf("UGUALI");
             var = false;
         }
     }
-    printf("1\n");
+    Printf("1\n");
     bzero(buffer, sizeof(buffer));
     while (buffer[0] == '\0')
     {
         n = read(sockfd, buffer, sizeof(buffer));
-        printf("LEGGENDO DIM FINESTRA \n");
-        printf("DIMENSIONE FINESTRA: %s\n", buffer);
+        Printf("LEGGENDO DIM FINESTRA \n");
+        Printf("DIMENSIONE FINESTRA: %s\n", buffer);
         if (n < 0)
         {
             error("ERROR reading from socket");
@@ -262,7 +287,7 @@ int main(int argc, char *argv[])
     strncpy(width_str, buffer + 7, 7);
     width_str[8] = '\0'; // Null-terminate the string
     width = atof(width_str);
-    printf("height: %f, width: %f\n", height, width);
+    Printf("height: %f, width: %f\n", height, width);
 
     bool echo_ok = false;
     char buffer_echo_trg_pos[1024];
@@ -305,7 +330,7 @@ int main(int argc, char *argv[])
         // generare ostacoli randomici
         time_t current_time = time(NULL);
         if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
-        {   
+        {
             for (; i < NUM_TARGETS; i++)
             {
                 world.target[i].x = rand() % (world.screen.width - 4) + 2;
@@ -326,7 +351,7 @@ int main(int argc, char *argv[])
         first--;
         while (!echo_ok)
         {
-            printf("trg_pos: %s\n", trg_pos);
+            Printf("trg_pos: %s\n", trg_pos);
             n = write(sockfd, trg_pos, sizeof(trg_pos));
             if (n < 0)
             {
@@ -340,79 +365,13 @@ int main(int argc, char *argv[])
             if (strcmp(buffer_echo_trg_pos, trg_pos) == 0)
             {
                 echo_ok = true;
-                printf("target POSITION ECHO CORRETTO\n");
+                Printf("target POSITION ECHO CORRETTO\n");
             }
             else
             {
-                printf("target POSITION ECHO NON CORRETTO\n");
+                Printf("target POSITION ECHO NON CORRETTO\n");
             }
         }
-
-        // if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
-        // {
-        //     error("read");
-        //     continue;
-        // }
-        // else
-        // {
-        //     tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
-
-        //     if (tot_borders != border_prec)
-        //     {
-        //         first = 2;
-        //     }
-        //     border_prec = tot_borders;
-
-        //     time_t current_time = time(NULL);
-
-        //     for (int i = 0; i < current_num_targets; i++)
-        //     {
-        //         // If the target is visible, generate a random position for it
-        //         if (current_targets[i].is_visible && (current_time - last_spawn_time >= refresh_time_targets || first > 0))
-        //         {
-        //             do
-        //             {
-        //                 printf("ENTRATO NEL DO\n");
-        //                 current_targets[i].x = rand() % (world.screen.width - 4) + 2;
-        //                 current_targets[i].y = rand() % (world.screen.height - 4) + 2;
-        //             } while (current_targets[i].x == world.drone.x && current_targets[i].y == world.drone.y);
-
-        //             current_targets[i].symbol = '0' + i;
-
-        //             // Copy the target to the world's targets
-        //             world.target[i] = current_targets[i];
-        //         }
-
-        //         printf("drone.x: %d, drone.y: %d\n", world.drone.x, world.drone.y);
-        //         if (current_targets[i].is_active)
-        //         {
-        //             printf("target.x: %d, target.y: %d\n", world.target[i].x, world.target[i].y);
-        //         }
-
-        //         // If the drone is in the same position as the active target, make the target inactive and invisible
-        //         if ((int)world.drone.x == (int)world.target[i].x && (int)world.drone.y == (int)world.target[i].y && current_targets[i].is_active)
-        //         {
-        //             current_targets[i].is_active = false;
-        //             current_targets[i].is_visible = false;
-
-        //             // If there is a next target, make it active
-        //             if (i + 1 < current_num_targets)
-        //             {
-        //                 current_targets[i + 1].is_active = true;
-        //             }
-        //             world.target[i] = current_targets[i];
-        //         }
-        //     }
-
-        //     if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
-        //     {
-        //         last_spawn_time = current_time;
-        //     }
-
-        //     first--;
-        //     write(pipets[PIPE_WRITE], &world.target, sizeof(world.target));
-        //     fsync(pipets[PIPE_WRITE]);
-        // }
     }
     return 0;
 }

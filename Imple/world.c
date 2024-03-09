@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <sys/ipc.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -32,6 +33,29 @@ void error(char *msg)
         char timeStr[20]; // Buffer to hold the time string
         strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
         fprintf(logFile, "%s - %s: %s\n", timeStr, msg, strerror(errno));
+        fclose(logFile);
+    }
+    else
+    {
+        perror("ERROR opening log file");
+    }
+}
+void Printf(char *format, ...)
+{
+    FILE *logFile = fopen("log/world/log_world.txt", "a");
+    if (logFile != NULL)
+    {
+        time_t now = time(NULL);
+        char timeStr[64]; // Buffer to hold the time string
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        fprintf(logFile, "%s - ", timeStr);
+
+        va_list args;
+        va_start(args, format);
+        vfprintf(logFile, format, args);
+        va_end(args);
+
+        fprintf(logFile, "\n");
         fclose(logFile);
     }
     else
@@ -91,7 +115,7 @@ void log_receipt(struct timeval tv)
 
 void watchdog_handler(int sig, siginfo_t *info, void *context)
 {
-    // printf("received signal \n");
+    // Printf("received signal \n");
     if (info->si_pid == watchdog_pid)
     {
         gettimeofday(&prev_t, NULL);
@@ -146,17 +170,17 @@ int main(int argc, char *argv[])
     }
     else
     {
-        printf("wrong args\n");
+        Printf("wrong args\n");
         return -1;
     }
 
-    printf("process num %d \n", process_num);
-    printf("pipe read %d \n", pipesw[PIPE_READ]);
-    printf("pipe write %d \n", pipesw[PIPE_WRITE]);
-    printf("pipe read %d \n", pipews[PIPE_READ]);
-    printf("pipe write %d \n", pipews[PIPE_WRITE]);
-    printf("pipe read %d \n", pipesd_s[PIPE_READ]);
-    printf("pipe write %d \n", pipesd_s[PIPE_WRITE]);
+    Printf("process num %d \n", process_num);
+    Printf("pipe read %d \n", pipesw[PIPE_READ]);
+    Printf("pipe write %d \n", pipesw[PIPE_WRITE]);
+    Printf("pipe read %d \n", pipews[PIPE_READ]);
+    Printf("pipe write %d \n", pipews[PIPE_WRITE]);
+    Printf("pipe read %d \n", pipesd_s[PIPE_READ]);
+    Printf("pipe write %d \n", pipesd_s[PIPE_WRITE]);
 
     // Publish your pid
     process_id = getpid();
@@ -167,7 +191,7 @@ int main(int argc, char *argv[])
     fprintf(pid_fp, "%d", process_id);
     fclose(pid_fp);
 
-    printf("Published pid %d \n", process_id);
+    Printf("Published pid %d \n", process_id);
 
     // Read watchdog pid
     FILE *watchdog_fp = NULL;
@@ -193,7 +217,7 @@ int main(int argc, char *argv[])
     watchdog_fp = fopen(PID_FILE_PW, "r");
 
     fscanf(watchdog_fp, "%d", &watchdog_pid);
-    printf("watchdog pid %d \n", watchdog_pid);
+    Printf("watchdog pid %d \n", watchdog_pid);
     fclose(watchdog_fp);
 
     // Read how long to sleep process for
@@ -247,65 +271,70 @@ int main(int argc, char *argv[])
     init_pair(3, COLOR_RED, COLOR_BLACK);
     init_pair(4, COLOR_GREEN, COLOR_BLACK);
 
-    struct World world;
+    struct World world = {0};
     int height, width;
+    int n;
     while (1)
     {
-
-        clear();
-
         // Read data from the pipe
-        if (read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone)) == -1)
+        n = read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
+        if (n < 0)
         {
             error("read drone");
             continue;
         }
-        if (read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle)) == -1)
+        n = read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
+        if (n < 0)
         {
             error("read obstacle");
             continue;
         }
-        if (read(pipesw[PIPE_READ], &world.target, sizeof(world.target)) == -1)
+        n = read(pipesw[PIPE_READ], &world.target, sizeof(world.target));
+        if (n < 0)
         {
             error("read target");
             continue;
         }
-
         getmaxyx(win, height, width);
         world.screen.height = height;
         world.screen.width = width;
-        mvprintw(3, 3, "Screen: height: %d, width: %d", world.screen.height, world.screen.width);
-        clear();
+        // clear();
+        // mvprintw(3, 3, "Screen: height: %d, width: %d", world.screen.height, world.screen.width);
 
-        // Print the target symbols at their positions if they're within the window dimensions
         for (int i = 0; i < NUM_TARGETS; i++)
         {
-            if ((world.target[i].y < height && world.target[i].x < width) && world.target[i].is_visible)
-            {
-                attron(COLOR_PAIR(4));
-                mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);
-                attroff(COLOR_PAIR(4));
-            }
+            Printf("target %d: x: %d, y: %d\n", i, world.target[i].x, world.target[i].y);
         }
 
-        for (int i = 0; i < NUM_OBSTACLES; i++)
-        {
-            if (world.obstacle[i].y < height && world.obstacle[i].x < width)
-            {
-                attron(COLOR_PAIR(3));
-                mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol);
-                attroff(COLOR_PAIR(3));
-            }
-        }
+        // Print the target symbols at their positions if they're within the window dimensions
+        // for (int i = 0; i < NUM_TARGETS; i++)
+        // {
+        //     if ((world.target[i].y < height && world.target[i].x < width) && world.target[i].is_visible)
+        //     {
+        //         attron(COLOR_PAIR(4));
+        //         mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);
+        //         attroff(COLOR_PAIR(4));
+        //     }
+        // }
 
-        if (world.drone.y < height && world.drone.x < width)
-        {
-            attron(COLOR_PAIR(world.drone.color_pair));
-            mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol);
-            attroff(COLOR_PAIR(world.drone.color_pair));
-        }
+        // for (int i = 0; i < NUM_OBSTACLES; i++)
+        // {
+        //     if (world.obstacle[i].y < height && world.obstacle[i].x < width)
+        //     {
+        //         attron(COLOR_PAIR(3));
+        //         mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol);
+        //         attroff(COLOR_PAIR(3));
+        //     }
+        // }
 
-        refresh();
+        // if (world.drone.y < height && world.drone.x < width)
+        // {
+        //     attron(COLOR_PAIR(world.drone.color_pair));
+        //     mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol);
+        //     attroff(COLOR_PAIR(world.drone.color_pair));
+        // }
+
+        // refresh();
 
         // Write the screen dimensions to the pipe
         if (write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen)) == -1)
