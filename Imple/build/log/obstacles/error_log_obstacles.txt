@@ -184,3 +184,6 @@
 2024-03-08 18:52:17 - ERROR reading from socket: Interrupted system call
 2024-03-08 18:52:18 - ERROR reading from socket: Interrupted system call
 2024-03-08 18:52:19 - ERROR reading from socket: Interrupted system call
+2024-03-09 11:42:15 - ERROR writing to socket: Connection reset by peer
+2024-03-09 11:56:46 - ERROR writing to socket: Connection reset by peer
+2024-03-09 12:34:40 - ERROR writing to socket: Connection reset by peer

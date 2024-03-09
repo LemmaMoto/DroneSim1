@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     {
         if (sscanf(line, "NUM_TARGETS = %d", &NUM_TARGETS) == 1)
         {
-            // Se abbiamo trovato una riga che corrisponde al formato "NUM_OBSTACLES = %d",
+            // Se abbiamo trovato una riga che corrisponde al formato "NUM_TARGETS = %d",
             // interrompiamo il ciclo
             continue;
         }
@@ -203,24 +203,150 @@ int main(int argc, char *argv[])
         error("ERROR connecting");
         sleep(1); // Wait for 1 second before trying again
     }
-    while (1)
+    char buffer_echo[1024];
+    printf("Sending TI\n");
+    bool var = true;
+    // to keep sending the OI command until the server responds with the same string
+    while (var)
     {
-        printf("Please enter the message: ");
-        bzero(buffer, 256);
-        fgets(buffer, 255, stdin);
-        sleep(1);
+        bzero(buffer, sizeof(buffer));
+        strcpy(buffer, "TI");
         n = write(sockfd, buffer, sizeof(buffer));
         if (n < 0)
         {
             // error("ERROR writing to socket");
         }
-        bzero(buffer, 256);
-        n = read(sockfd, buffer, 255);
+        sleep(1);                                // PROVARE AD AUMENTARE LO SLEEP
+        bzero(buffer_echo, sizeof(buffer_echo)); // Clear the echo buffer before reading into it
+        int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo));
+        if (n_r < 0)
+        {
+            error("ERROR reading from socket");
+        }
+        else if (n_r == 0)
+        {
+            error("STRANO ERRORE");
+        }
+        printf("ECHOOOOOOOO: %s\n", buffer_echo);
+        printf("BUUUUUUFFEEERR: %s\n", buffer);
+        if (strcmp(buffer, buffer_echo) == 0)
+        {
+            printf("UGUALI");
+            var = false;
+        }
+    }
+    printf("1\n");
+    bzero(buffer, sizeof(buffer));
+    while (buffer[0] == '\0')
+    {
+        n = read(sockfd, buffer, sizeof(buffer));
+        printf("LEGGENDO DIM FINESTRA \n");
+        printf("DIMENSIONE FINESTRA: %s\n", buffer);
         if (n < 0)
         {
-            // error("ERROR reading from socket");
+            error("ERROR reading from socket");
         }
-        printf("%s\n", buffer);
+        n = write(sockfd, buffer, sizeof(buffer));
+    }
+
+    char height_str[8];
+    height_str[0] = '\0';
+    char width_str[8];
+    width_str[0] = '\0';
+    float height, width;
+
+    strncpy(height_str, buffer, 7);
+    height_str[8] = '\0'; // Null-terminate the string
+    height = atof(height_str);
+
+    strncpy(width_str, buffer + 7, 7);
+    width_str[8] = '\0'; // Null-terminate the string
+    width = atof(width_str);
+    printf("height: %f, width: %f\n", height, width);
+
+    bool echo_ok = false;
+    char buffer_echo_trg_pos[1024];
+
+    world.screen.height = height;
+    world.screen.width = width;
+
+    tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+    char trg_pos[1024];
+    char str[64];
+    sprintf(str, "%d", NUM_TARGETS);
+    strcpy(&trg_pos[2], str);
+    while (1)
+    {
+
+        bzero(trg_pos, sizeof(trg_pos));
+        if (NUM_TARGETS > 9 && NUM_TARGETS < 100)
+        {
+            trg_pos[0] = 'T';
+            trg_pos[1] = '[';
+            trg_pos[2] = str[0];
+            trg_pos[3] = str[1];
+            trg_pos[4] = ']';
+        }
+        else if (NUM_TARGETS < 10)
+        {
+            trg_pos[0] = 'T';
+            trg_pos[1] = '[';
+            strcpy(&trg_pos[2], str);
+            trg_pos[3] = ']';
+        }
+        char target_x[8], target_y[8];
+        if (tot_borders != border_prec)
+        {
+            first = 1;
+        }
+        border_prec = tot_borders;
+        int i = 0;
+
+        // generare ostacoli randomici
+        time_t current_time = time(NULL);
+        if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
+        {   
+            for (; i < NUM_TARGETS; i++)
+            {
+                world.target[i].x = rand() % (world.screen.width - 4) + 2;
+                world.target[i].y = rand() % (world.screen.height - 4) + 2;
+                sprintf(target_x, "%.3f", (float)world.target[i].x);
+                sprintf(target_y, "%.3f", (float)world.target[i].y);
+                strcat(trg_pos, target_x);
+                strcat(trg_pos, ",");
+                strcat(trg_pos, target_y);
+                if (i < NUM_TARGETS - 1)
+                {
+                    strcat(trg_pos, "|");
+                }
+            }
+            last_spawn_time = current_time;
+            echo_ok = false;
+        }
+        first--;
+        while (!echo_ok)
+        {
+            printf("trg_pos: %s\n", trg_pos);
+            n = write(sockfd, trg_pos, sizeof(trg_pos));
+            if (n < 0)
+            {
+                error("ERROR writing to socket");
+            }
+            n = read(sockfd, buffer_echo_trg_pos, sizeof(buffer_echo_trg_pos));
+            if (n < 0)
+            {
+                error("ERROR writing to socket");
+            }
+            if (strcmp(buffer_echo_trg_pos, trg_pos) == 0)
+            {
+                echo_ok = true;
+                printf("target POSITION ECHO CORRETTO\n");
+            }
+            else
+            {
+                printf("target POSITION ECHO NON CORRETTO\n");
+            }
+        }
 
         // if (read(pipest[PIPE_READ], &world, sizeof(world)) == -1)
         // {

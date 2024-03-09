@@ -211,6 +211,7 @@ int main(int argc, char *argv[])
 
     char line[256];
     int NUM_OBSTACLES = 0;
+    int NUM_TARGETS = 0;
     int refresh_time_obstacles = 0;
 
     while (fgets(line, sizeof(line), file))
@@ -219,6 +220,10 @@ int main(int argc, char *argv[])
         {
             // Se abbiamo trovato una riga che corrisponde al formato "NUM_OBSTACLES = %d",
             // interrompiamo il ciclo
+            continue;
+        }
+        else if (sscanf(line, "NUM_TARGETS = %d", &NUM_TARGETS) == 1)
+        {
             continue;
         }
         else if (sscanf(line, "refresh_time_obstacles = %d", &refresh_time_obstacles) == 1)
@@ -273,7 +278,7 @@ int main(int argc, char *argv[])
         clear();
 
         // Print the target symbols at their positions if they're within the window dimensions
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < NUM_TARGETS; i++)
         {
             if ((world.target[i].y < height && world.target[i].x < width) && world.target[i].is_visible)
             {

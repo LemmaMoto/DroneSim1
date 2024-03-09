@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
         }
         sleep(1);                                // PROVARE AD AUMENTARE LO SLEEP
         bzero(buffer_echo, sizeof(buffer_echo)); // Clear the echo buffer before reading into it
-        int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo) - 1);
+        int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo));
         if (n_r < 0)
         {
             error("ERROR reading from socket");
@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        
+
     }
 
     return 0;
