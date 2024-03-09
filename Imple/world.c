@@ -202,6 +202,34 @@ int main(int argc, char *argv[])
     char *process_names[NUM_PROCESSES] = PROCESS_NAMES;
     process_name = process_names[process_num]; // added to logfile for readability
 
+    FILE *file = fopen("file_para.txt", "r");
+    if (file == NULL)
+    {
+        error("Unable to open file");
+        exit(EXIT_FAILURE);
+    }
+
+    char line[256];
+    int NUM_OBSTACLES = 0;
+    int refresh_time_obstacles = 0;
+
+    while (fgets(line, sizeof(line), file))
+    {
+        if (sscanf(line, "NUM_OBSTACLES = %d", &NUM_OBSTACLES) == 1)
+        {
+            // Se abbiamo trovato una riga che corrisponde al formato "NUM_OBSTACLES = %d",
+            // interrompiamo il ciclo
+            continue;
+        }
+        else if (sscanf(line, "refresh_time_obstacles = %d", &refresh_time_obstacles) == 1)
+        {
+            break;
+        }
+    }
+    mvprintw(3, 3, "NUM_OBSTACLES = %d\n", NUM_OBSTACLES);
+    refresh();
+    // fclose(file);
+
     WINDOW *win;
     win = initscr();
     start_color();
@@ -255,7 +283,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < NUM_OBSTACLES; i++)
         {
             if (world.obstacle[i].y < height && world.obstacle[i].x < width)
             {

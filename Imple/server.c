@@ -73,6 +73,7 @@ int pipets[2];
 int pipesw[2];
 int pipews[2];
 int pipesd_t[2];
+int pipesd_s[2];
 int pipeis[2];
 
 void error(char *msg)
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
 
     struct Drone drone;
     int process_num;
-    if (argc == 22)
+    if (argc == 24)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesd[PIPE_READ]);
@@ -170,6 +171,8 @@ int main(int argc, char *argv[])
         sscanf(argv[19], "%d", &pipesd_t[PIPE_WRITE]);
         sscanf(argv[20], "%d", &pipeis[PIPE_READ]);
         sscanf(argv[21], "%d", &pipeis[PIPE_WRITE]);
+        sscanf(argv[22], "%d", &pipesd_s[PIPE_READ]);
+        sscanf(argv[23], "%d", &pipesd_s[PIPE_WRITE]);
     }
     else
     {
@@ -274,6 +277,8 @@ int main(int argc, char *argv[])
     char buffer_echo[1024];
     while (1)
     {
+        bool exit_while = true;
+        
         read(pipews[PIPE_READ], &world.screen, sizeof(world.screen));
         read(pipeds[PIPE_READ], &world.drone, sizeof(world.drone));
 
@@ -318,8 +323,8 @@ int main(int argc, char *argv[])
         write(pipesd_t[PIPE_WRITE], &world.target, sizeof(world.target));
         fsync(pipesd_t[PIPE_WRITE]);
 
-        // write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
-        // fsync(pipesd_s[PIPE_WRITE]);
+        write(pipesd_s[PIPE_WRITE], &world.screen, sizeof(world.screen));
+        fsync(pipesd_s[PIPE_WRITE]);
 
         // write(pipeso[PIPE_WRITE], &world, sizeof(world));
         // fsync(pipeso[PIPE_WRITE]);
@@ -346,18 +351,17 @@ int main(int argc, char *argv[])
             char buffer[1024];
             char buffer_check[1024];
             char buffer2[1024];
-            while (1)
+            while (exit_while)
             {
                 bzero(buffer, sizeof(buffer));
                 sleep(1);
                 n = read(newsockfd, buffer, sizeof(buffer));
-                // int n2 = read(newsockfd, buffer2, 1024);
-                printf("buffer: %s\n", buffer);
-                // printf("buffer2: %s\n", buffer2);
                 if (n < 0)
                 {
-                    // error("ERROR reading from socket");
+                    error("ERROR reading from socket");
+                    exit_while = false;
                 }
+                printf("buffer: %s\n", buffer);
                 if (n >= 0)
                 {
                     switch (buffer[0])
@@ -395,6 +399,12 @@ int main(int argc, char *argv[])
                         }
                         else
                         {
+                            // send echo
+                            n = write(newsockfd, buffer, sizeof(buffer));
+                            if (n < 0)
+                            {
+                                error("ERROR writing to socket");
+                            }
                             int num_obstacles = buffer[2] - '0';
                             int j = 4;
                             for (int i = 0; i < num_obstacles; i++)

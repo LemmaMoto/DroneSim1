@@ -241,133 +241,106 @@ int main(int argc, char *argv[])
         n = write(sockfd, buffer, sizeof(buffer));
     }
 
+    char height_str[8];
+    height_str[0] = '\0';
+    char width_str[8];
+    width_str[0] = '\0';
+    float height, width;
+
+    strncpy(height_str, buffer, 7);
+    height_str[8] = '\0'; // Null-terminate the string
+    height = atof(height_str);
+
+    strncpy(width_str, buffer + 7, 7);
+    width_str[8] = '\0'; // Null-terminate the string
+    width = atof(width_str);
+    printf("height: %f, width: %f\n", height, width);
+
+    bool echo_ok = false;
+    char buffer_echo_obs_pos[1024];
+
+    world.screen.height = height;
+    world.screen.width = width;
+
+    tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
+    char obs_pos[1024];
+    char str[64];
+    sprintf(str, "%d", NUM_OBSTACLES);
+    strcpy(&obs_pos[2], str);
     while (1)
     {
-        sleep(1);
-        bzero(buffer, sizeof(buffer));
-        n = read(sockfd, buffer, sizeof(buffer));
-        if (n < 0)
+        bzero(obs_pos, sizeof(obs_pos));
+        if (NUM_OBSTACLES > 9 && NUM_OBSTACLES < 100)
         {
-            error("ERROR reading from socket");
+            obs_pos[0] = 'O';
+            obs_pos[1] = '[';
+            obs_pos[2] = str[0];
+            obs_pos[3] = str[1];
+            obs_pos[4] = ']';
         }
-
-        printf("\nECHO %s", buffer);
-        if (strcmp(buffer, buffer_echo) == 0)
+        else if (NUM_OBSTACLES < 10)
         {
-            printf("\nEcho OK");
-        }
-        printf("STRINGA CHE ARRIVA PER DEBUG: %s\n", buffer);
-
-        char height_str[8];
-        height_str[0] = '\0';
-        char width_str[8];
-        width_str[0] = '\0';
-        float height, width;
-
-        strncpy(height_str, buffer, 7);
-        height_str[8] = '\0'; // Null-terminate the string
-        height = atof(height_str);
-
-        strncpy(width_str, buffer + 7, 7);
-        width_str[8] = '\0'; // Null-terminate the string
-        width = atof(width_str);
-        printf("height: %f, width: %f\n", height, width);
-
-        if (height >= 1 && width >= 1)
-        {
-            world.screen.height = height;
-            world.screen.width = width;
-
-            tot_borders = 2 * (world.screen.height - 2) + 2 * (world.screen.width - 2);
-
-            char obs_pos[1024];
-            char str[64];
-            sprintf(str, "%d", NUM_OBSTACLES);
+            obs_pos[0] = 'O';
+            obs_pos[1] = '[';
             strcpy(&obs_pos[2], str);
-            if (NUM_OBSTACLES > 9 && NUM_OBSTACLES < 100)
-            {
-                obs_pos[0] = 'O';
-                obs_pos[1] = '[';
-                obs_pos[2] = str[0];
-                obs_pos[3] = str[1];
-                obs_pos[4] = ']';
-            }
-            else if (NUM_OBSTACLES < 10)
-            {
-                obs_pos[0] = 'O';
-                obs_pos[1] = '[';
-                strcpy(&obs_pos[2], str);
-                obs_pos[3] = ']';
-            }
-            char obstacle_x[8], obstacle_y[8];
-            if (tot_borders != border_prec)
-            {
-                first = 2;
-            }
-            border_prec = tot_borders;
-            int i = 0;
-
-            // generare ostacoli randomici
-            time_t current_time = time(NULL);
-            if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
-            {
-                for (; i < NUM_OBSTACLES; i++)
-                {
-                    int isSamePosition;
-                    // do
-                    // {
-                    isSamePosition = 0;
-                    world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
-                    world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
-                    sprintf(obstacle_x, "%.3f", (float)world.obstacle[i].x);
-                    sprintf(obstacle_y, "%.3f", (float)world.obstacle[i].y);
-                    strcat(obs_pos, obstacle_x);
-                    strcat(obs_pos, ",");
-                    strcat(obs_pos, obstacle_y);
-                    if (i < NUM_OBSTACLES - 1)
-                    {
-                        strcat(obs_pos, "|");
-                    }
-
-                    // Check if the obstacle is in the same position as the drone
-                    //     if (world.obstacle[i].x == world.drone.x && world.obstacle[i].y == world.drone.y)
-                    //     {
-                    //         isSamePosition = 1;
-                    //     }
-
-                    //     // Check if the obstacle is in the same position as any of the targets
-                    //     for (int j = 0; j < current_num_targets; j++)
-                    //     {
-                    //         if (world.obstacle[i].x == world.target[j].x && world.obstacle[i].y == world.target[j].y)
-                    //         {
-                    //             printf("DEBUGGGGGGGGGGGGGG\n");
-                    //             isSamePosition = 1;
-                    //             break;
-                    //         }
-                    //     }
-                    // } while (isSamePosition);
-                }
-                last_spawn_time = current_time;
-            }
-            first--;
-            // generare ostacoli randomici
-            printf("tot_borders: %d\n", tot_borders);
-            printf("i: %d\n", i);
-            printf("obs_pos: %s\n", obs_pos);
-            n = write(sockfd, obs_pos, strlen(obs_pos));
+            obs_pos[3] = ']';
         }
-        else
+        char obstacle_x[8], obstacle_y[8];
+        if (tot_borders != border_prec)
         {
-            printf("0 height and width\n");
-            // exit(EXIT_FAILURE);
+            first = 1;
         }
-        printf("height: %d, width: %d\n", world.screen.height, world.screen.width);
-        printf("buffer echo : %s", buffer_echo);
+        border_prec = tot_borders;
+        int i = 0;
 
-        // posizionare gli ostacoli intorno alla window di modo da delimitare i bordi
+        // generare ostacoli randomici
+        time_t current_time = time(NULL);
+        if (current_time - last_spawn_time >= refresh_time_obstacles || first > 0)
+        {
+            for (; i < NUM_OBSTACLES; i++)
+            {
+                world.obstacle[i].x = rand() % (world.screen.width - 4) + 2;
+                world.obstacle[i].y = rand() % (world.screen.height - 4) + 2;
+                sprintf(obstacle_x, "%.3f", (float)world.obstacle[i].x);
+                sprintf(obstacle_y, "%.3f", (float)world.obstacle[i].y);
+                strcat(obs_pos, obstacle_x);
+                strcat(obs_pos, ",");
+                strcat(obs_pos, obstacle_y);
+                if (i < NUM_OBSTACLES - 1)
+                {
+                    strcat(obs_pos, "|");
+                }
+            }
+            last_spawn_time = current_time;
+            echo_ok = false;
+        }
+        first--;
+        while (!echo_ok)
+        {
+            printf("obs_pos: %s\n", obs_pos);
+            n = write(sockfd, obs_pos, sizeof(obs_pos));
+            if (n < 0)
+            {
+                error("ERROR writing to socket");
+            }
+            n = read(sockfd, buffer_echo_obs_pos, sizeof(buffer_echo_obs_pos));
+            if (n < 0)
+            {
+                error("ERROR writing to socket");
+            }
+            if (strcmp(buffer_echo_obs_pos, obs_pos) == 0)
+            {
+                echo_ok = true;
+                printf("OBSTACLE POSITION ECHO CORRETTO\n");
+            }   
+            else 
+            {
+                printf("OBSTACLE POSITION ECHO NON CORRETTO\n");
+            }
+        }
+
+        
     }
-
-    // passare gli ostacoli al drone via pipe
 
     return 0;
 }

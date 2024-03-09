@@ -293,7 +293,6 @@ int main(int argc, char *argv[])
         fy = 0;
 
         char command = '\0';
-        printf("Reading from pipe\n");
 
         if (read(pipesd_s[PIPE_READ], &world.screen, sizeof(world.screen)) == -1)
         {

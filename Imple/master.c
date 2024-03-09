@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
 
     if (child_process0 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, pipe_read_is, pipe_write_di, NULL};
+        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, pipe_read_is, pipe_write_di, pipe_read_sd_s, pipe_write_sd_s, NULL};
         execvp("konsole", arg_list);
         error("execvp failed for server");
         return 0;
