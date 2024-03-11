@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
         char obstacle_x[8], obstacle_y[8];
         if (tot_borders != border_prec)
         {
-            first = 1;
+            first = 2;
         }
         border_prec = tot_borders;
         int i = 0;
@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
             last_spawn_time = current_time;
             echo_ok = false;
         }
-        first--;
+        first=-1;
         while (!echo_ok)
         {
             Printf("obs_pos: %s\n", obs_pos);

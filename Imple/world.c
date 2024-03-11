@@ -98,12 +98,14 @@ struct World
     struct Drone drone;
     struct Obstacle obstacle[9];
     struct Screen screen;
-    struct Target target[9];
+    struct Target target[10];
 };
 
 int pipesw[2];
 int pipews[2];
 int pipesd_s[2];
+int pipesw_o[2];
+int pipesw_t[2];
 
 // logs time update to file
 void log_receipt(struct timeval tv)
@@ -158,7 +160,7 @@ int main(int argc, char *argv[])
     }
 
     int process_num;
-    if (argc == 8)
+    if (argc == 12)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesw[PIPE_READ]);
@@ -167,6 +169,10 @@ int main(int argc, char *argv[])
         sscanf(argv[5], "%d", &pipews[PIPE_WRITE]);
         sscanf(argv[6], "%d", &pipesd_s[PIPE_READ]);
         sscanf(argv[7], "%d", &pipesd_s[PIPE_WRITE]);
+        sscanf(argv[8], "%d", &pipesw_o[PIPE_READ]);
+        sscanf(argv[9], "%d", &pipesw_o[PIPE_WRITE]);
+        sscanf(argv[10], "%d", &pipesw_t[PIPE_READ]);
+        sscanf(argv[11], "%d", &pipesw_t[PIPE_WRITE]);
     }
     else
     {
@@ -276,65 +282,98 @@ int main(int argc, char *argv[])
     int n;
     while (1)
     {
-        // Read data from the pipe
-        n = read(pipesw[PIPE_READ], &world.drone, sizeof(world.drone));
-        if (n < 0)
+        Printf("world loop %d\n",sizeof(world));
+
+        struct Drone droneTemp;
+        n = read(pipesw[PIPE_READ], &droneTemp, sizeof(world.drone));
+        if (n > 0)
+        {
+            
+            world.drone = droneTemp;
+            //Printf("drone x: AAAAAAA %d, y: %d , color: %d\n", world.drone.x, world.drone.y, world.drone.color_pair);
+        }
+        else
         {
             error("read drone");
-            continue;
         }
-        n = read(pipesw[PIPE_READ], &world.obstacle, sizeof(world.obstacle));
-        if (n < 0)
+
+        
+        struct Obstacle obstacleTemp[9];
+        n = read(pipesw_o[PIPE_READ], &obstacleTemp, sizeof(world.obstacle));
+        if (n > 0)
+        {
+            for (int i = 0; i < NUM_OBSTACLES; i++)
+            {
+                world.obstacle[i] = obstacleTemp[i];
+                //Printf("obstacle AAAAAAA%d: x: %d, y: %d, symbol: %c\n", i, world.obstacle[i].x, world.obstacle[i].y, world.obstacle[i].symbol);
+            }
+        }
+        else
         {
             error("read obstacle");
-            continue;
         }
-        n = read(pipesw[PIPE_READ], &world.target, sizeof(world.target));
-        if (n < 0)
+
+        struct Target targetTemp[10];
+        n = read(pipesw_t[PIPE_READ], &targetTemp, sizeof(world.target));
+        if (n > 0)
+        {
+            for (int i = 0; i < NUM_TARGETS; i++)
+            {
+                world.target[i] = targetTemp[i];
+                //Printf("target AAAAAA%d: x: %d, y: %d, symbol: %c, is_active: %d, is_visible: %d\n", i, world.target[i].x, world.target[i].y, world.target[i].symbol, world.target[i].is_active, world.target[i].is_visible);
+            }
+        }
+        else
         {
             error("read target");
-            continue;
         }
+
+
+
         getmaxyx(win, height, width);
         world.screen.height = height;
         world.screen.width = width;
-        // clear();
+        clear();
         // mvprintw(3, 3, "Screen: height: %d, width: %d", world.screen.height, world.screen.width);
 
-        for (int i = 0; i < NUM_TARGETS; i++)
+        for (int i = 1; i < NUM_TARGETS; i++)
         {
             Printf("target %d: x: %d, y: %d\n", i, world.target[i].x, world.target[i].y);
         }
 
-        // Print the target symbols at their positions if they're within the window dimensions
-        // for (int i = 0; i < NUM_TARGETS; i++)
-        // {
-        //     if ((world.target[i].y < height && world.target[i].x < width) && world.target[i].is_visible)
-        //     {
-        //         attron(COLOR_PAIR(4));
-        //         mvprintw(world.target[i].y, world.target[i].x, "%c", world.target[i].symbol);
-        //         attroff(COLOR_PAIR(4));
-        //     }
-        // }
+        //Print the target symbols at their positions if they're within the window dimensions
+        for (int i = 0; i < NUM_TARGETS; i++)
+        {
+            if ((world.target[i].y < height && world.target[i].x < width) && world.target[i].is_visible)
+            {
+                attron(COLOR_PAIR(4));
+                mvprintw(world.target[i].y, world.target[i].x, "T" );
+                attroff(COLOR_PAIR(4));
+            }
+        }
+        
 
-        // for (int i = 0; i < NUM_OBSTACLES; i++)
-        // {
-        //     if (world.obstacle[i].y < height && world.obstacle[i].x < width)
-        //     {
-        //         attron(COLOR_PAIR(3));
-        //         mvprintw(world.obstacle[i].y, world.obstacle[i].x, "%c", world.obstacle[i].symbol);
-        //         attroff(COLOR_PAIR(3));
-        //     }
-        // }
+        for (int i = 1; i < NUM_OBSTACLES; i++)
+        {
+            if (world.obstacle[i].y < height && world.obstacle[i].x < width)
+            {
+                attron(COLOR_PAIR(3));
+                mvprintw(world.obstacle[i].y, world.obstacle[i].x, "#");
+                attroff(COLOR_PAIR(3));
+            }
+        }
+        
 
-        // if (world.drone.y < height && world.drone.x < width)
-        // {
-        //     attron(COLOR_PAIR(world.drone.color_pair));
-        //     mvprintw(world.drone.y, world.drone.x, "%c", world.drone.symbol);
-        //     attroff(COLOR_PAIR(world.drone.color_pair));
-        // }
+        Printf("drone x: %d, y: %d\n", world.drone.x, world.drone.y);
+        Printf("Height x: %d, width y: %d\n", height, width);
+        if (world.drone.y < height && world.drone.x < width)
+        {
+            attron(COLOR_PAIR(world.drone.color_pair));
+            mvprintw(world.drone.y, world.drone.x, "W");
+            attroff(COLOR_PAIR(world.drone.color_pair));
+        }
 
-        // refresh();
+        refresh();
 
         // Write the screen dimensions to the pipe
         if (write(pipews[PIPE_WRITE], &world.screen, sizeof(world.screen)) == -1)

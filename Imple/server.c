@@ -63,7 +63,7 @@ struct World
     struct Drone drone;
     struct Obstacle obstacle[9];
     struct Screen screen;
-    struct Target target[9];
+    struct Target target[10];
 };
 int pipesd[2];
 int pipeds[2];
@@ -76,6 +76,8 @@ int pipews[2];
 int pipesd_t[2];
 int pipesd_s[2];
 int pipeis[2];
+int pipesw_o[2];
+int pipesw_t[2];
 
 void error(char *msg)
 {
@@ -173,7 +175,7 @@ int main(int argc, char *argv[])
 
     struct Drone drone;
     int process_num;
-    if (argc == 24)
+    if (argc == 28)
     {
         sscanf(argv[1], "%d", &process_num);
         sscanf(argv[2], "%d", &pipesd[PIPE_READ]);
@@ -198,6 +200,10 @@ int main(int argc, char *argv[])
         sscanf(argv[21], "%d", &pipeis[PIPE_WRITE]);
         sscanf(argv[22], "%d", &pipesd_s[PIPE_READ]);
         sscanf(argv[23], "%d", &pipesd_s[PIPE_WRITE]);
+        sscanf(argv[24], "%d", &pipesw_o[PIPE_READ]);
+        sscanf(argv[25], "%d", &pipesw_o[PIPE_WRITE]);
+        sscanf(argv[26], "%d", &pipesw_t[PIPE_READ]);
+        sscanf(argv[27], "%d", &pipesw_t[PIPE_WRITE]);
     }
     else
     {
@@ -319,13 +325,13 @@ int main(int argc, char *argv[])
         strcpy(merged_buffer, window_size);
         // Printf("merged_buffer: %s\n", merged_buffer);
 
+        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
+        fsync(pipesw[PIPE_WRITE]);
+
         read(pipeis[PIPE_READ], &command, sizeof(command));
         write(pipeis[PIPE_WRITE], &command, sizeof(command));
         // Printf("command: %c\n", command);
         command = '0';
-
-        write(pipesw[PIPE_WRITE], &world.drone, sizeof(world.drone));
-        fsync(pipesw[PIPE_WRITE]);
 
         write(pipesd[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
         fsync(pipesd[PIPE_WRITE]);
@@ -357,6 +363,10 @@ int main(int argc, char *argv[])
             char buffer2[1024];
             while (exit_while)
             {
+
+                Printf("Obsta %d %d\n", world.obstacle[3].x, world.obstacle[3].y);
+                Printf("Target %d %d\n", world.target[3].x, world.target[3].y);
+
                 bzero(buffer, sizeof(buffer));
                 sleep(1);
                 n = read(newsockfd, buffer, sizeof(buffer));
@@ -365,7 +375,7 @@ int main(int argc, char *argv[])
                     error("ERROR reading from socket");
                     exit_while = false;
                 }
-                // Printf("buffer: %s\n", buffer);
+                Printf("buffer: %s\n", buffer);
                 if (n >= 0)
                 {
                     switch (buffer[0])
@@ -378,7 +388,7 @@ int main(int argc, char *argv[])
                             {
                                 error("ERROR writing to socket");
                             }
-                            // Printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
+                            Printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
                             sleep(1);
                             bool var = true;
                             strcpy(buffer_echo, merged_buffer);
@@ -396,7 +406,7 @@ int main(int argc, char *argv[])
                                 }
                                 if (strcmp(buffer, buffer_echo) == 0)
                                 {
-                                    // Printf("DIMENSIONI FINESTRA OBSTACLE CORRETTE\n");
+                                    Printf("DIMENSIONI FINESTRA OBSTACLE CORRETTE\n");
                                     var = false;
                                 }
                             }
@@ -429,12 +439,19 @@ int main(int argc, char *argv[])
                                     }
                                     else if (buffer[j] == '|')
                                     {
-                                        sub_buffer_y[y_index] = '\0';
-                                        world.obstacle[i].x = (int)atof(sub_buffer_x);
-                                        world.obstacle[i].y = (int)atof(sub_buffer_y);
-                                        // //printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
-                                        j++;
-                                        break;
+                                        if ((int)atof(sub_buffer_x) == 0 || (int)atof(sub_buffer_y) == 0)
+                                        {
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            sub_buffer_y[y_index] = '\0';
+                                            world.obstacle[i].x = (int)atof(sub_buffer_x);
+                                            world.obstacle[i].y = (int)atof(sub_buffer_y);
+                                            Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
+                                            j++;
+                                            break;
+                                        }
                                     }
                                     else if (is_x)
                                     {
@@ -454,9 +471,9 @@ int main(int argc, char *argv[])
                                     world.obstacle[i].y = (int)atof(sub_buffer_y);
                                 }
                                 world.obstacle[i].symbol = '#';
-                                // Printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
-                                write(pipesw[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
-                                fsync(pipesw[PIPE_WRITE]);
+                                Printf("obstacle %d x: %d, y: %d\n", i, world.obstacle[i].x, world.obstacle[i].y);
+                                write(pipesw_o[PIPE_WRITE], &world.obstacle, sizeof(world.obstacle));
+                                fsync(pipesw_o[PIPE_WRITE]);
                             }
                         }
                         break;
@@ -519,12 +536,19 @@ int main(int argc, char *argv[])
                                     }
                                     else if (buffer[j] == '|')
                                     {
-                                        sub_buffer_y[y_index] = '\0';
-                                        world.target[i].x = (int)atof(sub_buffer_x);
-                                        world.target[i].y = (int)atof(sub_buffer_y);
-                                        // Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
-                                        j++;
-                                        break;
+                                        if ((int)atof(sub_buffer_x) == 0 || (int)atof(sub_buffer_y) == 0)
+                                        {
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            sub_buffer_y[y_index] = '\0';
+                                            world.target[i].x = (int)atof(sub_buffer_x);
+                                            world.target[i].y = (int)atof(sub_buffer_y);
+                                            Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
+                                            j++;
+                                            break;
+                                        }
                                     }
                                     else if (is_x)
                                     {
@@ -548,8 +572,8 @@ int main(int argc, char *argv[])
                                 world.target[i].is_visible = true;
                                 Printf("target %d x: %d, y: %d\n", i, world.target[i].x, world.target[i].y);
                             }
-                            write(pipesw[PIPE_WRITE], &world.target, sizeof(world.target));
-                            fsync(pipesw[PIPE_WRITE]);
+                            write(pipesw_t[PIPE_WRITE], &world.target, sizeof(world.target));
+                            fsync(pipesw_t[PIPE_WRITE]);
                         }
                         break;
                     default:
@@ -561,7 +585,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            close(newsockfd);
+            //close(newsockfd);
         }
     }
 

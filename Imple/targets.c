@@ -43,7 +43,7 @@ void error(char *msg)
 
 void Printf(char *format, ...)
 {
-    FILE *logFile = fopen("log/targets/error_log_targets.txt", "a");
+    FILE *logFile = fopen("log/targets/log_targets.txt", "a");
     if (logFile != NULL)
     {
         time_t now = time(NULL);
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
     {
 
         bzero(trg_pos, sizeof(trg_pos));
-        if (NUM_TARGETS > 9 && NUM_TARGETS < 100)
+        if (NUM_TARGETS >= 10 && NUM_TARGETS < 100)
         {
             trg_pos[0] = 'T';
             trg_pos[1] = '[';
@@ -322,13 +322,14 @@ int main(int argc, char *argv[])
         char target_x[8], target_y[8];
         if (tot_borders != border_prec)
         {
-            first = 1;
+            first = 2;
         }
         border_prec = tot_borders;
         int i = 0;
 
         // generare ostacoli randomici
         time_t current_time = time(NULL);
+        srand(current_time+15);
         if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
         {
             for (; i < NUM_TARGETS; i++)

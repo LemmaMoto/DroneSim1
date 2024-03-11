@@ -81,6 +81,32 @@ int main(int argc, char *argv[])
     sprintf(pipe_read_ws, "%d", pipews[PIPE_READ]);
     sprintf(pipe_write_ws, "%d", pipews[PIPE_WRITE]);
 
+    int pipesw_ob[2];
+
+    if (pipe(pipesw_ob) == -1)
+    {
+        error("Error creating pipesw_ob");
+        return -1;
+    }
+
+    char pipe_read_sw_obs[10];
+    char pipe_write_sw_obs[10];
+    sprintf(pipe_read_sw_obs, "%d", pipesw_ob[PIPE_READ]);
+    sprintf(pipe_write_sw_obs, "%d", pipesw_ob[PIPE_WRITE]);
+
+    int pipesw_tar[2];
+
+    if (pipe(pipesw_tar) == -1)
+    {
+        error("Error creating pipesw_tar");
+        return -1;
+    }
+
+    char pipe_read_sw_tar[10];
+    char pipe_write_sw_tar[10];
+    sprintf(pipe_read_sw_tar, "%d", pipesw_tar[PIPE_READ]);
+    sprintf(pipe_write_sw_tar, "%d", pipesw_tar[PIPE_WRITE]);
+
     // PIPE PER COLLEGARE SERVER E DRONE
     int pipesd[2];
     if (pipe(pipesd) == -1)
@@ -262,7 +288,7 @@ int main(int argc, char *argv[])
 
     if (child_process0 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, pipe_read_is, pipe_write_di, pipe_read_sd_s, pipe_write_sd_s, NULL};
+        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, pipe_read_is, pipe_write_di, pipe_read_sd_s, pipe_write_sd_s, pipe_read_sw_obs, pipe_write_sw_obs, pipe_read_sw_tar, pipe_write_sw_tar, NULL};
         execvp("konsole", arg_list);
         error("execvp failed for server");
         return 0;
@@ -314,7 +340,7 @@ int main(int argc, char *argv[])
 
     if (child_process3 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./world", "3", pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_s, pipe_write_sd_s, NULL};
+        char *arg_list[] = {"konsole", "-e", "./world", "3", pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_s, pipe_write_sd_s, pipe_read_sw_obs, pipe_write_sw_obs, pipe_read_sw_tar, pipe_write_sw_tar, NULL};
         execvp("konsole", arg_list);
         error("execvp failed for world");
         return 0;
@@ -400,6 +426,10 @@ int main(int argc, char *argv[])
     close(pipesd_s[1]);
     close(pipeis[0]);
     close(pipeis[1]);
+    close(pipesw_ob[0]);
+    close(pipesw_ob[1]);
+    close(pipesw_tar[0]);
+    close(pipesw_tar[1]);
 
     printf("pipedi[0] = %d, pipedi[1] = %d\n", pipedi[PIPE_READ], pipedi[PIPE_WRITE]);
     printf("pipesd[0] = %d, pipesd[1] = %d\n", pipesd[PIPE_READ], pipesd[PIPE_WRITE]);

@@ -1,7 +1,13 @@
 {
     "files.associations": {
         "unistd.h": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "array": "c",
+        "fstream": "c",
+        "istream": "c",
+        "limits": "c",
+        "functional": "c",
+        "typeinfo": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
