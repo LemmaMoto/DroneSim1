@@ -22,8 +22,6 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define portno 50000
-
 void error(char *msg)
 {
     FILE *logFile = fopen("log/obstacles/error_log_obstacles.txt", "a");
@@ -172,6 +170,7 @@ int main(int argc, char *argv[])
     int NUM_OBSTACLES = 0;
     int refresh_time_obstacles = 0;
     char ip_addr_string[100];
+    int portno = 0;
 
     while (fgets(line, sizeof(line), file))
     {
@@ -186,6 +185,10 @@ int main(int argc, char *argv[])
             continue;
         }
         else if (sscanf(line, "ip = %s", ip_addr_string) == 1){
+            continue;
+        }
+        else if (sscanf(line, "portno = %d", &portno) == 1)
+        {
             break;
         }
     }

@@ -2315,3 +2315,31 @@
 2024-03-11 18:09:34 - ERROR on accept: Interrupted system call
 2024-03-11 18:09:35 - ERROR reading from socket: Bad file descriptor
 2024-03-11 18:09:36 - ERROR reading from socket: Connection reset by peer
+2024-03-11 18:27:30 - ERROR on accept: Interrupted system call
+2024-03-11 18:27:31 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:27:32 - ERROR on accept: Interrupted system call
+2024-03-11 18:27:33 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:27:36 - ERROR on accept: Interrupted system call
+2024-03-11 18:27:37 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:27:40 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:10 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:11 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:13 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:14 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:16 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:17 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:20 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:21 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:24 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:25 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:27 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:28 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:31 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:32 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:34 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:35 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:38 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:39 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:42 - ERROR on accept: Interrupted system call
+2024-03-11 18:40:43 - ERROR reading from socket: Bad file descriptor
+2024-03-11 18:40:45 - ERROR reading from socket: Connection reset by peer

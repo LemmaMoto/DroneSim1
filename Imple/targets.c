@@ -22,7 +22,6 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define portno 50000
 
 void error(char *msg)
 {
@@ -169,6 +168,7 @@ int main(int argc, char *argv[])
     int NUM_TARGETS = 0;
     int refresh_time_targets = 0;
     char ip_addr_string[100];
+    int portno = 0;
 
     while (fgets(line, sizeof(line), file))
     {
@@ -181,7 +181,13 @@ int main(int argc, char *argv[])
         else if (sscanf(line, "refresh_time_targets = %d", &refresh_time_targets) == 1)
         {
             continue;
-        }else if (sscanf(line, "ip = %s", ip_addr_string) == 1){
+        }
+        else if (sscanf(line, "ip = %s", ip_addr_string) == 1)
+        {
+            continue;
+        }
+        else if (sscanf(line, "portno = %d", &portno) == 1)
+        {
             break;
         }
     }
@@ -332,7 +338,7 @@ int main(int argc, char *argv[])
 
         // generare ostacoli randomici
         time_t current_time = time(NULL);
-        srand(current_time+15);
+        srand(current_time + 15);
         if (current_time - last_spawn_time >= refresh_time_targets || first > 0)
         {
             for (; i < NUM_TARGETS; i++)
