@@ -6,8 +6,8 @@ drone.x = 10
 drone.y = 10
 NUM_OBSTACLES = 9
 NUM_TARGETS = 10 
-refresh_time_obstacles = 10 
-refresh_time_targets = 12 
+refresh_time_obstacles = 60 
+refresh_time_targets = 100
 ip = "localhost"
 portno = 50000
 

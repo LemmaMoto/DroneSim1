@@ -439,19 +439,13 @@ int main(int argc, char *argv[])
                                     }
                                     else if (buffer[j] == '|')
                                     {
-                                        if ((int)atof(sub_buffer_x) == 0 || (int)atof(sub_buffer_y) == 0)
-                                        {
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            sub_buffer_y[y_index] = '\0';
-                                            world.obstacle[i].x = (int)atof(sub_buffer_x);
-                                            world.obstacle[i].y = (int)atof(sub_buffer_y);
-                                            Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
-                                            j++;
-                                            break;
-                                        }
+
+                                        sub_buffer_y[y_index] = '\0';
+                                        world.obstacle[i].x = (int)atof(sub_buffer_x);
+                                        world.obstacle[i].y = (int)atof(sub_buffer_y);
+                                        Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
+                                        j++;
+                                        break;
                                     }
                                     else if (is_x)
                                     {
@@ -536,19 +530,13 @@ int main(int argc, char *argv[])
                                     }
                                     else if (buffer[j] == '|')
                                     {
-                                        if ((int)atof(sub_buffer_x) == 0 || (int)atof(sub_buffer_y) == 0)
-                                        {
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            sub_buffer_y[y_index] = '\0';
-                                            world.target[i].x = (int)atof(sub_buffer_x);
-                                            world.target[i].y = (int)atof(sub_buffer_y);
-                                            Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
-                                            j++;
-                                            break;
-                                        }
+
+                                        sub_buffer_y[y_index] = '\0';
+                                        world.target[i].x = (int)atof(sub_buffer_x);
+                                        world.target[i].y = (int)atof(sub_buffer_y);
+                                        Printf("sub_buffer_x: %s, sub_buffer_y: %s\n", sub_buffer_x, sub_buffer_y);
+                                        j++;
+                                        break;
                                     }
                                     else if (is_x)
                                     {
@@ -585,7 +573,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            //close(newsockfd);
+            // close(newsockfd);
         }
     }
 
