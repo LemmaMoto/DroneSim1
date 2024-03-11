@@ -597,8 +597,8 @@ int main(int argc, char *argv[])
         vx = prev_vx + ax * T;
         vy = prev_vy + ay * T;
 
-        vx = fmax(fmin(vx, 60), -60);
-        vy = fmax(fmin(vy, 60), -60);
+        vx = fmax(fmin(vx, 100), -100);
+        vy = fmax(fmin(vy, 100), -100);
 
         double new_x = prev_x + vx * T;
         double new_y = prev_y + vy * T;
