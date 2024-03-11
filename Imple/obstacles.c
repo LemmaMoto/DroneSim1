@@ -171,6 +171,7 @@ int main(int argc, char *argv[])
     char line[256];
     int NUM_OBSTACLES = 0;
     int refresh_time_obstacles = 0;
+    char ip_addr_string[100];
 
     while (fgets(line, sizeof(line), file))
     {
@@ -182,6 +183,9 @@ int main(int argc, char *argv[])
         }
         else if (sscanf(line, "refresh_time_obstacles = %d", &refresh_time_obstacles) == 1)
         {
+            continue;
+        }
+        else if (sscanf(line, "ip = %s", ip_addr_string) == 1){
             break;
         }
     }
@@ -205,7 +209,7 @@ int main(int argc, char *argv[])
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
-    server = gethostbyname("localhost");
+    server = gethostbyname(ip_addr_string);
     if (server == NULL)
     {
         fprintf(stderr, "ERROR, no such host\n");
