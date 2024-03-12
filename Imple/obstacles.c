@@ -129,7 +129,7 @@ void watchdog_handler(int sig, siginfo_t *info, void *context)
 
 int main(int argc, char *argv[])
 {
-    sleep(2);
+    // sleep(2);
     int sockfd, n;
 
     struct sockaddr_in serv_addr;
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
         {
             // error("ERROR writing to socket");
         }
-        sleep(1);                                // PROVARE AD AUMENTARE LO SLEEP
+        // sleep(1);                                // PROVARE AD AUMENTARE LO SLEEP
         bzero(buffer_echo, sizeof(buffer_echo)); // Clear the echo buffer before reading into it
         int n_r = read(sockfd, buffer_echo, sizeof(buffer_echo));
         if (n_r < 0)

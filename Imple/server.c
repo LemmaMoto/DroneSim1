@@ -20,7 +20,7 @@
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
-#define portno 50000
+#define portno 52000
 
 pid_t watchdog_pid;
 pid_t process_id;
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
                 Printf("Target %d %d\n", world.target[3].x, world.target[3].y);
 
                 bzero(buffer, sizeof(buffer));
-                sleep(1);
+                // sleep(1);
                 n = read(newsockfd, buffer, sizeof(buffer));
                 if (n < 0)
                 {
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
                                 error("ERROR writing to socket");
                             }
                             Printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
-                            sleep(1);
+                            // sleep(1);
                             bool var = true;
                             strcpy(buffer_echo, merged_buffer);
                             while (var)
@@ -480,7 +480,7 @@ int main(int argc, char *argv[])
                                 error("ERROR writing to socket");
                             }
                             // Printf("MERGED BUFFER DIM FINESTRA: %s\n", merged_buffer);
-                            sleep(1);
+                            // sleep(1);
                             bool var = true;
                             strcpy(buffer_echo, merged_buffer);
                             while (var)

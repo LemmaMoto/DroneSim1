@@ -4,10 +4,10 @@ M = 0.1
 K = 5.0
 drone.x = 10
 drone.y = 10
-NUM_OBSTACLES = 9
+NUM_OBSTACLES = 10
 NUM_TARGETS = 10 
 refresh_time_obstacles = 60 
 refresh_time_targets = 100
-ip = localhost
-portno = 50000
+ip = 127.0.0.1
+portno = 52000
 

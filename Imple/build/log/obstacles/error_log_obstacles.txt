@@ -27,3 +27,21 @@
 2024-03-12 14:01:07 - ERROR connecting: Connection refused
 2024-03-12 14:01:08 - ERROR connecting: Connection refused
 2024-03-12 14:01:09 - ERROR connecting: Connection refused
+2024-03-12 17:57:59 - ERROR connecting: Connection refused
+2024-03-12 17:58:00 - ERROR connecting: Connection refused
+2024-03-12 18:02:33 - ERROR connecting: Connection refused
+2024-03-12 18:02:34 - ERROR connecting: Connection refused
+2024-03-12 18:02:35 - ERROR connecting: Connection refused
+2024-03-12 18:02:36 - ERROR connecting: Connection refused
+2024-03-12 18:20:17 - ERROR reading from socket: Connection reset by peer
+2024-03-12 18:25:12 - ERROR writing to socket: Connection reset by peer
+2024-03-12 18:32:36 - ERROR writing to socket: Connection reset by peer
+2024-03-12 18:42:45 - ERROR connecting: Connection refused
+2024-03-12 18:42:46 - ERROR connecting: Connection refused
+2024-03-12 18:42:47 - ERROR connecting: Connection refused
+2024-03-12 18:42:48 - ERROR connecting: Connection refused
+2024-03-12 18:42:49 - ERROR connecting: Connection refused
+2024-03-12 18:42:50 - ERROR connecting: Connection refused
+2024-03-12 18:42:51 - ERROR connecting: Connection refused
+2024-03-12 18:42:52 - ERROR connecting: Connection refused
+2024-03-12 18:42:53 - ERROR connecting: Connection refused
