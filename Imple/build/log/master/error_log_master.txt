@@ -1,0 +1,4 @@
+2024-03-12 14:08:09 - execvp failed for watchdog: No such file or directory
+2024-03-12 14:08:12 - execvp failed for obstacles: No such file or directory
+2024-03-12 14:08:12 - execvp failed for targets: No such file or directory
+2024-03-12 14:09:44 - execvp failed for watchdog: No such file or directory

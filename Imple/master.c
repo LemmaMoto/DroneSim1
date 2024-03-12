@@ -270,8 +270,8 @@ int main(int argc, char *argv[])
 
     if (child_watchdog == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./watchdog", NULL};
-        execvp("konsole", arg_list);
+        char *arg_list[] = {"./watchdog", NULL};
+        execvp(arg_list[0], arg_list);
         error("execvp failed for watchdog");
         return 0;
     }
@@ -288,8 +288,8 @@ int main(int argc, char *argv[])
 
     if (child_process0 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, pipe_read_is, pipe_write_di, pipe_read_sd_s, pipe_write_sd_s, pipe_read_sw_obs, pipe_write_sw_obs, pipe_read_sw_tar, pipe_write_sw_tar, NULL};
-        execvp("konsole", arg_list);
+        char *arg_list[] = {"./server", "0", pipe_read_sd, pipe_write_sd, pipe_read_ds, pipe_write_ds, pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, pipe_read_sw, pipe_write_sw, pipe_read_ws, pipe_write_ws, pipe_read_sd_t, pipe_write_sd_t, pipe_read_is, pipe_write_di, pipe_read_sd_s, pipe_write_sd_s, pipe_read_sw_obs, pipe_write_sw_obs, pipe_read_sw_tar, pipe_write_sw_tar, NULL};
+        execvp(arg_list[0], arg_list);
         error("execvp failed for server");
         return 0;
     }
@@ -357,8 +357,8 @@ int main(int argc, char *argv[])
 
     if (child_process4 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./obstacles", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
-        execvp("konsole", arg_list);
+        char *arg_list[] = {"./obstacles", "4", pipe_read_so, pipe_write_so, pipe_read_os, pipe_write_os, NULL};
+        execvp(arg_list[0], arg_list);
         error("execvp failed for obstacles");
         return 0;
     }
@@ -374,8 +374,8 @@ int main(int argc, char *argv[])
 
     if (child_process5 == 0)
     {
-        char *arg_list[] = {"konsole", "-e", "./targets", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
-        execvp("konsole", arg_list);
+        char *arg_list[] = {"./targets", "5", pipe_read_st, pipe_write_st, pipe_read_ts, pipe_write_ts, NULL};
+        execvp(arg_list[0], arg_list);
         error("execvp failed for targets");
         return 0;
     }
